@@ -28,7 +28,8 @@ Implemented baseline workflows:
 - `mise run pre-commit`
 - `mise run hooks-install`
 - `mise run env:sync`
-- `mise run deps:check`
+- `mise run deps:check` (advisory dependency drift summary)
+- `mise run vm:gh:ensure` / `mise run vm:gh:shell`
 - `mise run test:unit` / `mise run test:integration` / `mise run test:e2e`
 - `mise run ci`
 
@@ -40,6 +41,15 @@ Recommended first-time setup:
 
 Runtime env loading is managed by `mise` via `mise.toml`. Application code reads validated environment config from
 backend infra modules rather than loading dotenv files directly.
+
+For a GitHub-like local Linux VM on macOS, use:
+
+1. `mise run vm:gh:ensure`
+2. `mise run vm:gh:shell`
+
+By default this creates or reconciles one worktree-scoped VM per folder, named `starter-gh-<folder>`, and mounts the
+current repository root into that VM. `vm:gh:ensure` also installs `mise` inside the guest and configures shell
+activation so repo commands are ready after you enter the VM.
 
 ## Observability Topology (Local/Dev)
 

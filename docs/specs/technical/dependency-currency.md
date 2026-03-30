@@ -6,7 +6,7 @@
 - Type: Technical
 - Status: active
 - Version: v2
-- Last Updated: 2026-03-26
+- Last Updated: 2026-04-06
 
 ## Summary
 
@@ -30,11 +30,15 @@ from consistent evidence.
 
 - Dependency-currency checks are invokable through `mise run deps:check`.
 - `deps:check` reports drift and does not fail solely because dependencies are behind latest.
-- Coverage includes:
-  - npm direct dependencies from `package.json`
-  - toolchain definitions from `mise.toml`
-  - local `mise` CLI version
-  - container image references from `infra/docker/docker-compose.yml` and Dockerfiles under `infra/docker/`
+- Coverage includes all managed dependency surfaces in this repository:
+  - npm direct dependencies from `package.json` (`dependencies`, `devDependencies`)
+  - toolchain definitions from canonical `mise` task declarations and local `mise` CLI version
+  - container image references from `infra/docker/docker-compose.yml`, `infra/docker/docker-compose.test.yml`, and
+    Dockerfiles under `infra/docker/`
+- npm dependency entries compare current direct versions against npm registry latest versions.
+- toolchain entries compare configured or active runtime versions against latest versions resolvable by `mise`.
+- `mise` CLI entry compares local active `mise --version` output against latest GitHub release metadata.
+- container image entries compare current tags against latest compatible tags from registry metadata when determinable.
 - Output includes:
   - surface type
   - dependency identifier

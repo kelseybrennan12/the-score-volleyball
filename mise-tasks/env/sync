@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 //MISE description="Sync .env keys and ordering from .env.example"
+//MISE tools={node="latest"}
 
 import fs from "node:fs";
 import path from "node:path";

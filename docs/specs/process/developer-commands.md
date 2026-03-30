@@ -51,6 +51,9 @@ Define the single source of truth for common developer-facing commands using `mi
 - `mise run built:up`: explicit local prod-like built runtime bring-up command.
 - `mise run built:down`: hard-stop local built runtime services while preserving named volumes.
 - `mise run built:logs`: show recent logs for the prod-like built local services.
+- `mise run vm:gh:ensure`: ensure the worktree-scoped GitHub-like Lima VM exists, matches the current folder mount, and
+  is running on macOS.
+- `mise run vm:gh:shell`: open a shell in the GitHub-like Lima VM.
 - `mise run dev:db:bootstrap`: run the local database bootstrap service directly.
 - `mise run dev:logs`: show recent logs for core local services.
 - `mise run dev:logs:follow`: follow logs for core local services.
@@ -125,6 +128,8 @@ Define the single source of truth for common developer-facing commands using `mi
   - `dev:down`
   - `dev:down-reset`
   - `dev:logs`
+  - `vm:gh:ensure`
+  - `vm:gh:shell`
   - `test`
   - `test:unit`
   - `test:integration`
@@ -147,6 +152,7 @@ Define the single source of truth for common developer-facing commands using `mi
 - `dev:up` remains the canonical local runtime start command.
 - `built:up` is the canonical local prod-like built-runtime start command.
 - Explicit lifecycle commands use `dev:*` naming.
+- Repo-owned local VM lifecycle commands use `vm:*` naming.
 - Runtime log-access commands use `dev:logs*` naming.
 - Local runtime lifecycle behavior is standardized:
   - `dev:up`: single compose bring-up command for the `dev` profile; startup init ordering is enforced through compose
@@ -158,6 +164,11 @@ Define the single source of truth for common developer-facing commands using `mi
   behavior.
 - `dev:up` startup output includes a concise local access link summary derived from compose-exposed service ports.
 - Local runtime environment variables are sourced by `mise` from a project `.env` file.
+- `vm:gh:ensure` is idempotent and either creates the configured worktree-scoped GitHub-like Lima VM or reconciles the
+  existing same-name instance to the current folder's mount and configured VM settings before starting it.
+- `vm:gh:ensure` provisions the guest shell baseline needed for repo commands by ensuring `mise` is installed and
+  activated inside the guest.
+- `vm:gh:ensure` does not silently delete or recreate existing Lima instances.
 - App startup command roles are explicit:
   - dedicated bootstrap command delegates app-schema migration apply to `app:drizzle-migrate`, then runs Graphile
     migration plus optional env-driven seeding

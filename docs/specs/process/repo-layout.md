@@ -66,6 +66,7 @@ Define the allowed root files/folders and the location of non-spec documentation
 - Top-level `/infra/` stores deployment/runtime assets and includes:
   - `/infra/docker/`
   - `/infra/azure/`
+  - `/infra/lima/`
 
 ### Frontend File Naming
 

@@ -47,6 +47,7 @@ run = "pnpm run typecheck"
 
 [tasks."deps:update:prod"]
 description = "Update production npm dependencies to latest (lockfile-only)"
+tools = { node = "latest", pnpm = "latest" }
 usage = '''
 arg "<packages>" var=#true help="One or more package names to update"
 '''
@@ -57,6 +58,7 @@ pnpm up --latest --lockfile-only "${packages[@]}"
 
 [tasks."deps:update:dev"]
 description = "Update development npm dependencies to latest (lockfile-only)"
+tools = { node = "latest", pnpm = "latest" }
 usage = '''
 arg "<packages>" var=#true help="One or more devDependency package names to update"
 '''
@@ -79,14 +81,17 @@ run = "pnpm run test"
 
 [tasks."gh:auth"]
 description = "Show GitHub CLI authentication status"
+tools = { gh = "latest" }
 run = "gh auth status"
 
 [tasks."gh:runs"]
 description = "List recent GitHub Actions runs for this repository"
+tools = { gh = "latest" }
 run = "gh run list --limit 20"
 
 [tasks."gh:logs"]
 description = "Show GitHub Actions logs for a run (supports optional gh run view args)"
+tools = { gh = "latest" }
 usage = '''
 arg "<run_id>" help="GitHub Actions run id"
 arg "[extra_args]" var=#true help="Additional gh run view args (for example --job <job-id>)"
@@ -98,6 +103,7 @@ gh run view "${usage_run_id?}" "${extra_args[@]}" --log
 
 [tasks."gh:job-logs"]
 description = "Show GitHub Actions logs for a specific job in a run"
+tools = { gh = "latest" }
 usage = '''
 arg "<run_id>" help="GitHub Actions run id"
 arg "<job_id>" help="GitHub Actions job id"
@@ -108,6 +114,7 @@ gh run view "${usage_run_id?}" --job "${usage_job_id?}" --log
 
 [tasks."azure:auth"]
 description = "Ensure Azure CLI auth and show active account context"
+tools = { azure-cli = "latest" }
 run = '''
 az account show >/dev/null 2>&1 || az login
 az account show --output table
@@ -115,6 +122,7 @@ az account show --output table
 
 [tasks."azure:rgs"]
 description = "List resource groups in the active subscription"
+tools = { azure-cli = "latest" }
 run = '''
 mise run azure:auth >/dev/null
 az group list --query "[].{name:name,location:location}" --output table
@@ -122,12 +130,14 @@ az group list --query "[].{name:name,location:location}" --output table
 
 [tasks."azure:subs"]
 description = "List available Azure subscriptions for the current login"
+tools = { azure-cli = "latest" }
 run = '''
 az account list --all --query "[].{name:name,id:id,tenantId:tenantId,isDefault:isDefault,state:state}" --output json
 '''
 
 [tasks."azure:apps"]
 description = "List Container Apps in the target resource group"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "[resource_group]" help="Azure resource group (omit to list across active subscription)"
 '''
@@ -141,6 +151,7 @@ fi
 
 [tasks."azure:containerapp:env"]
 description = "Show deployed Container App env entries (name/value/secretRef)"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<app_name>" help="Container App name (for example project-starter-jobs)"
 arg "<resource_group>" help="Azure resource group"
@@ -156,6 +167,7 @@ az containerapp show \
 
 [tasks."azure:entra:app-show"]
 description = "Show Entra app registration JSON by app (client) id"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<app_id>" help="Entra application (client) id"
 '''
@@ -166,6 +178,7 @@ az ad app show --id "${usage_app_id?}" --output json
 
 [tasks."azure:entra:sp-show"]
 description = "Show Entra service principal JSON by app (client) id"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<app_id>" help="Entra application (client) id"
 '''
@@ -176,6 +189,7 @@ az ad sp show --id "${usage_app_id?}" --output json
 
 [tasks."azure:entra:app-credentials"]
 description = "List Entra app credentials for an app (client) id"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<app_id>" help="Entra application (client) id"
 '''
@@ -186,6 +200,7 @@ az ad app credential list --id "${usage_app_id?}" --output table
 
 [tasks."azure:entra:graph-role-assignments"]
 description = "List Microsoft Graph app-role assignments for an app service principal"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<app_id>" help="Entra application (client) id"
 '''
@@ -201,6 +216,7 @@ az rest \
 
 [tasks."azure:logs:app"]
 description = "Show Container App logs by app name"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<app_name>" help="Container App name (for example project-starter-api)"
 arg "[tail]" help="Tail line count (default AZURE_LOG_TAIL or 200)"
@@ -213,6 +229,7 @@ az containerapp logs show --resource-group "${usage_resource_group?}" --name "${
 
 [tasks."azure:logs:api"]
 description = "Show API Container App logs"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<resource_group>" help="Azure resource group"
 arg "[tail]" help="Tail line count (default AZURE_LOG_TAIL or 200)"
@@ -221,6 +238,7 @@ run = 'mise run azure:logs:app -- project-starter-api "${usage_tail:-${AZURE_LOG
 
 [tasks."azure:logs:edge"]
 description = "Show edge Container App logs"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<resource_group>" help="Azure resource group"
 arg "[tail]" help="Tail line count (default AZURE_LOG_TAIL or 200)"
@@ -229,6 +247,7 @@ run = 'mise run azure:logs:app -- project-starter-edge "${usage_tail:-${AZURE_LO
 
 [tasks."azure:logs:jobs"]
 description = "Show jobs Container App logs"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<resource_group>" help="Azure resource group"
 arg "[tail]" help="Tail line count (default AZURE_LOG_TAIL or 200)"
@@ -237,6 +256,7 @@ run = 'mise run azure:logs:app -- project-starter-jobs "${usage_tail:-${AZURE_LO
 
 [tasks."azure:logs:obs"]
 description = "Show observability Container App logs by component"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<component>" help="One of: alloy, loki, prometheus, tempo, grafana"
 arg "<resource_group>" help="Azure resource group"
@@ -246,6 +266,7 @@ run = 'mise run azure:logs:app -- "project-starter-${usage_component?}" "${usage
 
 [tasks."azure:obs:status"]
 description = "Show revision/ingress status for observability Container Apps"
+tools = { azure-cli = "latest" }
 usage = '''
 arg "<resource_group>" help="Azure resource group"
 '''

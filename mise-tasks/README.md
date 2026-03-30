@@ -12,6 +12,7 @@ This folder owns the repository's orchestration-heavy command surface.
 ## Current Groups
 
 - `dev:*` — local runtime lifecycle commands
+- `vm:*` — GitHub-like Lima VM lifecycle helpers
 - `env:*` — environment sync helpers
 - `deps:*` — dependency inspection and update workflows
 - `deps:install` is the canonical lockfile install step for tasks that require `node_modules`

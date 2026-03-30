@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Pre-commit checks"
+#MISE tools={node="latest",pnpm="latest"}
 
 set -euo pipefail
 
