@@ -1,0 +1,6 @@
+[mcp_servers.starter_mise]
+command = "mise"
+args = ["mcp"]
+
+[mcp_servers.starter_mise.env]
+MISE_EXPERIMENTAL = "1"

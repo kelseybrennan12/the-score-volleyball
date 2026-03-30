@@ -62,7 +62,31 @@ activation so repo commands are ready after you enter the VM.
 
 ## AI Agent Support
 
-Project instructions live in [`/AGENTS.md`](/AGENTS.md). Agent-specific config files are redirect adapters only.
+Project instructions live in [`/AGENTS.md`](/AGENTS.md). Agent-specific config files are redirect adapters only: they
+point to [`/AGENTS.md`](/AGENTS.md) and do not duplicate project instructions.
+
+This repo commits project-scoped Codex MCP config in [`/.codex/config.toml`](/.codex/config.toml). In a trusted project,
+Codex loads that file automatically, so `mise` MCP is available without a separate per-user setup step. Restart Codex
+after pulling the change if you already had a session open.
+
+| Agent          | Config File                                                            |
+| -------------- | ---------------------------------------------------------------------- |
+| OpenAI Codex   | [`/AGENTS.md`](/AGENTS.md) (native)                                    |
+| Claude Code    | [`/CLAUDE.md`](/CLAUDE.md)                                             |
+| Cursor         | [`/.cursorrules`](/.cursorrules)                                       |
+| Windsurf       | [`/.windsurfrules`](/.windsurfrules)                                   |
+| GitHub Copilot | [`/.github/copilot-instructions.md`](/.github/copilot-instructions.md) |
+
+### Adding support for a new agent
+
+1. Find the agent's config file convention (check its docs for the expected filename and location).
+2. Create that file in the repo with a single line pointing to AGENTS.md:
+   ```
+   See [AGENTS.md](/AGENTS.md) for project instructions, process, loop rules, and available skills.
+   ```
+3. Add the new entry to the table above.
+
+All project knowledge stays in AGENTS.md and the docs it references. Agent-specific files are only redirects.
 
 ## Next Steps
 

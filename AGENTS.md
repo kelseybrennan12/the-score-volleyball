@@ -49,6 +49,21 @@
 
 - Prefer `mise run <task>` for execution in agent workflows.
 - When a suitable `mise` task exists, use it instead of invoking raw underlying CLI chains directly.
+- In Codex sessions for this repo, MCP server `starter_mise` is available via
+  [`/.codex/config.toml`](/.codex/config.toml). Prefer it for inspecting `mise` tasks/config/env and for executing
+  defined `mise` tasks when available. Use direct shell commands for non-`mise` workflows or when raw shell interaction
+  is specifically needed.
+- For command-surface details and task naming, follow
+  [`/docs/specs/process/developer-commands.md`](/docs/specs/process/developer-commands.md).
+
+## Agent Redirect Policy
+
+- [`/AGENTS.md`](/AGENTS.md) is the canonical instruction source for AI coding agents in this repository.
+- Tool-specific config files (for example [`/CLAUDE.md`](/CLAUDE.md), [`/.cursorrules`](/.cursorrules),
+  [`/.windsurfrules`](/.windsurfrules), and [`/.github/copilot-instructions.md`](/.github/copilot-instructions.md)) are
+  redirect adapters only.
+- Normative rules live in [`/docs/specs/process/agent-skills.md`](/docs/specs/process/agent-skills.md) and
+  [`/docs/specs/process/repo-layout.md`](/docs/specs/process/repo-layout.md).
 
 ## Loop Rules
 
