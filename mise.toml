@@ -1,0 +1,909 @@
+[settings]
+windows_default_inline_shell_args = "bash -c"
+
+[tools]
+node = "latest"
+pnpm = "latest"
+gh = "latest"
+uv = "latest"
+fd = "latest"
+azure-cli = "latest"
+
+[env]
+_.file = ".env"
+GH_PAGER = "cat"
+
+[tasks.fmt]
+description = "Format repository files"
+run = "pnpm run fmt"
+
+[tasks.fmt-check]
+description = "Check repository formatting (staged files only during pre-commit)"
+run = '''
+if [ -n "$MISE_PRE_COMMIT" ]; then
+  if ! git diff --cached --quiet --name-only --diff-filter=d; then
+    git diff --cached --name-only --diff-filter=d -z | xargs -0 pnpm exec prettier --check --ignore-unknown
+  fi
+else
+  pnpm run fmt-check
+fi
+'''
+
+[tasks.lint]
+description = "Lint repository source"
+run = "pnpm run lint"
+
+[tasks.typecheck]
+description = "Typecheck repository source"
+run = "pnpm run typecheck"
+
+[tasks."deps:check"]
+description = "Run advisory dependency-currency checks"
+run = "node scripts/deps/check.mjs"
+
+[tasks."deps:update:prod"]
+description = "Update production npm dependencies to latest (lockfile-only)"
+usage = '''
+arg "<packages>" var=#true help="One or more package names to update"
+'''
+run = '''
+eval "packages=(${usage_packages:-})"
+pnpm up --latest --lockfile-only "${packages[@]}"
+'''
+
+[tasks."deps:update:dev"]
+description = "Update development npm dependencies to latest (lockfile-only)"
+usage = '''
+arg "<packages>" var=#true help="One or more devDependency package names to update"
+'''
+run = '''
+eval "packages=(${usage_packages:-})"
+pnpm up --latest --lockfile-only -D "${packages[@]}"
+'''
+
+[tasks.build]
+description = "Build app runtime artifacts"
+run = "pnpm run build:app"
+
+[tasks.test]
+description = "Execute default automated test suite"
+run = "pnpm run test"
+
+[tasks."gh:auth"]
+description = "Show GitHub CLI authentication status"
+run = "gh auth status"
+
+[tasks."gh:runs"]
+description = "List recent GitHub Actions runs for this repository"
+run = "gh run list --limit 20"
+
+[tasks."gh:logs"]
+description = "Show GitHub Actions logs for a run (supports optional gh run view args)"
+usage = '''
+arg "<run_id>" help="GitHub Actions run id"
+arg "[extra_args]" var=#true help="Additional gh run view args (for example --job <job-id>)"
+'''
+run = '''
+eval "extra_args=(${usage_extra_args:-})"
+gh run view "${usage_run_id?}" "${extra_args[@]}" --log
+'''
+
+[tasks."gh:job-logs"]
+description = "Show GitHub Actions logs for a specific job in a run"
+usage = '''
+arg "<run_id>" help="GitHub Actions run id"
+arg "<job_id>" help="GitHub Actions job id"
+'''
+run = '''
+gh run view "${usage_run_id?}" --job "${usage_job_id?}" --log
+'''
+
+[tasks."azure:auth"]
+description = "Ensure Azure CLI auth and show active account context"
+run = '''
+az account show >/dev/null 2>&1 || az login
+az account show --output table
+'''
+
+[tasks."azure:rgs"]
+description = "List resource groups in the active subscription"
+run = '''
+mise run azure:auth >/dev/null
+az group list --query "[].{name:name,location:location}" --output table
+'''
+
+[tasks."azure:subs"]
+description = "List available Azure subscriptions for the current login"
+run = '''
+az account list --all --query "[].{name:name,id:id,tenantId:tenantId,isDefault:isDefault,state:state}" --output json
+'''
+
+[tasks."azure:apps"]
+description = "List Container Apps in the target resource group"
+usage = '''
+arg "[resource_group]" help="Azure resource group (omit to list across active subscription)"
+'''
+run = '''
+if [ -n "${usage_resource_group:-}" ]; then
+  az containerapp list --resource-group "${usage_resource_group}" --query "[].name" --output tsv
+else
+  az containerapp list --query "[].name" --output tsv
+fi
+'''
+
+[tasks."azure:containerapp:env"]
+description = "Show deployed Container App env entries (name/value/secretRef)"
+usage = '''
+arg "<app_name>" help="Container App name (for example project-starter-jobs)"
+arg "<resource_group>" help="Azure resource group"
+'''
+run = '''
+mise run azure:auth >/dev/null
+az containerapp show \
+  --name "${usage_app_name?}" \
+  --resource-group "${usage_resource_group?}" \
+  --query "properties.template.containers[0].env[].{name:name,value:value,secretRef:secretRef}" \
+  --output table
+'''
+
+[tasks."azure:entra:app-show"]
+description = "Show Entra app registration JSON by app (client) id"
+usage = '''
+arg "<app_id>" help="Entra application (client) id"
+'''
+run = '''
+mise run azure:auth >/dev/null
+az ad app show --id "${usage_app_id?}" --output json
+'''
+
+[tasks."azure:entra:sp-show"]
+description = "Show Entra service principal JSON by app (client) id"
+usage = '''
+arg "<app_id>" help="Entra application (client) id"
+'''
+run = '''
+mise run azure:auth >/dev/null
+az ad sp show --id "${usage_app_id?}" --output json
+'''
+
+[tasks."azure:entra:app-credentials"]
+description = "List Entra app credentials for an app (client) id"
+usage = '''
+arg "<app_id>" help="Entra application (client) id"
+'''
+run = '''
+mise run azure:auth >/dev/null
+az ad app credential list --id "${usage_app_id?}" --output table
+'''
+
+[tasks."azure:entra:graph-role-assignments"]
+description = "List Microsoft Graph app-role assignments for an app service principal"
+usage = '''
+arg "<app_id>" help="Entra application (client) id"
+'''
+run = '''
+set -euo pipefail
+mise run azure:auth >/dev/null
+SP_OBJECT_ID="$(az ad sp show --id "${usage_app_id?}" --query id -o tsv)"
+az rest \
+  --method GET \
+  --url "https://graph.microsoft.com/v1.0/servicePrincipals/${SP_OBJECT_ID}/appRoleAssignments" \
+  --output json
+'''
+
+[tasks."azure:logs:app"]
+description = "Show Container App logs by app name"
+usage = '''
+arg "<app_name>" help="Container App name (for example project-starter-api)"
+arg "[tail]" help="Tail line count (default AZURE_LOG_TAIL or 200)"
+arg "<resource_group>" help="Azure resource group"
+'''
+run = '''
+TAIL="${usage_tail:-${AZURE_LOG_TAIL:-200}}"
+az containerapp logs show --resource-group "${usage_resource_group?}" --name "${usage_app_name?}" --tail "${TAIL}"
+'''
+
+[tasks."azure:logs:api"]
+description = "Show API Container App logs"
+usage = '''
+arg "<resource_group>" help="Azure resource group"
+arg "[tail]" help="Tail line count (default AZURE_LOG_TAIL or 200)"
+'''
+run = 'mise run azure:logs:app -- project-starter-api "${usage_tail:-${AZURE_LOG_TAIL:-200}}" "${usage_resource_group?}"'
+
+[tasks."azure:logs:edge"]
+description = "Show edge Container App logs"
+usage = '''
+arg "<resource_group>" help="Azure resource group"
+arg "[tail]" help="Tail line count (default AZURE_LOG_TAIL or 200)"
+'''
+run = 'mise run azure:logs:app -- project-starter-edge "${usage_tail:-${AZURE_LOG_TAIL:-200}}" "${usage_resource_group?}"'
+
+[tasks."azure:logs:jobs"]
+description = "Show jobs Container App logs"
+usage = '''
+arg "<resource_group>" help="Azure resource group"
+arg "[tail]" help="Tail line count (default AZURE_LOG_TAIL or 200)"
+'''
+run = 'mise run azure:logs:app -- project-starter-jobs "${usage_tail:-${AZURE_LOG_TAIL:-200}}" "${usage_resource_group?}"'
+
+[tasks."azure:logs:obs"]
+description = "Show observability Container App logs by component"
+usage = '''
+arg "<component>" help="One of: alloy, loki, prometheus, tempo, grafana"
+arg "<resource_group>" help="Azure resource group"
+arg "[tail]" help="Tail line count (default AZURE_LOG_TAIL or 200)"
+'''
+run = 'mise run azure:logs:app -- "project-starter-${usage_component?}" "${usage_tail:-${AZURE_LOG_TAIL:-200}}" "${usage_resource_group?}"'
+
+[tasks."azure:obs:status"]
+description = "Show revision/ingress status for observability Container Apps"
+usage = '''
+arg "<resource_group>" help="Azure resource group"
+'''
+run = '''
+for app in project-starter-alloy project-starter-loki project-starter-prometheus project-starter-tempo project-starter-grafana; do
+  az containerapp show \
+    --resource-group "${usage_resource_group?}" \
+    --name "${app}" \
+    --query "{name:name,latestRevision:properties.latestRevisionName,provisioningState:properties.provisioningState,fqdn:properties.configuration.ingress.fqdn}" \
+    --output table
+done
+'''
+
+[tasks."obs:health"]
+description = "Query Grafana API health endpoint"
+run = '''
+curl -fsSL \
+  -H "Authorization: Bearer ${AZURE_GRAFANA_TOKEN?}" \
+  "${AZURE_GRAFANA_URL?}/api/health"
+'''
+
+[tasks."obs:loki:query"]
+description = "Run a LogQL query through Grafana's Loki datasource proxy"
+usage = '''
+arg "<query>" help="LogQL query"
+arg "[start_ns]" help="Start timestamp in unix nanoseconds (default: now - AZURE_OBS_WINDOW_NS)"
+arg "[end_ns]" help="End timestamp in unix nanoseconds (default: now)"
+'''
+run = '''
+end_ns="${usage_end_ns:-$(( $(date -u +%s) * 1000000000 ))}"
+start_ns="${usage_start_ns:-$(( end_ns - ${AZURE_OBS_WINDOW_NS:-3600000000000} ))}"
+curl -fsSL -G \
+  -H "Authorization: Bearer ${AZURE_GRAFANA_TOKEN?}" \
+  --data-urlencode "query=${usage_query?}" \
+  --data-urlencode "start=${start_ns}" \
+  --data-urlencode "end=${end_ns}" \
+  --data-urlencode "limit=${AZURE_OBS_LIMIT:-200}" \
+  --data-urlencode "direction=backward" \
+  "${AZURE_GRAFANA_URL?}/api/datasources/proxy/uid/${AZURE_GRAFANA_LOKI_UID:-loki}/loki/api/v1/query_range"
+'''
+
+[tasks."obs:prom:query"]
+description = "Run a PromQL query through Grafana's Prometheus datasource proxy"
+usage = '''
+arg "<query>" help="PromQL query"
+arg "[time_s]" help="Evaluation time in unix seconds (default: now)"
+'''
+run = '''
+time_s="${usage_time_s:-$(date -u +%s)}"
+curl -fsSL -G \
+  -H "Authorization: Bearer ${AZURE_GRAFANA_TOKEN?}" \
+  --data-urlencode "query=${usage_query?}" \
+  --data-urlencode "time=${time_s}" \
+  "${AZURE_GRAFANA_URL?}/api/datasources/proxy/uid/${AZURE_GRAFANA_PROMETHEUS_UID:-prometheus}/api/v1/query"
+'''
+
+[tasks."obs:tempo:trace"]
+description = "Fetch a trace by ID through Grafana's Tempo datasource proxy"
+usage = '''
+arg "<trace_id>" help="Tempo trace id"
+'''
+run = '''
+curl -fsSL \
+  -H "Authorization: Bearer ${AZURE_GRAFANA_TOKEN?}" \
+  "${AZURE_GRAFANA_URL?}/api/datasources/proxy/uid/${AZURE_GRAFANA_TEMPO_UID:-tempo}/api/traces/${usage_trace_id?}"
+'''
+
+[tasks."lint:data-boundaries"]
+description = "Check frontend code for data pipeline boundary violations"
+run = "bash scripts/lint-data-boundaries.sh"
+
+[tasks."visual-parity:capture"]
+description = "Capture starter-safe visual parity screenshots for configured design and app routes"
+run = "node scripts/visual-parity/capture.mjs"
+
+[tasks.pre-commit]
+description = "Pre-commit checks"
+run = '''
+mise run fmt-check & p1=$!
+mise run lint & p2=$!
+mise run typecheck & p3=$!
+mise run lint:data-boundaries & p4=$!
+fail=0
+wait $p1 || fail=1
+wait $p2 || fail=1
+wait $p3 || fail=1
+wait $p4 || fail=1
+exit $fail
+'''
+
+[tasks."dev:links"]
+description = "Print local service URLs and connection info"
+run = """
+printf '%s\n' \
+  '' \
+  'Local services:' \
+  "  Dev edge (API + frontend): http://localhost:${API_PORT:-3000}" \
+  "  Built edge (prod-like web): http://localhost:${BUILT_WEB_PORT:-3102}" \
+  "  E2E edge (isolated smoke): http://localhost:${E2E_WEB_PORT:-3202}" \
+  "  Figma edge (design preview): http://localhost:${FIGMA_WEB_PORT:-4173}" \
+  "  Grafana:                   http://localhost:${GRAFANA_PORT}" \
+  "  Postgres:                  postgres://${POSTGRES_USER:-project-starter}:${POSTGRES_PASSWORD:-project-starter}@localhost:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-project-starter}"
+"""
+
+[tasks."built:links"]
+description = "Print prod-like local service URLs"
+run = """
+printf '%s\n' \
+  '' \
+  'Built services:' \
+  "  Built edge:                http://localhost:${BUILT_WEB_PORT:-3102}" \
+  "  Built IDP:                 http://localhost:${BUILT_IDP_PORT:-3103}"
+"""
+
+[tasks."dev:up"]
+description = "Start local dev stack (hot-reload services only)"
+run = """
+mise run dev:env-sync
+docker compose -f infra/docker/docker-compose.yml --profile dev up -d --build
+mise run dev:links
+"""
+
+[tasks."dev:down"]
+description = "Stop local runtime immediately and preserve named volumes"
+run = """
+docker compose -f infra/docker/docker-compose.yml kill alloy loki prometheus tempo grafana api idp jobs frontend dev-edge dev-bootstrap >/dev/null 2>&1 || true
+docker compose -f infra/docker/docker-compose.yml rm -fsv alloy loki prometheus tempo grafana api idp jobs frontend dev-edge dev-bootstrap >/dev/null 2>&1 || true
+"""
+
+[tasks."dev:down-reset"]
+description = "Stop local stack immediately and destroy named volumes"
+run = """
+docker compose -f infra/docker/docker-compose.yml kill alloy loki prometheus tempo grafana api idp jobs frontend dev-edge dev-bootstrap app-api app-idp app-jobs app-edge app-bootstrap postgres azurite >/dev/null 2>&1 || true
+docker compose -f infra/docker/docker-compose.yml rm -fsv alloy loki prometheus tempo grafana api idp jobs frontend dev-edge dev-bootstrap app-api app-idp app-jobs app-edge app-bootstrap postgres azurite >/dev/null 2>&1 || true
+docker compose -f infra/docker/docker-compose.yml down --remove-orphans --volumes --timeout 1
+"""
+
+[tasks."dev:logs"]
+description = "Show recent logs for core local services"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 dev-edge api idp frontend jobs postgres"
+
+[tasks."dev:logs:follow"]
+description = "Follow logs for core local services"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 -f dev-edge api idp frontend jobs postgres"
+
+[tasks."dev:logs:all"]
+description = "Show recent logs for all local services"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120"
+
+[tasks."dev:logs:api"]
+description = "Show recent api service logs"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 api"
+
+[tasks."dev:logs:idp"]
+description = "Show recent idp service logs"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 idp"
+
+[tasks."dev:logs:jobs"]
+description = "Show recent jobs service logs"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 jobs"
+
+[tasks."dev:logs:frontend"]
+description = "Show recent frontend service logs"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 frontend"
+
+[tasks."dev:logs:dev-edge"]
+description = "Show recent dev-edge service logs"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 dev-edge"
+
+[tasks."dev:logs:app-edge"]
+description = "Show recent built app-edge service logs"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 app-edge"
+
+[tasks."dev:logs:app-api"]
+description = "Show recent built app-api service logs"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 app-api"
+
+[tasks."dev:logs:postgres"]
+description = "Show recent postgres service logs"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 postgres"
+
+[tasks."built:up"]
+description = "Start local prod-like built stack"
+run = """
+mise run dev:env-sync
+docker compose -f infra/docker/docker-compose.yml --profile built up -d --build
+mise run built:links
+"""
+
+[tasks."built:down"]
+description = "Stop local built stack immediately and preserve named volumes"
+run = """
+docker compose -f infra/docker/docker-compose.yml kill app-api app-idp app-jobs app-edge app-bootstrap >/dev/null 2>&1 || true
+docker compose -f infra/docker/docker-compose.yml rm -fsv app-api app-idp app-jobs app-edge app-bootstrap >/dev/null 2>&1 || true
+"""
+
+[tasks."built:logs"]
+description = "Show recent logs for built local services"
+run = "docker compose -f infra/docker/docker-compose.yml logs --no-color --tail=120 app-edge app-api app-idp app-jobs postgres"
+
+[tasks."test:db:prepare"]
+description = "Prepare the dedicated shared test database public schema and graphile schema"
+run = '''
+set -eu
+project_name="${TEST_COMPOSE_PROJECT_NAME:-project-starter-test}"
+docker compose -f infra/docker/docker-compose.yml -p "${project_name}" --profile test run --rm \
+  --build \
+  -e APP_DB_SCHEMA="${APP_DB_SCHEMA:-public}" \
+  -e APP_STARTUP_SEED_PACK=none \
+  -e JOBS_GRAPHILE_SCHEMA="${TEST_JOBS_GRAPHILE_SCHEMA:-${JOBS_GRAPHILE_SCHEMA:-graphile_worker_test}}" \
+  test-bootstrap
+'''
+
+[tasks."test-integration"]
+description = "Execute backend integration tests against local containerized dependencies"
+usage = '''
+arg "[vitest_args]" var=#true help="Optional extra vitest args"
+'''
+run = '''
+set -eu
+if [ -n "${usage_vitest_args:-}" ]; then
+  eval "set -- ${usage_vitest_args}"
+else
+  set --
+fi
+project_name="${TEST_COMPOSE_PROJECT_NAME:-project-starter-test}"
+docker compose -f infra/docker/docker-compose.yml -p "${project_name}" --profile test up -d test-postgres
+docker compose -f infra/docker/docker-compose.yml up -d azurite
+resolved_database_url="$(node -e 'const raw = (process.env.INTEGRATION_TEST_DATABASE_URL || "").trim(); if (raw) { const url = new URL(raw); if (url.hostname === "postgres" || url.hostname === "test-postgres") { url.hostname = "localhost"; if (process.env.TEST_POSTGRES_PORT) { url.port = process.env.TEST_POSTGRES_PORT; } } process.stdout.write(url.toString()); process.exit(0); } const user = process.env.POSTGRES_USER || "project-starter"; const password = process.env.POSTGRES_PASSWORD || "project-starter"; const database = process.env.TEST_POSTGRES_DB || "project-starter_test"; const port = process.env.TEST_POSTGRES_PORT || "5434"; process.stdout.write(`postgres://${user}:${password}@localhost:${port}/${database}`);')"
+DATABASE_URL="${resolved_database_url}" \
+APP_DB_SCHEMA=public \
+APP_STARTUP_SEED_PACK=none \
+TEST_JOBS_GRAPHILE_SCHEMA="${TEST_JOBS_GRAPHILE_SCHEMA:-graphile_worker_test}" \
+mise run test:db:prepare
+DATABASE_URL="${resolved_database_url}" \
+INTEGRATION_TEST_DATABASE_URL="${resolved_database_url}" \
+APP_DB_SCHEMA=public \
+JOBS_GRAPHILE_SCHEMA="${TEST_JOBS_GRAPHILE_SCHEMA:-graphile_worker_test}" \
+pnpm run test:integration "$@"
+'''
+
+[tasks."e2e:stack:up"]
+description = "Start the isolated compose-managed e2e stack and persist host runtime state"
+run = '''
+set -eu
+mkdir -p artifacts/e2e
+state_file="artifacts/e2e/runtime.env"
+resolved_project_name="${TEST_COMPOSE_PROJECT_NAME:-${E2E_COMPOSE_PROJECT_NAME:-}}"
+resolved_test_postgres_port="${TEST_POSTGRES_PORT:-}"
+resolved_test_postgres_db="${TEST_POSTGRES_DB:-}"
+resolved_e2e_jobs_port="${E2E_JOBS_PORT:-}"
+resolved_schema_cookie_name="${APP_E2E_SCHEMA_COOKIE_NAME:-}"
+if [ -f "${state_file}" ]; then
+  set -a
+  . "${state_file}"
+  set +a
+  if [ -z "${resolved_project_name}" ]; then
+    resolved_project_name="${TEST_COMPOSE_PROJECT_NAME:-${E2E_COMPOSE_PROJECT_NAME:-}}"
+  fi
+  if [ -z "${resolved_test_postgres_port}" ]; then
+    resolved_test_postgres_port="${TEST_POSTGRES_PORT:-}"
+  fi
+  if [ -z "${resolved_test_postgres_db}" ]; then
+    resolved_test_postgres_db="${TEST_POSTGRES_DB:-}"
+  fi
+  if [ -z "${resolved_e2e_jobs_port}" ]; then
+    resolved_e2e_jobs_port="${E2E_JOBS_PORT:-}"
+  fi
+  if [ -z "${resolved_schema_cookie_name}" ]; then
+    resolved_schema_cookie_name="${APP_E2E_SCHEMA_COOKIE_NAME:-}"
+  fi
+fi
+if [ -z "${resolved_project_name}" ]; then
+  resolved_project_name="project-starter-test"
+fi
+if [ -z "${resolved_test_postgres_port}" ]; then
+  resolved_test_postgres_port="5434"
+fi
+if [ -z "${resolved_test_postgres_db}" ]; then
+  resolved_test_postgres_db="project-starter_test"
+fi
+if [ -z "${resolved_e2e_jobs_port}" ]; then
+  resolved_e2e_jobs_port="3204"
+fi
+if [ -z "${resolved_schema_cookie_name}" ]; then
+  resolved_schema_cookie_name="project-starter-e2e-schema"
+fi
+resolved_e2e_web_port="${E2E_WEB_PORT:-3202}"
+resolved_e2e_idp_port="${E2E_IDP_PORT:-3203}"
+resolved_e2e_jobs_poll_interval_ms="${E2E_JOBS_POLL_INTERVAL_MS:-1000}"
+resolved_e2e_jobs_concurrency="${E2E_JOBS_CONCURRENCY:-10}"
+printf '%s\n' \
+  "TEST_COMPOSE_PROJECT_NAME=${resolved_project_name}" \
+  "TEST_POSTGRES_PORT=${resolved_test_postgres_port}" \
+  "TEST_POSTGRES_DB=${resolved_test_postgres_db}" \
+  "E2E_WEB_PORT=${resolved_e2e_web_port}" \
+  "E2E_IDP_PORT=${resolved_e2e_idp_port}" \
+  "E2E_JOBS_PORT=${resolved_e2e_jobs_port}" \
+  "E2E_JOBS_POLL_INTERVAL_MS=${resolved_e2e_jobs_poll_interval_ms}" \
+  "E2E_JOBS_CONCURRENCY=${resolved_e2e_jobs_concurrency}" \
+  "APP_E2E_SCHEMA_COOKIE_NAME=${resolved_schema_cookie_name}" \
+  > "${state_file}"
+TEST_POSTGRES_PORT="${resolved_test_postgres_port}" E2E_JOBS_PORT="${resolved_e2e_jobs_port}" E2E_JOBS_POLL_INTERVAL_MS="${resolved_e2e_jobs_poll_interval_ms}" E2E_JOBS_CONCURRENCY="${resolved_e2e_jobs_concurrency}" APP_E2E_SCHEMA_COOKIE_NAME="${resolved_schema_cookie_name}" AZURITE_BLOB_PORT= AZURITE_QUEUE_PORT= AZURITE_TABLE_PORT= \
+docker compose -f infra/docker/docker-compose.yml -p "${resolved_project_name}" --profile e2e up -d --build azurite e2e-edge e2e-idp e2e-jobs
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${resolved_e2e_web_port}/healthz" \
+  || { echo "Timed out waiting for e2e web on port ${resolved_e2e_web_port}" >&2; exit 1; }
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${resolved_e2e_idp_port}/_dev/idp/.well-known/openid-configuration" \
+  || { echo "Timed out waiting for e2e IDP on port ${resolved_e2e_idp_port}" >&2; exit 1; }
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${resolved_e2e_jobs_port}/healthz" \
+  || { echo "Timed out waiting for e2e jobs on port ${resolved_e2e_jobs_port}" >&2; exit 1; }
+'''
+
+[tasks."e2e:stack:down"]
+description = "Stop the isolated compose-managed e2e stack and clear persisted host runtime state"
+run = '''
+set -eu
+state_file="artifacts/e2e/runtime.env"
+project_name="${TEST_COMPOSE_PROJECT_NAME:-${E2E_COMPOSE_PROJECT_NAME:-}}"
+if [ -f "${state_file}" ]; then
+  set -a
+  . "${state_file}"
+  set +a
+  if [ -z "${project_name}" ]; then
+    project_name="${TEST_COMPOSE_PROJECT_NAME:-${E2E_COMPOSE_PROJECT_NAME:-}}"
+  fi
+fi
+if [ -z "${project_name}" ]; then
+  project_name="project-starter-test"
+fi
+docker compose -f infra/docker/docker-compose.yml -p "${project_name}" down --remove-orphans --volumes --timeout 1 >/dev/null 2>&1 || true
+docker ps -aq --filter "label=com.docker.compose.project=${project_name}" | xargs -r docker rm -f >/dev/null 2>&1 || true
+docker network rm "${project_name}_default" >/dev/null 2>&1 || true
+docker volume rm "${project_name}_test_postgres_data" >/dev/null 2>&1 || true
+rm -f "${state_file}"
+'''
+
+[tasks."e2e:_run:host"]
+description = "Internal host Playwright runner against the isolated e2e stack"
+usage = '''
+arg "[playwright_args]" var=#true help="Optional extra Playwright args"
+'''
+run = '''
+set -eu
+if [ -n "${usage_playwright_args:-}" ]; then
+  eval "set -- ${usage_playwright_args}"
+else
+  set --
+fi
+state_file="artifacts/e2e/runtime.env"
+if [ ! -f "${state_file}" ]; then
+  echo "Missing ${state_file}. Run 'mise run e2e:stack:up' first." >&2
+  exit 1
+fi
+set -a
+. "${state_file}"
+set +a
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${E2E_WEB_PORT}/healthz" \
+  || { echo "Timed out waiting for e2e web on port ${E2E_WEB_PORT}" >&2; exit 1; }
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${E2E_IDP_PORT}/_dev/idp/.well-known/openid-configuration" \
+  || { echo "Timed out waiting for e2e IDP on port ${E2E_IDP_PORT}" >&2; exit 1; }
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${E2E_JOBS_PORT}/healthz" \
+  || { echo "Timed out waiting for e2e jobs on port ${E2E_JOBS_PORT}" >&2; exit 1; }
+resolved_e2e_database_url="postgres://${POSTGRES_USER:-project-starter}:${POSTGRES_PASSWORD:-project-starter}@localhost:${TEST_POSTGRES_PORT}/${TEST_POSTGRES_DB:-project-starter_test}"
+PLAYWRIGHT_BASE_URL="http://localhost:${E2E_WEB_PORT}" \
+PLAYWRIGHT_IDP_BASE_URL="http://localhost:${E2E_IDP_PORT}" \
+PLAYWRIGHT_ARTIFACTS_DIR="artifacts/e2e" \
+APP_E2E_SCHEMA_COOKIE_NAME="${APP_E2E_SCHEMA_COOKIE_NAME}" \
+TEST_JOBS_GRAPHILE_SCHEMA="${E2E_JOBS_GRAPHILE_SCHEMA:-graphile_worker_e2e}" \
+INTEGRATION_TEST_DATABASE_URL="${resolved_e2e_database_url}" \
+pnpm exec playwright test "$@"
+'''
+
+[tasks."e2e:_run:host:grep"]
+description = "Internal host Playwright runner against the isolated e2e stack scoped by test-title grep"
+usage = '''
+arg "<pattern>" help="Playwright --grep pattern"
+'''
+run = '''
+set -eu
+state_file="artifacts/e2e/runtime.env"
+if [ ! -f "${state_file}" ]; then
+  echo "Missing ${state_file}. Run 'mise run e2e:stack:up' first." >&2
+  exit 1
+fi
+set -a
+. "${state_file}"
+set +a
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${E2E_WEB_PORT}/healthz" \
+  || { echo "Timed out waiting for e2e web on port ${E2E_WEB_PORT}" >&2; exit 1; }
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${E2E_IDP_PORT}/_dev/idp/.well-known/openid-configuration" \
+  || { echo "Timed out waiting for e2e IDP on port ${E2E_IDP_PORT}" >&2; exit 1; }
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${E2E_JOBS_PORT}/healthz" \
+  || { echo "Timed out waiting for e2e jobs on port ${E2E_JOBS_PORT}" >&2; exit 1; }
+resolved_e2e_database_url="postgres://${POSTGRES_USER:-project-starter}:${POSTGRES_PASSWORD:-project-starter}@localhost:${TEST_POSTGRES_PORT}/${TEST_POSTGRES_DB:-project-starter_test}"
+PLAYWRIGHT_BASE_URL="http://localhost:${E2E_WEB_PORT}" \
+PLAYWRIGHT_IDP_BASE_URL="http://localhost:${E2E_IDP_PORT}" \
+PLAYWRIGHT_ARTIFACTS_DIR="artifacts/e2e" \
+APP_E2E_SCHEMA_COOKIE_NAME="${APP_E2E_SCHEMA_COOKIE_NAME}" \
+TEST_JOBS_GRAPHILE_SCHEMA="${E2E_JOBS_GRAPHILE_SCHEMA:-graphile_worker_e2e}" \
+INTEGRATION_TEST_DATABASE_URL="${resolved_e2e_database_url}" \
+pnpm exec playwright test --grep "${usage_pattern}"
+'''
+
+[tasks."e2e:run:headless"]
+description = "Run host Playwright headlessly against the isolated e2e stack and leave it running"
+usage = '''
+arg "[playwright_args]" var=#true help="Optional extra Playwright args"
+'''
+run = '''
+set -eu
+mise run e2e:stack:up
+if [ -n "${usage_playwright_args:-}" ]; then
+  mise run e2e:_run:host -- ${usage_playwright_args}
+else
+  mise run e2e:_run:host
+fi
+'''
+
+[tasks."e2e:run:headless:grep"]
+description = "Run host Playwright headlessly against the isolated e2e stack scoped by test-title grep"
+usage = '''
+arg "<pattern>" help="Playwright --grep pattern"
+'''
+run = '''
+set -eu
+mise run e2e:stack:up
+mise run e2e:_run:host:grep "${usage_pattern}"
+'''
+
+[tasks."e2e:run:headed"]
+description = "Run host Playwright in headed mode against the isolated e2e stack and leave it running"
+usage = '''
+arg "[playwright_args]" var=#true help="Optional extra Playwright args"
+'''
+run = '''
+set -eu
+mise run e2e:stack:up
+if [ -n "${usage_playwright_args:-}" ]; then
+  PLAYWRIGHT_HEADLESS=false PLAYWRIGHT_WORKERS="${PLAYWRIGHT_WORKERS:-1}" mise run e2e:_run:host -- ${usage_playwright_args}
+else
+  PLAYWRIGHT_HEADLESS=false PLAYWRIGHT_WORKERS="${PLAYWRIGHT_WORKERS:-1}" mise run e2e:_run:host
+fi
+'''
+
+[tasks."e2e:run:headed:grep"]
+description = "Run host Playwright in headed mode against the isolated e2e stack scoped by test-title grep"
+usage = '''
+arg "<pattern>" help="Playwright --grep pattern"
+'''
+run = '''
+set -eu
+mise run e2e:stack:up
+PLAYWRIGHT_HEADLESS=false PLAYWRIGHT_WORKERS="${PLAYWRIGHT_WORKERS:-1}" mise run e2e:_run:host:grep "${usage_pattern}"
+'''
+
+[tasks."e2e:run:ui"]
+description = "Open Playwright UI against the isolated e2e stack and leave it running"
+usage = '''
+arg "[playwright_args]" var=#true help="Optional extra Playwright args"
+'''
+run = '''
+set -eu
+mise run e2e:stack:up
+if [ -n "${usage_playwright_args:-}" ]; then
+  PLAYWRIGHT_HEADLESS=false PLAYWRIGHT_WORKERS="${PLAYWRIGHT_WORKERS:-1}" mise run e2e:_run:host -- --ui ${usage_playwright_args}
+else
+  PLAYWRIGHT_HEADLESS=false PLAYWRIGHT_WORKERS="${PLAYWRIGHT_WORKERS:-1}" mise run e2e:_run:host -- --ui
+fi
+'''
+
+[tasks."e2e:smoke:headless"]
+description = "Execute host Playwright smoke flows headlessly against the isolated e2e stack"
+usage = '''
+arg "[playwright_args]" var=#true help="Optional extra Playwright args"
+'''
+run = '''
+set -eu
+cleanup() {
+  mise run e2e:_collect:runtime-logs >/dev/null 2>&1 || true
+  mise run e2e:stack:down >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+if [ -n "${usage_playwright_args:-}" ]; then
+  mise run e2e:run:headless -- ${usage_playwright_args}
+else
+  mise run e2e:run:headless
+fi
+'''
+
+[tasks."e2e:smoke:headless:grep"]
+description = "Execute host Playwright headlessly against the isolated e2e stack scoped by test-title grep"
+usage = '''
+arg "<pattern>" help="Playwright --grep pattern"
+'''
+run = '''
+set -eu
+cleanup() {
+  mise run e2e:_collect:runtime-logs >/dev/null 2>&1 || true
+  mise run e2e:stack:down >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+mise run e2e:run:headless:grep "${usage_pattern}"
+'''
+
+[tasks."e2e:smoke:headed"]
+description = "Execute host Playwright smoke flows in headed mode against the isolated e2e stack"
+usage = '''
+arg "[playwright_args]" var=#true help="Optional extra Playwright args"
+'''
+run = '''
+set -eu
+cleanup() {
+  mise run e2e:_collect:runtime-logs >/dev/null 2>&1 || true
+  mise run e2e:stack:down >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+if [ -n "${usage_playwright_args:-}" ]; then
+  mise run e2e:run:headed -- ${usage_playwright_args}
+else
+  mise run e2e:run:headed
+fi
+'''
+
+[tasks."e2e:_collect:runtime-logs"]
+description = "Internal helper to persist isolated e2e runtime logs before teardown"
+run = '''
+set -eu
+state_file="artifacts/e2e/runtime.env"
+if [ ! -f "${state_file}" ]; then
+  exit 0
+fi
+set -a
+. "${state_file}"
+set +a
+runtime_logs_dir="artifacts/e2e/runtime-logs"
+mkdir -p "${runtime_logs_dir}"
+docker compose -f infra/docker/docker-compose.yml -p "${TEST_COMPOSE_PROJECT_NAME}" ps > "${runtime_logs_dir}/compose-ps.txt" 2>&1 || true
+docker compose -f infra/docker/docker-compose.yml -p "${TEST_COMPOSE_PROJECT_NAME}" logs --no-color --timestamps e2e-api > "${runtime_logs_dir}/e2e-api.log" 2>&1 || true
+docker compose -f infra/docker/docker-compose.yml -p "${TEST_COMPOSE_PROJECT_NAME}" logs --no-color --timestamps e2e-jobs > "${runtime_logs_dir}/e2e-jobs.log" 2>&1 || true
+'''
+
+[tasks."e2e:_run:container"]
+description = "Internal container Playwright runner against the isolated e2e stack"
+usage = '''
+arg "[playwright_args]" var=#true help="Optional extra Playwright args"
+'''
+run = '''
+set -eu
+if [ -n "${usage_playwright_args:-}" ]; then
+  eval "set -- ${usage_playwright_args}"
+else
+  set --
+fi
+state_file="artifacts/e2e/runtime.env"
+if [ ! -f "${state_file}" ]; then
+  echo "Missing ${state_file}. Run 'mise run e2e:stack:up' first." >&2
+  exit 1
+fi
+set -a
+. "${state_file}"
+set +a
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${E2E_WEB_PORT}/healthz" \
+  || { echo "Timed out waiting for e2e web on port ${E2E_WEB_PORT}" >&2; exit 1; }
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${E2E_IDP_PORT}/_dev/idp/.well-known/openid-configuration" \
+  || { echo "Timed out waiting for e2e IDP on port ${E2E_IDP_PORT}" >&2; exit 1; }
+curl --retry 120 --retry-delay 1 --retry-all-errors --fail --silent --output /dev/null "http://localhost:${E2E_JOBS_PORT}/healthz" \
+  || { echo "Timed out waiting for e2e jobs on port ${E2E_JOBS_PORT}" >&2; exit 1; }
+TEST_POSTGRES_PORT= AZURITE_BLOB_PORT= AZURITE_QUEUE_PORT= AZURITE_TABLE_PORT= \
+docker compose -f infra/docker/docker-compose.yml -p "${TEST_COMPOSE_PROJECT_NAME}" --profile e2e run --build --rm --no-deps \
+  -e DATABASE_URL="postgres://${POSTGRES_USER:-project-starter}:${POSTGRES_PASSWORD:-project-starter}@test-postgres:5432/${TEST_POSTGRES_DB:-project-starter_test}" \
+  -e INTEGRATION_TEST_DATABASE_URL="postgres://${POSTGRES_USER:-project-starter}:${POSTGRES_PASSWORD:-project-starter}@test-postgres:5432/${TEST_POSTGRES_DB:-project-starter_test}" \
+  -e APP_E2E_SCHEMA_COOKIE_NAME="${APP_E2E_SCHEMA_COOKIE_NAME}" \
+  -e TEST_JOBS_GRAPHILE_SCHEMA="${E2E_JOBS_GRAPHILE_SCHEMA:-graphile_worker_e2e}" \
+  e2e-playwright pnpm exec playwright test "$@"
+'''
+
+[tasks."e2e:smoke:container"]
+description = "Execute Playwright smoke flows inside the Playwright runner container against the isolated e2e stack"
+usage = '''
+arg "[playwright_args]" var=#true help="Optional extra Playwright args"
+'''
+run = '''
+set -eu
+cleanup() {
+  mise run e2e:_collect:runtime-logs >/dev/null 2>&1 || true
+  mise run e2e:stack:down >/dev/null 2>&1 || true
+}
+trap cleanup EXIT
+mise run e2e:stack:up
+if [ -n "${usage_playwright_args:-}" ]; then
+  mise run e2e:_run:container -- ${usage_playwright_args}
+else
+  mise run e2e:_run:container
+fi
+'''
+
+[tasks.ci]
+description = "Run local CI-equivalent checks in canonical order"
+run = '''
+set -eu
+# Mirror the GitHub Actions baseline more closely than the local `.env` default.
+# CI does not provide these repo-local values, so scrub them before invoking tasks.
+unset POSTGRES_USER
+unset POSTGRES_PASSWORD
+unset POSTGRES_DB
+export CI=true
+export LOG_LEVEL=
+export OTEL_SERVICE_NAME=
+export OTEL_EXPORTER_OTLP_ENDPOINT=
+export OTEL_EXPORTER_OTLP_PROTOCOL=
+export OTEL_RESOURCE_ATTRIBUTES=
+export OTEL_METRIC_EXPORT_INTERVAL_MS=
+export OTEL_EXPORTER_OTLP_TIMEOUT_MS=
+export JOBS_POLL_INTERVAL_MS=
+export JOBS_CONCURRENCY=
+mise run fmt-check
+mise run deps:check
+mise run lint
+mise run test
+mise run build
+mise run test-integration
+mise run e2e:smoke:container
+'''
+
+[tasks."dev:db:generate"]
+description = "Generate a new Drizzle migration file from schema changes"
+usage = 'arg "name" help="Descriptive slug for the migration (e.g. add-user-email-column)"'
+run = '''
+node ./node_modules/drizzle-kit/bin.cjs generate --config drizzle.config.ts --name "$usage_name"
+'''
+
+[tasks."dev:db:sql"]
+description = "Run SQL against local postgres via docker-compose"
+usage = '''
+arg "<sql>" help="SQL statement to execute (quote the argument)"
+'''
+run = """
+docker compose -f infra/docker/docker-compose.yml up -d postgres
+docker compose -f infra/docker/docker-compose.yml exec -T postgres \
+  psql -U "${POSTGRES_USER:-project-starter}" \
+  -d "${POSTGRES_DB:-project-starter}" \
+  -v ON_ERROR_STOP=1 \
+  -c "${usage_sql?}"
+"""
+
+[tasks."dev:db:bootstrap"]
+description = "Run the local database bootstrap service"
+run = """
+docker compose -f infra/docker/docker-compose.yml --profile dev up --build dev-bootstrap
+"""
+
+[tasks."dev:env-sync"]
+description = "Sync .env keys and ordering from .env.example"
+run = "node scripts/dev/env-sync.mjs"
+
+[tasks.hooks-install]
+description = "Install git pre-commit hook"
+run = "mise generate git-pre-commit --write --task=pre-commit"
+
+[tasks.setup]
+description = "Install local dev dependencies and hooks"
+run = """
+mise install
+mise reshim
+pnpm install
+pnpm exec playwright install chromium
+az bicep version > /dev/null 2>&1 || az bicep install --only-show-errors
+mise run hooks-install
+"""

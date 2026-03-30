@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(mise run:*)",
+      "Bash(gh run view:*)",
+      "Bash(mise tasks:*)",
+      "Bash(ls:*)",
+      "Bash(npx vitest:*)",
+      "Bash(npx tsc:*)"
+    ]
+  }
+}

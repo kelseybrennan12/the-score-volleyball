@@ -1,0 +1,17 @@
+.DS_Store
+.idea/
+.vscode/
+node_modules/
+.pnpm-store/
+.env
+src/frontend/dist/
+*.swp
+*.swo
+*~
+dist/
+data/
+nul
+.claude/settings.local.json
+docs/sample-files/
+artifacts/annotated-mapping/
+artifacts/validation-reports/

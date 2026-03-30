@@ -1,0 +1,511 @@
+name: Azure CD (Optional)
+run-name: >-
+  ${{
+    format(
+      'Azure CD: {0} ({1})',
+      inputs.environment,
+      inputs.imageTag
+    )
+  }}
+
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: Target Azure environment
+        required: true
+        type: choice
+        options:
+          - staging
+          - prod
+      imageTag:
+        description: Container image tag already published to ACR
+        required: true
+        type: string
+      databaseResetMode:
+        description: Database reset mode before bootstrap
+        required: false
+        default: soft
+        type: choice
+        options:
+          - soft
+          - hard
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy Azure Runtime
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    concurrency:
+      group: azure-cd-${{ inputs.environment }}
+      cancel-in-progress: false
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: azure/login@v2
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Set deployment variables
+        id: vars
+        run: |
+          set -euo pipefail
+
+          ENV_NAME="${{ inputs.environment }}"
+          IMAGE_TAG="${{ inputs.imageTag }}"
+          DB_RESET_MODE="${{ inputs.databaseResetMode || 'soft' }}"
+          ACR_SUBSCRIPTION_ID="${{ vars.ACR_SUBSCRIPTION_ID || vars.AZURE_SUBSCRIPTION_ID }}"
+
+          echo "env_name=${ENV_NAME}" >> "$GITHUB_OUTPUT"
+          echo "image_tag=${IMAGE_TAG}" >> "$GITHUB_OUTPUT"
+          echo "db_reset_mode=${DB_RESET_MODE}" >> "$GITHUB_OUTPUT"
+          echo "acr_subscription_id=${ACR_SUBSCRIPTION_ID}" >> "$GITHUB_OUTPUT"
+          echo "rg_name=rg-project-starter-${ENV_NAME}" >> "$GITHUB_OUTPUT"
+          echo "kv_name=kv-project-starter-${ENV_NAME}" >> "$GITHUB_OUTPUT"
+          echo "sp_object_id=$(az ad sp show --id ${{ vars.AZURE_CLIENT_ID }} --query id -o tsv)" >> "$GITHUB_OUTPUT"
+
+      - name: Verify required images exist in ACR
+        run: |
+          set -euo pipefail
+
+          ACR_NAME="${{ vars.ACR_NAME }}"
+          IMAGE_TAG="${{ steps.vars.outputs.image_tag }}"
+
+          require_image() {
+            local image="$1"
+            if ! az acr repository show \
+              --subscription "${{ steps.vars.outputs.acr_subscription_id }}" \
+              --name "$ACR_NAME" \
+              --image "$image" \
+              --output none; then
+              echo "::error::Required image ${ACR_NAME}.azurecr.io/${image} not found in ACR."
+              exit 1
+            fi
+          }
+
+          require_image "project-starter-app:${IMAGE_TAG}"
+          require_image "project-starter-edge:${IMAGE_TAG}"
+
+      - name: Ensure resource group exists
+        run: |
+          az group create \
+            --name ${{ steps.vars.outputs.rg_name }} \
+            --location centralus \
+            --output none
+
+      - name: Bootstrap Key Vault (first deploy only)
+        run: |
+          set -euo pipefail
+
+          if ! az keyvault show --name ${{ steps.vars.outputs.kv_name }} --resource-group ${{ steps.vars.outputs.rg_name }} &>/dev/null; then
+            az deployment group create \
+              --resource-group ${{ steps.vars.outputs.rg_name }} \
+              --template-file infra/azure/bootstrap.bicep \
+              --parameters \
+                envName=${{ steps.vars.outputs.env_name }} \
+                authClientSecret=${{ secrets.AUTH_CLIENT_SECRET }} \
+                authSessionEncryptionKey=${{ secrets.AUTH_SESSION_ENCRYPTION_KEY }} \
+                postgresAdminPassword=${{ secrets.POSTGRES_ADMIN_PASSWORD }} \
+                deployerSpObjectId=${{ steps.vars.outputs.sp_object_id }} \
+              --output none
+          fi
+
+      - name: Reconcile Key Vault secrets required for app deployment
+        env:
+          AUTH_CLIENT_SECRET: ${{ secrets.AUTH_CLIENT_SECRET }}
+          AUTH_SESSION_ENCRYPTION_KEY: ${{ secrets.AUTH_SESSION_ENCRYPTION_KEY }}
+          POSTGRES_ADMIN_PASSWORD: ${{ secrets.POSTGRES_ADMIN_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          KV="${{ steps.vars.outputs.kv_name }}"
+          ENV_NAME="${{ steps.vars.outputs.env_name }}"
+
+          upsert_required_secret() {
+            local name="$1"
+            local value="$2"
+            local source="$3"
+
+            if [ -z "${value}" ]; then
+              echo "::error::Required GitHub secret ${source} is missing/empty."
+              exit 1
+            fi
+
+            az keyvault secret set --vault-name "$KV" --name "$name" --value "$value" --output none
+            echo "Secret $name upserted from $source."
+          }
+
+          upsert_required_secret "auth-client-secret" "$AUTH_CLIENT_SECRET" "AUTH_CLIENT_SECRET"
+          upsert_required_secret "auth-session-encryption-key" "$AUTH_SESSION_ENCRYPTION_KEY" "AUTH_SESSION_ENCRYPTION_KEY"
+          upsert_required_secret "postgres-admin-password" "$POSTGRES_ADMIN_PASSWORD" "POSTGRES_ADMIN_PASSWORD"
+
+          DB_HOST="psql-project-starter-${ENV_NAME}.postgres.database.azure.com"
+          DB_PASS="$(az keyvault secret show --vault-name "$KV" --name postgres-admin-password --query value -o tsv)"
+          az keyvault secret set \
+            --vault-name "$KV" \
+            --name database-url \
+            --value "postgresql://projectstarteradmin:${DB_PASS}@${DB_HOST}:5432/project_starter?sslmode=require" \
+            --output none
+
+          required_secrets=(
+            "database-url"
+            "auth-client-secret"
+            "auth-session-encryption-key"
+            "postgres-admin-password"
+          )
+
+          missing=()
+          for name in "${required_secrets[@]}"; do
+            if ! az keyvault secret show --vault-name "$KV" --name "$name" &>/dev/null; then
+              missing+=("$name")
+            fi
+          done
+
+          if ((${#missing[@]} > 0)); then
+            echo "::error::Missing required Key Vault secrets: ${missing[*]}"
+            exit 1
+          fi
+
+      - name: Detect shared platform infrastructure
+        id: detect_base_infra
+        run: |
+          set -euo pipefail
+
+          RG_NAME="${{ steps.vars.outputs.rg_name }}"
+          ENV_NAME="${{ steps.vars.outputs.env_name }}"
+          missing=()
+
+          az containerapp env show \
+            --resource-group "$RG_NAME" \
+            --name "cae-project-starter-${ENV_NAME}" \
+            --output none 2>/dev/null || missing+=("container-apps-env")
+
+          az identity show \
+            --resource-group "$RG_NAME" \
+            --name "id-project-starter-${ENV_NAME}" \
+            --output none 2>/dev/null || missing+=("managed-identity")
+
+          az storage account show \
+            --resource-group "$RG_NAME" \
+            --name "saprojectstarter${ENV_NAME}" \
+            --output none 2>/dev/null || missing+=("storage-account")
+
+          az postgres flexible-server db show \
+            --resource-group "$RG_NAME" \
+            --server-name "psql-project-starter-${ENV_NAME}" \
+            --database-name "project_starter" \
+            --output none 2>/dev/null || missing+=("postgres-database")
+
+          az containerapp show \
+            --resource-group "$RG_NAME" \
+            --name "project-starter-alloy" \
+            --output none 2>/dev/null || missing+=("alloy")
+
+          if ((${#missing[@]} == 0)); then
+            echo "base_infra_exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Missing shared infrastructure components: ${missing[*]}"
+            echo "base_infra_exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Ensure shared platform infrastructure
+        if: steps.detect_base_infra.outputs.base_infra_exists != 'true'
+        run: |
+          az deployment group create \
+            --resource-group ${{ steps.vars.outputs.rg_name }} \
+            --template-file infra/azure/main.bicep \
+            --parameters \
+              envName=${{ steps.vars.outputs.env_name }} \
+              imageTag=${{ steps.vars.outputs.image_tag }} \
+              acrName=${{ vars.ACR_NAME }} \
+              acrSubscriptionId=${{ vars.ACR_SUBSCRIPTION_ID }} \
+              acrResourceGroup=${{ vars.ACR_RESOURCE_GROUP }} \
+              authTenantId=${{ vars.AZURE_TENANT_ID }} \
+              authClientId=${{ vars.AZURE_CLIENT_ID }} \
+              postgresSkuName=${{ vars.POSTGRES_SKU_NAME || 'Standard_B1ms' }} \
+              postgresSkuTier=${{ vars.POSTGRES_SKU_TIER || 'Burstable' }} \
+              customDomain=${{ vars.CUSTOM_DOMAIN || '' }} \
+              authAdminGroupId=${{ vars.AUTH_ADMIN_GROUP_ID || '' }} \
+              authUserGroupId=${{ vars.AUTH_USER_GROUP_ID || '' }} \
+              deployBootstrapJob=false \
+              deployApi=false \
+              deployJobs=false \
+              deployEdge=false \
+            --output none
+
+      - name: Hard reset database
+        if: steps.vars.outputs.db_reset_mode == 'hard'
+        run: |
+          set -euo pipefail
+
+          ENV_NAME="${{ steps.vars.outputs.env_name }}"
+          RG_NAME="${{ steps.vars.outputs.rg_name }}"
+          SERVER_NAME="psql-project-starter-${ENV_NAME}"
+          DATABASE_NAME="project_starter"
+
+          if az postgres flexible-server db show --resource-group "$RG_NAME" --server-name "$SERVER_NAME" --database-name "$DATABASE_NAME" --output none 2>/dev/null; then
+            az postgres flexible-server db delete \
+              --resource-group "$RG_NAME" \
+              --server-name "$SERVER_NAME" \
+              --database-name "$DATABASE_NAME" \
+              --yes
+          fi
+
+          az postgres flexible-server db create \
+            --resource-group "$RG_NAME" \
+            --server-name "$SERVER_NAME" \
+            --database-name "$DATABASE_NAME"
+
+      - name: Deploy bootstrap runtime
+        id: deploy_bootstrap_runtime
+        run: |
+          DEPLOY_OUTPUT=$(az deployment group create \
+            --resource-group ${{ steps.vars.outputs.rg_name }} \
+            --template-file infra/azure/runtime.bicep \
+            --parameters \
+              envName=${{ steps.vars.outputs.env_name }} \
+              imageTag=${{ steps.vars.outputs.image_tag }} \
+              acrName=${{ vars.ACR_NAME }} \
+              authTenantId=${{ vars.AZURE_TENANT_ID }} \
+              authClientId=${{ vars.AZURE_CLIENT_ID }} \
+              customDomain=${{ vars.CUSTOM_DOMAIN || '' }} \
+              authAdminGroupId=${{ vars.AUTH_ADMIN_GROUP_ID || '' }} \
+              authUserGroupId=${{ vars.AUTH_USER_GROUP_ID || '' }} \
+              deployBootstrapJob=true \
+              deployApi=false \
+              deployJobs=false \
+              deployEdge=false \
+            -o json)
+          echo "auth_redirect_uri=$(echo "$DEPLOY_OUTPUT" | jq -r '.properties.outputs.authRedirectUri.value')" >> "$GITHUB_OUTPUT"
+          echo "grafana_redirect_uri=$(echo "$DEPLOY_OUTPUT" | jq -r '.properties.outputs.grafanaRedirectUri.value')" >> "$GITHUB_OUTPUT"
+          echo "db_bootstrap_job_name=$(echo "$DEPLOY_OUTPUT" | jq -r '.properties.outputs.dbBootstrapJobName.value')" >> "$GITHUB_OUTPUT"
+          echo "edge_host=$(echo "$DEPLOY_OUTPUT" | jq -r '.properties.outputs.edgeHost.value')" >> "$GITHUB_OUTPUT"
+
+      - name: Run database bootstrap job
+        id: run_bootstrap
+        run: |
+          set -euo pipefail
+
+          RG_NAME="${{ steps.vars.outputs.rg_name }}"
+          JOB_NAME="${{ steps.deploy_bootstrap_runtime.outputs.db_bootstrap_job_name }}"
+          STARTED_AT_EPOCH="$(date -u +%s)"
+
+          az containerapp job start \
+            --resource-group "$RG_NAME" \
+            --name "$JOB_NAME" \
+            --output none
+
+          for attempt in $(seq 1 60); do
+            EXECUTION_JSON=$(az containerapp job execution list \
+              --resource-group "$RG_NAME" \
+              --name "$JOB_NAME" \
+              --output json | jq -c --argjson started_at_epoch "$STARTED_AT_EPOCH" '
+                def to_utc_epoch:
+                  if . == null or . == "" then null
+                  else (sub("\\+00:00$"; "Z") | fromdateiso8601)
+                  end;
+
+                [
+                  .[]
+                  | select(((.properties.startTime // "") | to_utc_epoch) >= $started_at_epoch)
+                ]
+                | sort_by((.properties.startTime // "") | to_utc_epoch)
+                | last
+              ')
+
+            if [ -z "$EXECUTION_JSON" ] || [ "$EXECUTION_JSON" = "null" ]; then
+              sleep 10
+              continue
+            fi
+
+            EXECUTION_NAME=$(echo "$EXECUTION_JSON" | jq -r '.name')
+            EXECUTION_STATUS=$(echo "$EXECUTION_JSON" | jq -r '.properties.status // .properties.runningState // "Unknown"')
+
+            echo "Bootstrap execution ${EXECUTION_NAME}: ${EXECUTION_STATUS}"
+
+            if echo "$EXECUTION_STATUS" | grep -Eiq 'Succeeded|Completed'; then
+              echo "execution_name=${EXECUTION_NAME}" >> "$GITHUB_OUTPUT"
+              echo "execution_status=${EXECUTION_STATUS}" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            if echo "$EXECUTION_STATUS" | grep -Eiq 'Failed|Canceled|Cancelled|Error'; then
+              echo "::error::Database bootstrap job failed with status ${EXECUTION_STATUS}."
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "::error::Timed out waiting for database bootstrap job completion."
+          exit 1
+
+      - name: Deploy runtime apps
+        run: |
+          az deployment group create \
+            --resource-group ${{ steps.vars.outputs.rg_name }} \
+            --template-file infra/azure/runtime.bicep \
+            --parameters \
+              envName=${{ steps.vars.outputs.env_name }} \
+              imageTag=${{ steps.vars.outputs.image_tag }} \
+              acrName=${{ vars.ACR_NAME }} \
+              authTenantId=${{ vars.AZURE_TENANT_ID }} \
+              authClientId=${{ vars.AZURE_CLIENT_ID }} \
+              edgeMinReplicas=${{ vars.EDGE_MIN_REPLICAS || '1' }} \
+              edgeMaxReplicas=${{ vars.EDGE_MAX_REPLICAS || '1' }} \
+              apiMinReplicas=${{ vars.API_MIN_REPLICAS || '1' }} \
+              apiMaxReplicas=${{ vars.API_MAX_REPLICAS || '1' }} \
+              jobsMinReplicas=${{ vars.JOBS_MIN_REPLICAS || '1' }} \
+              jobsMaxReplicas=${{ vars.JOBS_MAX_REPLICAS || '1' }} \
+              customDomain=${{ vars.CUSTOM_DOMAIN || '' }} \
+              authAdminGroupId=${{ vars.AUTH_ADMIN_GROUP_ID || '' }} \
+              authUserGroupId=${{ vars.AUTH_USER_GROUP_ID || '' }} \
+              deployBootstrapJob=false \
+              deployApi=true \
+              deployJobs=true \
+              deployEdge=true \
+            --output none
+
+      - name: Wait for API target revision
+        id: wait_api
+        run: |
+          set -euo pipefail
+
+          RG_NAME="${{ steps.vars.outputs.rg_name }}"
+          TARGET_IMAGE="${{ vars.ACR_NAME }}.azurecr.io/project-starter-app:${{ steps.vars.outputs.image_tag }}"
+
+          for attempt in $(seq 1 60); do
+            REVISION_JSON=$(az containerapp revision list \
+              --resource-group "$RG_NAME" \
+              --name project-starter-api \
+              --all \
+              --output json | jq -c --arg image "$TARGET_IMAGE" '
+                [.[] | select(.properties.template.containers[0].image == $image)]
+                | sort_by(.properties.createdTime // .name)
+                | last
+              ')
+
+            if [ -z "$REVISION_JSON" ] || [ "$REVISION_JSON" = "null" ]; then
+              sleep 10
+              continue
+            fi
+
+            REVISION_NAME=$(echo "$REVISION_JSON" | jq -r '.name')
+            ACTIVE=$(echo "$REVISION_JSON" | jq -r '.properties.active // false')
+            RUNNING_STATE=$(echo "$REVISION_JSON" | jq -r '.properties.runningState // ""')
+            HEALTH_STATE=$(echo "$REVISION_JSON" | jq -r '.properties.healthState // ""')
+            PROVISIONING_STATE=$(echo "$REVISION_JSON" | jq -r '.properties.provisioningState // ""')
+
+            if [ "$ACTIVE" = "true" ] && [ "${RUNNING_STATE:-Running}" = "Running" ] && [ "${HEALTH_STATE:-Healthy}" = "Healthy" ] && [ "${PROVISIONING_STATE:-Provisioned}" = "Provisioned" ]; then
+              echo "revision_name=${REVISION_NAME}" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            if printf '%s %s %s\n' "$RUNNING_STATE" "$HEALTH_STATE" "$PROVISIONING_STATE" | grep -Eiq 'failed|error|degraded|unhealthy'; then
+              echo "::error::Target API revision ${REVISION_NAME} entered a failed state."
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "::error::Timed out waiting for the target API revision to become active."
+          exit 1
+
+      - name: Wait for jobs target revision
+        id: wait_jobs
+        run: |
+          set -euo pipefail
+
+          RG_NAME="${{ steps.vars.outputs.rg_name }}"
+          TARGET_IMAGE="${{ vars.ACR_NAME }}.azurecr.io/project-starter-app:${{ steps.vars.outputs.image_tag }}"
+
+          for attempt in $(seq 1 60); do
+            REVISION_JSON=$(az containerapp revision list \
+              --resource-group "$RG_NAME" \
+              --name project-starter-jobs \
+              --all \
+              --output json | jq -c --arg image "$TARGET_IMAGE" '
+                [.[] | select(.properties.template.containers[0].image == $image)]
+                | sort_by(.properties.createdTime // .name)
+                | last
+              ')
+
+            if [ -z "$REVISION_JSON" ] || [ "$REVISION_JSON" = "null" ]; then
+              sleep 10
+              continue
+            fi
+
+            REVISION_NAME=$(echo "$REVISION_JSON" | jq -r '.name')
+            ACTIVE=$(echo "$REVISION_JSON" | jq -r '.properties.active // false')
+            RUNNING_STATE=$(echo "$REVISION_JSON" | jq -r '.properties.runningState // ""')
+            HEALTH_STATE=$(echo "$REVISION_JSON" | jq -r '.properties.healthState // ""')
+            PROVISIONING_STATE=$(echo "$REVISION_JSON" | jq -r '.properties.provisioningState // ""')
+
+            if [ "$ACTIVE" = "true" ] && [ "${RUNNING_STATE:-Running}" = "Running" ] && [ "${HEALTH_STATE:-Healthy}" = "Healthy" ] && [ "${PROVISIONING_STATE:-Provisioned}" = "Provisioned" ]; then
+              echo "revision_name=${REVISION_NAME}" >> "$GITHUB_OUTPUT"
+              exit 0
+            fi
+
+            if printf '%s %s %s\n' "$RUNNING_STATE" "$HEALTH_STATE" "$PROVISIONING_STATE" | grep -Eiq 'failed|error|degraded|unhealthy'; then
+              echo "::error::Target jobs revision ${REVISION_NAME} entered a failed state."
+              exit 1
+            fi
+
+            sleep 10
+          done
+
+          echo "::error::Timed out waiting for the target jobs revision to become active."
+          exit 1
+
+      - name: Sync Entra redirect URIs
+        run: |
+          APP_ID="${{ vars.AZURE_CLIENT_ID }}"
+          EDGE_URI="${{ steps.deploy_bootstrap_runtime.outputs.auth_redirect_uri }}"
+          GRAFANA_URI="${{ steps.deploy_bootstrap_runtime.outputs.grafana_redirect_uri }}"
+
+          CURRENT=$(az rest --method GET \
+            --url "https://graph.microsoft.com/v1.0/applications(appId='$APP_ID')" \
+            --query 'web.redirectUris' -o json) || {
+            echo "::warning::Cannot read app registration — Graph permissions not configured."
+            exit 0
+          }
+
+          UPDATED=$(echo "$CURRENT" | jq -c \
+            --arg edge "$EDGE_URI" --arg grafana "$GRAFANA_URI" \
+            '. + [$edge, $grafana] | unique')
+
+          if [ "$(echo "$CURRENT" | jq -c 'sort')" = "$(echo "$UPDATED" | jq -c 'sort')" ]; then
+            exit 0
+          fi
+
+          az rest --method PATCH \
+            --url "https://graph.microsoft.com/v1.0/applications(appId='$APP_ID')" \
+            --headers Content-Type=application/json \
+            --body "{\"web\":{\"redirectUris\":$UPDATED}}" || {
+            echo "::warning::Could not update redirect URIs — check Graph permissions."
+            exit 0
+          }
+
+      - name: Deployment summary
+        run: |
+          echo "## Azure Deployment Summary" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Field | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Environment | \`${{ steps.vars.outputs.env_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Database Reset Mode | \`${{ steps.vars.outputs.db_reset_mode }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Image Tag | \`${{ steps.vars.outputs.image_tag }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Resource Group | \`${{ steps.vars.outputs.rg_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Bootstrap Job | \`${{ steps.deploy_bootstrap_runtime.outputs.db_bootstrap_job_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Bootstrap Execution | \`${{ steps.run_bootstrap.outputs.execution_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Bootstrap Status | \`${{ steps.run_bootstrap.outputs.execution_status }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| API Revision | \`${{ steps.wait_api.outputs.revision_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Jobs Revision | \`${{ steps.wait_jobs.outputs.revision_name }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Edge Host | \`${{ steps.deploy_bootstrap_runtime.outputs.edge_host }}\` |" >> "$GITHUB_STEP_SUMMARY"

@@ -1,0 +1,72 @@
+name: CI
+run-name: >-
+  ${{
+    github.event_name == 'push'
+    && format('CI: {0}', github.event.head_commit.message)
+    || format('CI: PR #{0} {1}', github.event.pull_request.number, github.event.pull_request.title)
+  }}
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    name: Format, Deps, Lint, Unit, Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: mise run fmt-check
+
+      - run: mise run deps:check
+
+      - run: mise run lint
+
+      - run: mise run test
+
+      - run: mise run build
+
+  integration:
+    name: Integration Tests
+    needs: check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+
+      - run: pnpm install --frozen-lockfile
+
+      - run: mise run test-integration
+
+  e2e:
+    name: E2E Smoke (Chromium)
+    needs: [check]
+    runs-on: ubuntu-latest-m
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: jdx/mise-action@v2
+
+      - run: mise run e2e:smoke:container
+        env:
+          CI: "true"
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: e2e-artifacts
+          path: artifacts/e2e
+          if-no-files-found: ignore

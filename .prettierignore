@@ -1,0 +1,9 @@
+.git
+node_modules
+.pnpm-store
+dist
+build
+coverage
+artifacts/**
+!artifacts/**/.gitignore
+!artifacts/**/README.md

@@ -1,0 +1,61 @@
+stream_over_http_enabled: true
+
+server:
+  http_listen_port: 3200
+  grpc_listen_port: 9095
+
+distributor:
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: 0.0.0.0:4317
+        http:
+          endpoint: 0.0.0.0:4318
+
+ingester:
+  max_block_duration: 5m
+
+query_frontend:
+  search:
+    duration_slo: 5s
+    throughput_bytes_slo: 1073741824
+  trace_by_id:
+    duration_slo: 5s
+
+compactor:
+  compaction:
+    block_retention: 24h
+
+metrics_generator:
+  traces_storage:
+    path: /var/tempo/generator/traces
+  storage:
+    path: /var/tempo/generator/wal
+    remote_write:
+      - url: ${PROMETHEUS_REMOTE_WRITE_URL}
+        send_exemplars: true
+  processor:
+    service_graphs: {}
+    span_metrics:
+      dimensions:
+        - job_type
+        - outcome
+    local_blocks:
+      filter_server_spans: false
+
+overrides:
+  defaults:
+    metrics_generator:
+      processors:
+        - service-graphs
+        - span-metrics
+        - local-blocks
+
+storage:
+  trace:
+    backend: local
+    wal:
+      path: /var/tempo/wal
+    local:
+      path: /var/tempo/blocks
