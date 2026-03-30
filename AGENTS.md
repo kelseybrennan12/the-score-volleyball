@@ -50,9 +50,11 @@
 - Prefer `mise run <task>` for execution in agent workflows.
 - When a suitable `mise` task exists, use it instead of invoking raw underlying CLI chains directly.
 - In Codex sessions for this repo, MCP server `starter_mise` is available via
-  [`/.codex/config.toml`](/.codex/config.toml). Prefer it for inspecting `mise` tasks/config/env and for executing
-  defined `mise` tasks when available. Use direct shell commands for non-`mise` workflows or when raw shell interaction
-  is specifically needed.
+- [`/.codex/config.toml`](/.codex/config.toml). Agents MUST load `mise://tools` when the `starter_mise` MCP server is
+  available.
+- When `starter_mise` is available, agents MUST prefer the available `mise` tool set for development tasks when
+  possible, including inspecting `mise` tasks/config/env and executing defined `mise` tasks.
+- Use direct shell commands for non-`mise` workflows or when raw shell interaction is specifically needed.
 - For command-surface details and task naming, follow
   [`/docs/specs/process/developer-commands.md`](/docs/specs/process/developer-commands.md).
 

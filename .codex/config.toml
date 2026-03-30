@@ -7,8 +7,8 @@ tool_timeout_sec = 1800
 [mcp_servers.starter_mise.env]
 MISE_EXPERIMENTAL = "1"
 
-[mcp_servers.happy_cow_mise.tools.run_task]
+[mcp_servers.starter_mise.tools.run_task]
 approval_mode = "approve"
 
-[mcp_servers.happy_cow_mise.tools.install_tool]
+[mcp_servers.starter_mise.tools.install_tool]
 approval_mode = "approve"
