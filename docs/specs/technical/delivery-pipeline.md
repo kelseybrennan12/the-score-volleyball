@@ -6,7 +6,7 @@
 - Type: Technical
 - Status: active
 - Version: v2
-- Last Updated: 2026-03-26
+- Last Updated: 2026-04-06
 
 ## Summary
 
@@ -37,12 +37,10 @@ Define the baseline CI and optional deployment flow for the starter repository.
 
 - GitHub Actions is the default executor for CI and optional deployment workflows.
 - CI runs on pull requests and on pushes to `main`.
+- CI installs Node dependencies through the canonical command surface with `mise run deps:install`.
 - CI executes the canonical command-surface checks through `mise` tasks:
-  - `mise run fmt-check`
-  - `mise run deps:check`
-  - `mise run test`
+  - `mise run ci:check`
   - `mise run test-integration`
-  - `mise run build`
 - CI executes baseline Chromium smoke coverage through `mise run e2e:smoke:container`.
 - CI may split checks across multiple GitHub Actions jobs as long as the named `mise` task contract remains the source
   of truth.

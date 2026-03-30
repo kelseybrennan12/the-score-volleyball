@@ -14,8 +14,9 @@ This folder owns the repository's orchestration-heavy command surface.
 - `dev:*` — local runtime lifecycle commands
 - `env:*` — environment sync helpers
 - `deps:*` — dependency inspection and update workflows
+- `deps:install` is the canonical lockfile install step for tasks that require `node_modules`
 - `test:*` — canonical containerized unit, integration, and e2e flows
-- `ci` — local CI checks
+- `ci`, `ci:check` — local CI checks
 - `pre-commit`, `setup` — top-level developer workflow tasks
 
 ## Notes

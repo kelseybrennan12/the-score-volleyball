@@ -15,10 +15,14 @@ GH_PAGER = "cat"
 
 [tasks.fmt]
 description = "Format repository files"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
 run = "pnpm run fmt"
 
 [tasks.fmt-check]
 description = "Check repository formatting (staged files only during pre-commit)"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
 run = '''
 if [ -n "$MISE_PRE_COMMIT" ]; then
   if ! git diff --cached --quiet --name-only --diff-filter=d; then
@@ -31,10 +35,14 @@ fi
 
 [tasks.lint]
 description = "Lint repository source"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
 run = "pnpm run lint"
 
 [tasks.typecheck]
 description = "Typecheck repository source"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
 run = "pnpm run typecheck"
 
 [tasks."deps:update:prod"]
@@ -59,10 +67,14 @@ pnpm up --latest --lockfile-only -D "${packages[@]}"
 
 [tasks.build]
 description = "Build app runtime artifacts"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
 run = "pnpm run build:app"
 
 [tasks.test]
 description = "Execute default automated test suite"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
 run = "pnpm run test"
 
 [tasks."gh:auth"]
@@ -397,6 +409,8 @@ docker compose -f infra/docker/docker-compose.yml -p "${project_name}" --profile
 
 [tasks."test-integration"]
 description = "Execute backend integration tests against local containerized dependencies"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
 usage = '''
 arg "[vitest_args]" var=#true help="Optional extra vitest args"
 '''
@@ -520,6 +534,8 @@ rm -f "${state_file}"
 
 [tasks."e2e:_run:host"]
 description = "Internal host Playwright runner against the isolated e2e stack"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
 usage = '''
 arg "[playwright_args]" var=#true help="Optional extra Playwright args"
 '''
@@ -556,6 +572,8 @@ pnpm exec playwright test "$@"
 
 [tasks."e2e:_run:host:grep"]
 description = "Internal host Playwright runner against the isolated e2e stack scoped by test-title grep"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
 usage = '''
 arg "<pattern>" help="Playwright --grep pattern"
 '''
@@ -780,6 +798,8 @@ fi
 
 [tasks."dev:db:generate"]
 description = "Generate a new Drizzle migration file from schema changes"
+depends = ["deps:install"]
+tools = { node = "latest" }
 usage = 'arg "name" help="Descriptive slug for the migration (e.g. add-user-email-column)"'
 run = '''
 node ./node_modules/drizzle-kit/bin.cjs generate --config drizzle.config.ts --name "$usage_name"

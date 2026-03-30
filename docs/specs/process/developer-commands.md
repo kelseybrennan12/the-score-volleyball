@@ -63,6 +63,7 @@ Define the single source of truth for common developer-facing commands using `mi
 - `mise run fmt` applies Prettier formatting plus lint autofixes in one command.
 - `mise run fmt-check`: check formatter-managed files without writing changes.
 - `mise run env:sync`: sync `.env` keys and ordering from `.env.example`.
+- `mise run deps:install`: install repository Node dependencies from the lockfile for tasks that require `node_modules`.
 - `mise run deps:check`: run advisory dependency-currency checks and summary output.
 - `mise run pre-commit`: run pre-commit checks manually.
 - `mise run hooks-install`: install or refresh the git pre-commit hook via `mise`.
@@ -92,6 +93,8 @@ Define the single source of truth for common developer-facing commands using `mi
   compose-managed `e2e` stack.
 - `mise run e2e:smoke:container`: execute the same Playwright smoke flows inside the dedicated Playwright container
   against the isolated compose-managed `e2e` stack.
+- `mise run ci:check`: run the non-test CI check graph for formatting, dependency advisory checks, lint, and build
+  sanity.
 - `mise run build`: produce deployable build artifacts and container build context.
 - `mise run gh:auth`: verify local GitHub CLI auth context used for repository workflows.
 - `mise run gh:runs`: list recent GitHub Actions runs for this repository.
@@ -135,8 +138,10 @@ Define the single source of truth for common developer-facing commands using `mi
   - `e2e:smoke:headless`
   - `e2e:smoke:headed`
   - `e2e:smoke:container`
-  - `env:sync`
+  - `ci:check`
+  - `deps:install`
   - `deps:check`
+  - `env:sync`
   - `build`
   - `ci`
 - `dev:up` remains the canonical local runtime start command.
@@ -183,6 +188,8 @@ Define the single source of truth for common developer-facing commands using `mi
   database.
 - The shared test database owns `public` as the canonical template schema for disposable integration/e2e app schemas.
 - `deps:check` is advisory-first and does not fail solely because dependencies are behind latest versions.
+- Tasks that require repository `node_modules` depend on one canonical install task, `deps:install`, rather than relying
+  on workflow-local `pnpm install` steps.
 - Dependency commands cover managed dependency surfaces from npm manifests/lockfile, `mise` tool definitions, and local
   container image references.
 - `deps:check` includes toolchain drift checks for local `mise`, `node`, and `pnpm` versions as part of the toolchain

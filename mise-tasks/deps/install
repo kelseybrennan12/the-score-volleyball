@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#MISE description="Install repository Node dependencies from the lockfile"
+#MISE tools={node="latest",pnpm="latest"}
+
+set -euo pipefail
+
+cd "${MISE_PROJECT_ROOT:?}"
+pnpm install --frozen-lockfile

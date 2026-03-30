@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #MISE description="Run local CI-equivalent checks through the canonical task graph"
-#MISE depends=["fmt-check", "deps:check", "lint", "build", "test:unit", "test:integration", "test:e2e"]
+#MISE depends=["ci:check", "test:unit", "test:integration", "test:e2e"]
 
 set -euo pipefail
 

@@ -17,24 +17,16 @@ permissions:
 
 jobs:
   check:
-    name: Format, Deps, Lint, Unit, Build
+    name: Format, Deps, Lint, Build
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
       - uses: jdx/mise-action@v2
 
-      - run: pnpm install --frozen-lockfile
+      - run: mise run deps:install
 
-      - run: mise run fmt-check
-
-      - run: mise run deps:check
-
-      - run: mise run lint
-
-      - run: mise run test
-
-      - run: mise run build
+      - run: mise run ci:check
 
   integration:
     name: Integration Tests
@@ -46,7 +38,7 @@ jobs:
 
       - uses: jdx/mise-action@v2
 
-      - run: pnpm install --frozen-lockfile
+      - run: mise run deps:install
 
       - run: mise run test-integration
 

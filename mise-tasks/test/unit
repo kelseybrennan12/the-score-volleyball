@@ -5,4 +5,13 @@
 set -euo pipefail
 
 cd "${MISE_PROJECT_ROOT:?}"
-pnpm run test
+
+if [[ "${1:-}" == "--" ]]; then
+  shift
+fi
+
+if [[ "$#" -gt 0 ]]; then
+  mise run test -- "$@"
+else
+  mise run test
+fi
