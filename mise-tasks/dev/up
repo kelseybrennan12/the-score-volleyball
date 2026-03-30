@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Start local dev stack (hot-reload services only)"
+#MISE depends=["env:sync"]
+
+set -euo pipefail
+
+cd "${MISE_PROJECT_ROOT:?}"
+
+docker compose -f infra/docker/docker-compose.yml --profile dev up -d --build
+mise run dev:links

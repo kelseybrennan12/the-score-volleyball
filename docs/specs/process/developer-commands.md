@@ -6,7 +6,7 @@
 - Type: Process
 - Status: active
 - Version: v1
-- Last Updated: 2026-03-16
+- Last Updated: 2026-04-06
 
 ## Summary
 
@@ -35,7 +35,11 @@ Define the single source of truth for common developer-facing commands using `mi
 ## Task Authoring Guidance
 
 - Promote commands that appear repeatedly in docs and agent workflows into named `mise run <task>` entries.
-- Keep reusable wrapper tasks thin: accept args via `usage`, then pass through to one underlying CLI invocation.
+- Prefer file tasks under [`/mise-tasks/`](/mise-tasks/) for orchestration-heavy or multi-step workflows.
+- Keep `mise.toml` focused on tool/env configuration, simple one-liner tasks, and small aliases where inline TOML
+  remains clearer than a separate file.
+- Keep reusable wrapper tasks thin: accept args via `usage` or native file-task argv passthrough, then delegate to one
+  underlying script/tool invocation.
 - Prefer multiple short variant tasks over shell branching within a single task.
 
 ## Initial Command Catalog
@@ -58,10 +62,14 @@ Define the single source of truth for common developer-facing commands using `mi
 - `mise run fmt`: apply repository formatting.
 - `mise run fmt` applies Prettier formatting plus lint autofixes in one command.
 - `mise run fmt-check`: check formatter-managed files without writing changes.
+- `mise run env:sync`: sync `.env` keys and ordering from `.env.example`.
 - `mise run deps:check`: run advisory dependency-currency checks and summary output.
 - `mise run pre-commit`: run pre-commit checks manually.
 - `mise run hooks-install`: install or refresh the git pre-commit hook via `mise`.
 - `mise run test`: execute default automated test suite.
+- `mise run test:unit`: execute the default automated unit/contract suite.
+- `mise run test:integration`: execute integration tests through the canonical task surface.
+- `mise run test:e2e`: execute Chromium smoke flows through the canonical task surface.
 - `mise run test-integration`: execute integration tests against containerized dependencies.
 - `mise run test:db:prepare`: prepare the dedicated shared test database template schema for integration/e2e cloning.
 - `mise run e2e:stack:up`: start the isolated compose-managed e2e stack for iterative local browser work.
@@ -106,6 +114,8 @@ Define the single source of truth for common developer-facing commands using `mi
 - Project docs treat `mise` as the canonical command surface for developer and agent workflows.
 - A concrete command catalog is defined before implementation relies on command names in docs.
 - Reusable commands referenced repeatedly in docs or agent guidance are promoted to named `mise` tasks.
+- Complex reusable command workflows live in file tasks under [`/mise-tasks/`](/mise-tasks/) rather than large inline
+  `run = '''...'''` blocks in [`/mise.toml`](/mise.toml).
 - Command names for runtime, database, test, dependency, build, and CI workflows are:
   - `dev:up`
   - `built:up`
@@ -113,6 +123,9 @@ Define the single source of truth for common developer-facing commands using `mi
   - `dev:down-reset`
   - `dev:logs`
   - `test`
+  - `test:unit`
+  - `test:integration`
+  - `test:e2e`
   - `test-integration`
   - `e2e:stack:up`
   - `e2e:stack:down`
@@ -122,6 +135,7 @@ Define the single source of truth for common developer-facing commands using `mi
   - `e2e:smoke:headless`
   - `e2e:smoke:headed`
   - `e2e:smoke:container`
+  - `env:sync`
   - `deps:check`
   - `build`
   - `ci`
@@ -174,6 +188,8 @@ Define the single source of truth for common developer-facing commands using `mi
 - `deps:check` includes toolchain drift checks for local `mise`, `node`, and `pnpm` versions as part of the toolchain
   dependency surface.
 - Local compose/runtime commands load env values through `mise` env configuration.
+- New reusable wrapper tasks stay thin and delegate to underlying scripts/tools; when a workflow needs complex shell
+  logic, it moves into a dedicated file task or repo script instead of growing inline TOML.
 - `fmt` applies repository-supported formatting for TypeScript/source assets and lint autofixes.
 - `fmt-check` remains non-mutating for formatter-managed file types with dedicated check behavior.
 - GitHub Actions log retrieval is available through canonical `mise` tasks (`gh:runs`, `gh:logs`, `gh:job-logs`) backed

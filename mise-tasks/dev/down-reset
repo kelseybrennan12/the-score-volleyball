@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+#MISE description="Stop local stack immediately and destroy named volumes"
+
+set -euo pipefail
+
+cd "${MISE_PROJECT_ROOT:?}"
+
+docker compose -f infra/docker/docker-compose.yml kill alloy loki prometheus tempo grafana api idp jobs frontend dev-edge dev-bootstrap postgres azurite >/dev/null 2>&1 || true
+docker compose -f infra/docker/docker-compose.yml rm -fsv alloy loki prometheus tempo grafana api idp jobs frontend dev-edge dev-bootstrap postgres azurite >/dev/null 2>&1 || true
+docker compose -f infra/docker/docker-compose.yml down --remove-orphans --volumes --timeout 1

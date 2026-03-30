@@ -37,10 +37,6 @@ run = "pnpm run lint"
 description = "Typecheck repository source"
 run = "pnpm run typecheck"
 
-[tasks."deps:check"]
-description = "Run advisory dependency-currency checks"
-run = "node scripts/deps/check.mjs"
-
 [tasks."deps:update:prod"]
 description = "Update production npm dependencies to latest (lockfile-only)"
 usage = '''
@@ -313,35 +309,6 @@ run = "bash scripts/lint-data-boundaries.sh"
 description = "Capture starter-safe visual parity screenshots for configured design and app routes"
 run = "node scripts/visual-parity/capture.mjs"
 
-[tasks.pre-commit]
-description = "Pre-commit checks"
-run = '''
-mise run fmt-check & p1=$!
-mise run lint & p2=$!
-mise run typecheck & p3=$!
-mise run lint:data-boundaries & p4=$!
-fail=0
-wait $p1 || fail=1
-wait $p2 || fail=1
-wait $p3 || fail=1
-wait $p4 || fail=1
-exit $fail
-'''
-
-[tasks."dev:links"]
-description = "Print local service URLs and connection info"
-run = """
-printf '%s\n' \
-  '' \
-  'Local services:' \
-  "  Dev edge (API + frontend): http://localhost:${API_PORT:-3000}" \
-  "  Built edge (prod-like web): http://localhost:${BUILT_WEB_PORT:-3102}" \
-  "  E2E edge (isolated smoke): http://localhost:${E2E_WEB_PORT:-3202}" \
-  "  Figma edge (design preview): http://localhost:${FIGMA_WEB_PORT:-4173}" \
-  "  Grafana:                   http://localhost:${GRAFANA_PORT}" \
-  "  Postgres:                  postgres://${POSTGRES_USER:-project-starter}:${POSTGRES_PASSWORD:-project-starter}@localhost:${POSTGRES_PORT:-5432}/${POSTGRES_DB:-project-starter}"
-"""
-
 [tasks."built:links"]
 description = "Print prod-like local service URLs"
 run = """
@@ -350,29 +317,6 @@ printf '%s\n' \
   'Built services:' \
   "  Built edge:                http://localhost:${BUILT_WEB_PORT:-3102}" \
   "  Built IDP:                 http://localhost:${BUILT_IDP_PORT:-3103}"
-"""
-
-[tasks."dev:up"]
-description = "Start local dev stack (hot-reload services only)"
-run = """
-mise run dev:env-sync
-docker compose -f infra/docker/docker-compose.yml --profile dev up -d --build
-mise run dev:links
-"""
-
-[tasks."dev:down"]
-description = "Stop local runtime immediately and preserve named volumes"
-run = """
-docker compose -f infra/docker/docker-compose.yml kill alloy loki prometheus tempo grafana api idp jobs frontend dev-edge dev-bootstrap >/dev/null 2>&1 || true
-docker compose -f infra/docker/docker-compose.yml rm -fsv alloy loki prometheus tempo grafana api idp jobs frontend dev-edge dev-bootstrap >/dev/null 2>&1 || true
-"""
-
-[tasks."dev:down-reset"]
-description = "Stop local stack immediately and destroy named volumes"
-run = """
-docker compose -f infra/docker/docker-compose.yml kill alloy loki prometheus tempo grafana api idp jobs frontend dev-edge dev-bootstrap app-api app-idp app-jobs app-edge app-bootstrap postgres azurite >/dev/null 2>&1 || true
-docker compose -f infra/docker/docker-compose.yml rm -fsv alloy loki prometheus tempo grafana api idp jobs frontend dev-edge dev-bootstrap app-api app-idp app-jobs app-edge app-bootstrap postgres azurite >/dev/null 2>&1 || true
-docker compose -f infra/docker/docker-compose.yml down --remove-orphans --volumes --timeout 1
 """
 
 [tasks."dev:logs"]
@@ -834,34 +778,6 @@ else
 fi
 '''
 
-[tasks.ci]
-description = "Run local CI-equivalent checks in canonical order"
-run = '''
-set -eu
-# Mirror the GitHub Actions baseline more closely than the local `.env` default.
-# CI does not provide these repo-local values, so scrub them before invoking tasks.
-unset POSTGRES_USER
-unset POSTGRES_PASSWORD
-unset POSTGRES_DB
-export CI=true
-export LOG_LEVEL=
-export OTEL_SERVICE_NAME=
-export OTEL_EXPORTER_OTLP_ENDPOINT=
-export OTEL_EXPORTER_OTLP_PROTOCOL=
-export OTEL_RESOURCE_ATTRIBUTES=
-export OTEL_METRIC_EXPORT_INTERVAL_MS=
-export OTEL_EXPORTER_OTLP_TIMEOUT_MS=
-export JOBS_POLL_INTERVAL_MS=
-export JOBS_CONCURRENCY=
-mise run fmt-check
-mise run deps:check
-mise run lint
-mise run test
-mise run build
-mise run test-integration
-mise run e2e:smoke:container
-'''
-
 [tasks."dev:db:generate"]
 description = "Generate a new Drizzle migration file from schema changes"
 usage = 'arg "name" help="Descriptive slug for the migration (e.g. add-user-email-column)"'
@@ -896,14 +812,3 @@ run = "node scripts/dev/env-sync.mjs"
 [tasks.hooks-install]
 description = "Install git pre-commit hook"
 run = "mise generate git-pre-commit --write --task=pre-commit"
-
-[tasks.setup]
-description = "Install local dev dependencies and hooks"
-run = """
-mise install
-mise reshim
-pnpm install
-pnpm exec playwright install chromium
-az bicep version > /dev/null 2>&1 || az bicep install --only-show-errors
-mise run hooks-install
-"""

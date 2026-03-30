@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+#MISE description="Execute the default automated unit/contract suite"
+#MISE depends=["test:image:prepare"]
+
+set -euo pipefail
+
+cd "${MISE_PROJECT_ROOT:?}"
+pnpm run test

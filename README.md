@@ -27,7 +27,10 @@ Implemented baseline workflows:
 - `mise run fmt-check`
 - `mise run pre-commit`
 - `mise run hooks-install`
+- `mise run env:sync`
 - `mise run deps:check`
+- `mise run test:unit` / `mise run test:integration` / `mise run test:e2e`
+- `mise run ci`
 
 Recommended first-time setup:
 

@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+//MISE description="Sync .env keys and ordering from .env.example"
+
 import fs from "node:fs";
 import path from "node:path";
 import process from "node:process";
@@ -61,7 +64,7 @@ const buildSyncedEnvContent = (envFile, exampleFile) => {
   return `${outputLines.join("\n")}\n`;
 };
 
-const projectRoot = process.cwd();
+const projectRoot = process.env.MISE_PROJECT_ROOT ?? process.cwd();
 const envPath = path.join(projectRoot, ENV_FILE);
 const examplePath = path.join(projectRoot, EXAMPLE_FILE);
 

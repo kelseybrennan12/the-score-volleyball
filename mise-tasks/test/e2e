@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+#MISE description="Execute Playwright smoke flows through the canonical task surface"
+#MISE depends=["test:image:prepare"]
+
+set -euo pipefail
+
+cd "${MISE_PROJECT_ROOT:?}"
+
+if [[ "${1:-}" == "--" ]]; then
+  shift
+fi
+
+if [[ "$#" -gt 0 ]]; then
+  mise run e2e:smoke:container -- "$@"
+else
+  mise run e2e:smoke:container
+fi

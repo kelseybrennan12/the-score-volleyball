@@ -6,7 +6,7 @@
 - Type: Process
 - Status: active
 - Version: v1
-- Last Updated: 2026-03-10
+- Last Updated: 2026-03-28
 
 ## Summary
 
@@ -31,7 +31,9 @@ Define the allowed root files/folders and the location of non-spec documentation
   - `package.json`
   - `mise.toml`
   - lockfiles and formatter/linter configs
-- Top-level folders include [`docs/`](/docs/), [`.agents/`](/.agents/), and optional tool-specific folders.
+- Top-level folders include [`docs/`](/docs/), [`.agents/`](/.agents/), [`/mise-tasks/`](/mise-tasks/), and optional
+  tool-specific folders.
+- When `mise` task files are used, they live under the approved top-level [`/mise-tasks/`](/mise-tasks/) folder.
 - Agent tool config files are thin redirect adapters only and do not become alternate instruction sources.
 - Redirect adapter files point to [`/AGENTS.md`](/AGENTS.md) using absolute repo-root markdown links.
 - Documentation roots include [`docs/README.md`](/docs/README.md), [`docs/specs/README.md`](/docs/specs/README.md), and
@@ -93,6 +95,7 @@ Define the allowed root files/folders and the location of non-spec documentation
 - [`/docs/specs/`](/docs/specs/): authoritative specs.
 - [`/docs/efforts/`](/docs/efforts/): effort plans, execution notes, deviations, and status.
 - [`/.agents/skills/`](/.agents/skills/): team-owned agent skills.
+- [`/mise-tasks/`](/mise-tasks/): file-backed `mise` task definitions for complex command-surface workflows.
 - `/src/`: canonical application source tree.
 - `/infra/`: container and cloud deployment assets.
 

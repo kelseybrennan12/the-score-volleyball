@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+#MISE description="Prepare shared env defaults for canonical test flows"
+
+set -euo pipefail
+
+cd "${MISE_PROJECT_ROOT:?}"
+export TEST_COMPOSE_PROJECT_NAME="${TEST_COMPOSE_PROJECT_NAME:-project-starter-test}"
+export TEST_IMAGE_TAG_SCOPE="${TEST_IMAGE_TAG_SCOPE:-${TEST_COMPOSE_PROJECT_NAME}}"
+export TEST_WORKERS="${TEST_WORKERS:-1}"

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#MISE description="Pre-commit checks"
+
+set -euo pipefail
+
+cd "${MISE_PROJECT_ROOT:?}"
+
+fmt_check() {
+  if [[ -n "${MISE_PRE_COMMIT:-}" ]]; then
+    if ! git diff --cached --quiet --name-only --diff-filter=d; then
+      git diff --cached --name-only --diff-filter=d -z | xargs -0 pnpm exec prettier --check --ignore-unknown
+    fi
+  else
+    pnpm run fmt-check
+  fi
+}
+
+fmt_check & p1=$!
+pnpm run lint & p2=$!
+pnpm run typecheck & p3=$!
+bash ./scripts/lint-data-boundaries.sh & p4=$!
+
+fail=0
+wait "${p1}" || fail=1
+wait "${p2}" || fail=1
+wait "${p3}" || fail=1
+wait "${p4}" || fail=1
+
+exit "${fail}"

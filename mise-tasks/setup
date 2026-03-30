@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+#MISE description="Install local dev dependencies and hooks"
+
+set -euo pipefail
+
+cd "${MISE_PROJECT_ROOT:?}"
+
+mise install
+mise reshim
+pnpm install
+pnpm exec playwright install chromium
+az bicep version >/dev/null 2>&1 || az bicep install --only-show-errors
+mise run hooks-install
