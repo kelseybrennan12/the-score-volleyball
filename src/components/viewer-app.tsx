@@ -4,10 +4,17 @@ import { pickCurrentSnapshot } from "@/shared/domain/current-season";
 import { findTeamCandidates } from "@/shared/domain/lookup";
 import { todayIsoInLeagueTimezone } from "@/shared/domain/next-match";
 import type { LeagueDay, Snapshot, Team } from "@/shared/domain/snapshot";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { TeamDetail } from "./team-detail";
 
 const DAYS: LeagueDay[] = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday"];
+const STORAGE_KEY = "volleyball-viewer:selection";
+
+interface StoredSelection {
+  day?: LeagueDay;
+  leagueSlug?: string;
+  teamNumber?: number;
+}
 
 function formatDay(day: LeagueDay): string {
   return day.charAt(0).toUpperCase() + day.slice(1);
@@ -21,6 +28,50 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
   const [selectedLeagueSlug, setSelectedLeagueSlug] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [selectedTeamNumber, setSelectedTeamNumber] = useState<number | null>(null);
+  const hydratedRef = useRef(false);
+
+  useEffect(() => {
+    if (hydratedRef.current) return;
+    hydratedRef.current = true;
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      const stored = JSON.parse(raw) as StoredSelection;
+      const day = stored.day && DAYS.includes(stored.day) ? stored.day : null;
+      const daySnapshots = day ? (snapshotsByDay.get(day) ?? []) : [];
+      if (!day || daySnapshots.length === 0) return;
+      setSelectedDay(day);
+      const slug =
+        stored.leagueSlug && daySnapshots.some((s) => s.league.slug === stored.leagueSlug) ? stored.leagueSlug : null;
+      const resolvedSlug = slug ?? pickCurrentSnapshot(daySnapshots, today)?.league.slug ?? null;
+      setSelectedLeagueSlug(resolvedSlug);
+      if (stored.teamNumber != null && resolvedSlug) {
+        const snap = daySnapshots.find((s) => s.league.slug === resolvedSlug);
+        if (snap?.teams.some((t) => t.number === stored.teamNumber)) {
+          setSelectedTeamNumber(stored.teamNumber);
+        }
+      }
+    } catch {
+      // Ignore storage or parse errors; fall back to defaults.
+    }
+  }, [snapshotsByDay, today]);
+
+  useEffect(() => {
+    if (!hydratedRef.current) return;
+    const selection: StoredSelection = {};
+    if (selectedDay) selection.day = selectedDay;
+    if (selectedLeagueSlug) selection.leagueSlug = selectedLeagueSlug;
+    if (selectedTeamNumber != null) selection.teamNumber = selectedTeamNumber;
+    try {
+      if (Object.keys(selection).length === 0) {
+        window.localStorage.removeItem(STORAGE_KEY);
+      } else {
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
+      }
+    } catch {
+      // Ignore storage errors (e.g. quota, private mode).
+    }
+  }, [selectedDay, selectedLeagueSlug, selectedTeamNumber]);
 
   const leagueOptions = selectedDay ? (snapshotsByDay.get(selectedDay) ?? []) : [];
   const selectedSnapshot = leagueOptions.find((s) => s.league.slug === selectedLeagueSlug) ?? null;
