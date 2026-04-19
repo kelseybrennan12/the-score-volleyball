@@ -108,7 +108,7 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
             className="mt-2 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
           />
           {selectedTeamNumber == null && (
-            <ul className="mt-2 max-h-80 space-y-1 overflow-y-auto">
+            <ul className="mt-2 space-y-1">
               {candidates.length === 0 && <li className="text-sm text-neutral-500">No teams match.</li>}
               {candidates.map((team) => (
                 <li key={team.number}>
