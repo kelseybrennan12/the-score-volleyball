@@ -14,10 +14,14 @@ const MONTH_NAMES = [
 ];
 
 export function parseMonthDay(label: string, year: number): string | null {
-  const cleaned = label.replace(/(st|nd|rd|th)/i, "").trim();
-  const match = cleaned.match(/^([A-Za-z]+)\s+(\d+)$/);
+  const cleaned = label.replace(/(\d+)(st|nd|rd|th)/i, "$1").trim();
+  const match = cleaned.match(/^([A-Za-z]+)\.?\s+(\d+)$/);
   if (!match) return null;
-  const monthIndex = MONTH_NAMES.indexOf(match[1].toLowerCase());
+  const monthToken = match[1].toLowerCase();
+  let monthIndex = MONTH_NAMES.indexOf(monthToken);
+  if (monthIndex === -1) {
+    monthIndex = MONTH_NAMES.findIndex((m) => m.startsWith(monthToken));
+  }
   if (monthIndex === -1) return null;
   const day = Number.parseInt(match[2], 10);
   if (!Number.isFinite(day) || day < 1 || day > 31) return null;

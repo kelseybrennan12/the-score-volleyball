@@ -1,103 +1,93 @@
 {
   "schemaVersion": 1,
   "league": {
-    "slug": "fall-tuesdays",
-    "displayName": "Fall Tuesdays",
-    "day": "tuesday",
+    "slug": "fall-mondays",
+    "displayName": "Fall Mondays",
+    "day": "monday",
     "session": "fall",
-    "year": 2025,
-    "sourceSheetId": "1xikgLuGrFTq0xbusZ-l8xr3R_OBoYIko18oNbLX56F8"
+    "year": 2026,
+    "sourceSheetId": "1G0r-N7PBe5sQENyz5AgNc-4Z1ItuF9aUu63bOeV8QVw"
   },
-  "ingestedAt": "2026-04-19T15:57:15.738Z",
+  "ingestedAt": "2026-04-19T15:18:58.661Z",
   "teams": [
     {
       "number": 1,
-      "captain": "Veronica Booth",
+      "captain": "Nathan Kroeze",
       "division": "B"
     },
     {
       "number": 2,
-      "captain": "Ezra Fenton",
+      "captain": "Brant Kym",
       "division": "B"
     },
     {
       "number": 3,
-      "captain": "Charly Markwart",
+      "captain": "Bruce Walterhouse",
       "division": "B"
     },
     {
       "number": 4,
-      "captain": "Karen Stephens",
+      "captain": "Steven Kiebles",
       "division": "B"
     },
     {
       "number": 5,
-      "captain": "Garrett Koss",
+      "captain": "Kristy Anderson",
       "division": "B"
     },
     {
       "number": 6,
-      "captain": "Nate Stempky",
+      "captain": "Dill Hayes",
       "division": "B"
     },
     {
       "number": 7,
-      "captain": "Patrick Jobes",
+      "captain": "Katy Salinas",
       "division": "B"
     },
     {
       "number": 8,
-      "captain": "Kacy Shetler",
+      "captain": "Pattie Harmelink",
       "division": "B"
     },
     {
       "number": 9,
-      "captain": "Brett Bradbury",
+      "captain": "Russ Henckel",
       "division": "B"
     },
     {
       "number": 10,
-      "captain": "Greg Shields",
+      "captain": "Christina Nienhuis",
       "division": "B"
     },
     {
       "number": 11,
-      "captain": "Steve Harvey",
+      "captain": "Andy Zinck",
       "division": "B"
     },
     {
       "number": 12,
-      "captain": "Greg Jonker",
+      "captain": "Alec Gardner",
       "division": "B"
     },
     {
       "number": 13,
-      "captain": "Luke Simonds",
+      "captain": "Alison Polakowski",
       "division": "B"
     },
     {
       "number": 14,
-      "captain": "Brooks",
+      "captain": "Makayla Selvius",
       "division": "B"
     },
     {
       "number": 15,
-      "captain": "John Hartman",
+      "captain": "Greg Shields",
       "division": "B"
     },
     {
       "number": 16,
-      "captain": "Wyatt Kuiper",
-      "division": "B"
-    },
-    {
-      "number": 17,
-      "captain": "Kevin Stout",
-      "division": "B"
-    },
-    {
-      "number": 18,
-      "captain": "Deavyn Manser",
+      "captain": "Nate Rademacher",
       "division": "B"
     }
   ],

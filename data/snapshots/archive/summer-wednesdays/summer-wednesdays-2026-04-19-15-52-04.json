@@ -8,7 +8,7 @@
     "year": 2025,
     "sourceSheetId": "1mKil0nE9rx1NIhzKAC0eTgEOm48PHdgteZ6UmIymeEM"
   },
-  "ingestedAt": "2026-04-19T15:57:13.538Z",
+  "ingestedAt": "2026-04-19T15:52:04.171Z",
   "teams": [
     {
       "number": 1,
@@ -139,36 +139,6 @@
       }
     },
     {
-      "date": "2025-08-06",
-      "time": "18:00",
-      "court": "Blue Ct",
-      "teamNumbers": [13, 16],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 13,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "18:00",
-      "court": "Blue Ct",
-      "teamNumbers": [6, 16],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "18:00",
-      "court": "Blue Ct",
-      "teamNumbers": [18, 7],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
       "date": "2025-07-09",
       "time": "18:00",
       "court": "Yellow Ct",
@@ -206,36 +176,6 @@
       "time": "18:00",
       "court": "Yellow Ct",
       "teamNumbers": [6, 1],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-06",
-      "time": "18:00",
-      "court": "Yellow Ct",
-      "teamNumbers": [10, 7],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "18:00",
-      "court": "Yellow Ct",
-      "teamNumbers": [8, 14],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 8,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "18:00",
-      "court": "Yellow Ct",
-      "teamNumbers": [1, 16],
       "outcome": {
         "status": "unplayed"
       }
@@ -289,33 +229,6 @@
       }
     },
     {
-      "date": "2025-08-06",
-      "time": "18:00",
-      "court": "White Ct",
-      "teamNumbers": [11, 9],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "18:00",
-      "court": "White Ct",
-      "teamNumbers": [10, 3],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "18:00",
-      "court": "White Ct",
-      "teamNumbers": [17, 8],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
       "date": "2025-07-09",
       "time": "18:50",
       "court": "Blue Ct",
@@ -359,48 +272,6 @@
       "outcome": {
         "status": "played",
         "winnerTeamNumber": 10,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-06",
-      "time": "18:50",
-      "court": "Blue Ct",
-      "teamNumbers": [9, 7],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "18:50",
-      "court": "Blue Ct",
-      "teamNumbers": [10, 14],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 10,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "18:50",
-      "court": "Blue Ct",
-      "teamNumbers": [7, 8],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-27",
-      "time": "18:50",
-      "court": "Blue Ct",
-      "teamNumbers": [4, 9],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 4,
         "setsWinner": 3,
         "setsLoser": 0
       }
@@ -451,48 +322,6 @@
       }
     },
     {
-      "date": "2025-08-06",
-      "time": "18:50",
-      "court": "Yellow Ct",
-      "teamNumbers": [11, 16],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "18:50",
-      "court": "Yellow Ct",
-      "teamNumbers": [6, 3],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 6,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "18:50",
-      "court": "Yellow Ct",
-      "teamNumbers": [17, 1],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 17,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-27",
-      "time": "18:50",
-      "court": "Yellow Ct",
-      "teamNumbers": [14, 18],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
       "date": "2025-07-09",
       "time": "18:50",
       "court": "White Ct",
@@ -524,42 +353,6 @@
       "time": "18:50",
       "court": "White Ct",
       "teamNumbers": [17, 6],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-06",
-      "time": "18:50",
-      "court": "White Ct",
-      "teamNumbers": [10, 13],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "18:50",
-      "court": "White Ct",
-      "teamNumbers": [8, 16],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "18:50",
-      "court": "White Ct",
-      "teamNumbers": [18, 16],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-27",
-      "time": "18:50",
-      "court": "White Ct",
-      "teamNumbers": [11, 8],
       "outcome": {
         "status": "unplayed"
       }
@@ -604,48 +397,6 @@
       }
     },
     {
-      "date": "2025-08-06",
-      "time": "19:40",
-      "court": "Blue Ct",
-      "teamNumbers": [12, 8],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 12,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "19:40",
-      "court": "Blue Ct",
-      "teamNumbers": [2, 12],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "19:40",
-      "court": "Blue Ct",
-      "teamNumbers": [4, 15],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-27",
-      "time": "19:40",
-      "court": "Blue Ct",
-      "teamNumbers": [11, 18],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 11,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
       "date": "2025-07-09",
       "time": "19:40",
       "court": "Yellow Ct",
@@ -680,45 +431,6 @@
       "time": "19:40",
       "court": "Yellow Ct",
       "teamNumbers": [13, 12],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-06",
-      "time": "19:40",
-      "court": "Yellow Ct",
-      "teamNumbers": [4, 5],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 4,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "19:40",
-      "court": "Yellow Ct",
-      "teamNumbers": [11, 4],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "19:40",
-      "court": "Yellow Ct",
-      "teamNumbers": [13, 6],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-27",
-      "time": "19:40",
-      "court": "Yellow Ct",
-      "teamNumbers": [8, 9],
       "outcome": {
         "status": "unplayed"
       }
@@ -766,48 +478,6 @@
       }
     },
     {
-      "date": "2025-08-06",
-      "time": "19:40",
-      "court": "White Ct",
-      "teamNumbers": [6, 18],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 6,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "19:40",
-      "court": "White Ct",
-      "teamNumbers": [5, 7],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "19:40",
-      "court": "White Ct",
-      "teamNumbers": [11, 3],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-27",
-      "time": "19:40",
-      "court": "White Ct",
-      "teamNumbers": [4, 14],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 4,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
       "date": "2025-07-09",
       "time": "20:30",
       "court": "Blue Ct",
@@ -839,39 +509,6 @@
       "time": "20:30",
       "court": "Blue Ct",
       "teamNumbers": [2, 13],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-06",
-      "time": "20:30",
-      "court": "Blue Ct",
-      "teamNumbers": [4, 18],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 4,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "20:30",
-      "court": "Blue Ct",
-      "teamNumbers": [12, 7],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 12,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "20:30",
-      "court": "Blue Ct",
-      "teamNumbers": [11, 15],
       "outcome": {
         "status": "unplayed"
       }
@@ -916,39 +553,6 @@
       }
     },
     {
-      "date": "2025-08-06",
-      "time": "20:30",
-      "court": "Yellow Ct",
-      "teamNumbers": [12, 6],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 12,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "20:30",
-      "court": "Yellow Ct",
-      "teamNumbers": [11, 5],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 11,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "20:30",
-      "court": "Yellow Ct",
-      "teamNumbers": [13, 3],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
       "date": "2025-07-09",
       "time": "20:30",
       "court": "White Ct",
@@ -983,36 +587,6 @@
       "time": "20:30",
       "court": "White Ct",
       "teamNumbers": [12, 3],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-06",
-      "time": "20:30",
-      "court": "White Ct",
-      "teamNumbers": [8, 5],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "20:30",
-      "court": "White Ct",
-      "teamNumbers": [2, 4],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 2,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "20:30",
-      "court": "White Ct",
-      "teamNumbers": [4, 6],
       "outcome": {
         "status": "unplayed"
       }
@@ -1054,39 +628,6 @@
       }
     },
     {
-      "date": "2025-08-06",
-      "time": "21:20",
-      "court": "Blue Ct",
-      "teamNumbers": [17, 15],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "21:20",
-      "court": "Blue Ct",
-      "teamNumbers": [9, 1],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 9,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "21:20",
-      "court": "Blue Ct",
-      "teamNumbers": [5, 14],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 5,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
       "date": "2025-07-09",
       "time": "21:20",
       "court": "Yellow Ct",
@@ -1121,33 +662,6 @@
       "time": "21:20",
       "court": "Yellow Ct",
       "teamNumbers": [18, 14],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-06",
-      "time": "21:20",
-      "court": "Yellow Ct",
-      "teamNumbers": [1, 14],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "21:20",
-      "court": "Yellow Ct",
-      "teamNumbers": [13, 17],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "21:20",
-      "court": "Yellow Ct",
-      "teamNumbers": [10, 12],
       "outcome": {
         "status": "unplayed"
       }
@@ -1195,36 +709,6 @@
       }
     },
     {
-      "date": "2025-08-06",
-      "time": "21:20",
-      "court": "White Ct",
-      "teamNumbers": [2, 3],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "21:20",
-      "court": "White Ct",
-      "teamNumbers": [18, 15],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 18,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "21:20",
-      "court": "White Ct",
-      "teamNumbers": [2, 9],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
       "date": "2025-07-09",
       "time": "22:10",
       "court": "Blue Ct",
@@ -1259,36 +743,6 @@
       "time": "22:10",
       "court": "Blue Ct",
       "teamNumbers": [18, 11],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-06",
-      "time": "22:10",
-      "court": "Blue Ct",
-      "teamNumbers": [2, 15],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 2,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "22:10",
-      "court": "Blue Ct",
-      "teamNumbers": [18, 1],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "22:10",
-      "court": "Blue Ct",
-      "teamNumbers": [10, 9],
       "outcome": {
         "status": "unplayed"
       }
@@ -1333,36 +787,6 @@
       }
     },
     {
-      "date": "2025-08-06",
-      "time": "22:10",
-      "court": "Yellow Ct",
-      "teamNumbers": [3, 1],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 3,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "22:10",
-      "court": "Yellow Ct",
-      "teamNumbers": [13, 15],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "22:10",
-      "court": "Yellow Ct",
-      "teamNumbers": [5, 2],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
       "date": "2025-07-09",
       "time": "22:10",
       "court": "White Ct",
@@ -1399,39 +823,6 @@
       "teamNumbers": [4, 14],
       "outcome": {
         "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-06",
-      "time": "22:10",
-      "court": "White Ct",
-      "teamNumbers": [17, 14],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 17,
-        "setsWinner": 3,
-        "setsLoser": 0
-      }
-    },
-    {
-      "date": "2025-08-13",
-      "time": "22:10",
-      "court": "White Ct",
-      "teamNumbers": [9, 17],
-      "outcome": {
-        "status": "unplayed"
-      }
-    },
-    {
-      "date": "2025-08-20",
-      "time": "22:10",
-      "court": "White Ct",
-      "teamNumbers": [12, 14],
-      "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 12,
-        "setsWinner": 3,
-        "setsLoser": 0
       }
     }
   ]
