@@ -1,6 +1,0 @@
-{
-  "name": "github-env-<ENV_NAME>",
-  "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:<github-owner>/<github-repo>:environment:<ENV_NAME>",
-  "audiences": ["api://AzureADTokenExchange"]
-}

@@ -19,12 +19,10 @@ fmt_check() {
 fmt_check & p1=$!
 pnpm run lint & p2=$!
 pnpm run typecheck & p3=$!
-bash ./scripts/lint-data-boundaries.sh & p4=$!
 
 fail=0
 wait "${p1}" || fail=1
 wait "${p2}" || fail=1
 wait "${p3}" || fail=1
-wait "${p4}" || fail=1
 
 exit "${fail}"

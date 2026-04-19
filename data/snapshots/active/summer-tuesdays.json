@@ -1,0 +1,877 @@
+{
+  "schemaVersion": 1,
+  "league": {
+    "slug": "summer-tuesdays",
+    "displayName": "Summer Tuesdays",
+    "day": "tuesday",
+    "session": "summer",
+    "year": 2026,
+    "sourceSheetId": "1x_gDvpqjBgsudqfKugo524xEOKdq2WDRQnctYfezRPg"
+  },
+  "ingestedAt": "2026-04-19T15:06:12.767Z",
+  "teams": [
+    {
+      "number": 1,
+      "captain": "Nick Conran",
+      "division": "A"
+    },
+    {
+      "number": 2,
+      "captain": "Lesniaks",
+      "division": "A"
+    },
+    {
+      "number": 3,
+      "captain": "Haley Stewart",
+      "division": "A"
+    },
+    {
+      "number": 4,
+      "captain": "Ellen Nichols",
+      "division": "A"
+    },
+    {
+      "number": 5,
+      "captain": "Kyle Tucker",
+      "division": "A"
+    },
+    {
+      "number": 6,
+      "captain": "Cole Lachmann",
+      "division": "A"
+    },
+    {
+      "number": 7,
+      "captain": "Kat Rant",
+      "division": "A"
+    },
+    {
+      "number": 8,
+      "captain": "Ryan Leggett",
+      "division": "A"
+    },
+    {
+      "number": 9,
+      "captain": "Deavyn Manser",
+      "division": "A"
+    },
+    {
+      "number": 10,
+      "captain": "Bates",
+      "division": "A"
+    },
+    {
+      "number": 11,
+      "captain": "Joe Gamino-Kirkhoff",
+      "division": "A"
+    },
+    {
+      "number": 12,
+      "captain": "Hannah Wright",
+      "division": "A"
+    },
+    {
+      "number": 13,
+      "captain": "Drew Langstraat (Jodi)",
+      "division": "A"
+    },
+    {
+      "number": 14,
+      "captain": "Bri Bailey",
+      "division": "A"
+    },
+    {
+      "number": 15,
+      "captain": "Muirs",
+      "division": "A"
+    },
+    {
+      "number": 16,
+      "captain": "Kevin DeYoung",
+      "division": "A"
+    },
+    {
+      "number": 17,
+      "captain": "Connor Cook",
+      "division": "A"
+    },
+    {
+      "number": 18,
+      "captain": "Joey Mehall",
+      "division": "A"
+    }
+  ],
+  "matches": [
+    {
+      "date": "2026-07-08",
+      "time": "18:00",
+      "court": "Blue Ct",
+      "teamNumbers": [14, 15],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "18:00",
+      "court": "Blue Ct",
+      "teamNumbers": [10, 7],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "18:00",
+      "court": "Blue Ct",
+      "teamNumbers": [11, 2],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "18:00",
+      "court": "Blue Ct",
+      "teamNumbers": [16, 6],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 16,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "18:00",
+      "court": "Yellow Ct",
+      "teamNumbers": [3, 17],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "18:00",
+      "court": "Yellow Ct",
+      "teamNumbers": [11, 9],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 11,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "18:00",
+      "court": "Yellow Ct",
+      "teamNumbers": [7, 4],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 7,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "18:00",
+      "court": "Yellow Ct",
+      "teamNumbers": [8, 14],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 8,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "18:00",
+      "court": "White Ct",
+      "teamNumbers": [2, 1],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 2,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "18:00",
+      "court": "White Ct",
+      "teamNumbers": [16, 13],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "18:00",
+      "court": "White Ct",
+      "teamNumbers": [17, 12],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "18:00",
+      "court": "White Ct",
+      "teamNumbers": [10, 3],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 10,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "18:50",
+      "court": "Blue Ct",
+      "teamNumbers": [2, 17],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "18:50",
+      "court": "Blue Ct",
+      "teamNumbers": [16, 11],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "18:50",
+      "court": "Blue Ct",
+      "teamNumbers": [11, 12],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "18:50",
+      "court": "Blue Ct",
+      "teamNumbers": [10, 14],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 10,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "18:50",
+      "court": "Yellow Ct",
+      "teamNumbers": [1, 15],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 1,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "18:50",
+      "court": "Yellow Ct",
+      "teamNumbers": [10, 13],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "18:50",
+      "court": "Yellow Ct",
+      "teamNumbers": [17, 4],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 17,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "18:50",
+      "court": "Yellow Ct",
+      "teamNumbers": [3, 6],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 3,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "18:50",
+      "court": "White Ct",
+      "teamNumbers": [3, 14],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 3,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "18:50",
+      "court": "White Ct",
+      "teamNumbers": [7, 9],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 7,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "18:50",
+      "court": "White Ct",
+      "teamNumbers": [7, 2],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "18:50",
+      "court": "White Ct",
+      "teamNumbers": [8, 16],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 8,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "19:40",
+      "court": "Blue Ct",
+      "teamNumbers": [7, 11],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "19:40",
+      "court": "Blue Ct",
+      "teamNumbers": [8, 12],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "19:40",
+      "court": "Blue Ct",
+      "teamNumbers": [13, 18],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 13,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "19:40",
+      "court": "Blue Ct",
+      "teamNumbers": [12, 2],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 12,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "19:40",
+      "court": "Yellow Ct",
+      "teamNumbers": [10, 16],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 10,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "19:40",
+      "court": "Yellow Ct",
+      "teamNumbers": [5, 4],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 5,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "19:40",
+      "court": "Yellow Ct",
+      "teamNumbers": [15, 9],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 15,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "19:40",
+      "court": "Yellow Ct",
+      "teamNumbers": [4, 11],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 4,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "19:40",
+      "court": "White Ct",
+      "teamNumbers": [13, 9],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 13,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "19:40",
+      "court": "White Ct",
+      "teamNumbers": [18, 6],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 18,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "19:40",
+      "court": "White Ct",
+      "teamNumbers": [1, 5],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "19:40",
+      "court": "White Ct",
+      "teamNumbers": [5, 7],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "20:30",
+      "court": "Blue Ct",
+      "teamNumbers": [16, 9],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 16,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "20:30",
+      "court": "Blue Ct",
+      "teamNumbers": [18, 4],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "20:30",
+      "court": "Blue Ct",
+      "teamNumbers": [5, 15],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 5,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "20:30",
+      "court": "Blue Ct",
+      "teamNumbers": [12, 7],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "20:30",
+      "court": "Yellow Ct",
+      "teamNumbers": [13, 7],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 13,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "20:30",
+      "court": "Yellow Ct",
+      "teamNumbers": [12, 6],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 12,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "20:30",
+      "court": "Yellow Ct",
+      "teamNumbers": [13, 1],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "20:30",
+      "court": "Yellow Ct",
+      "teamNumbers": [5, 11],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 5,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "20:30",
+      "court": "White Ct",
+      "teamNumbers": [10, 11],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 10,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "20:30",
+      "court": "White Ct",
+      "teamNumbers": [8, 5],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "20:30",
+      "court": "White Ct",
+      "teamNumbers": [18, 9],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "20:30",
+      "court": "White Ct",
+      "teamNumbers": [4, 2],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "21:20",
+      "court": "Blue Ct",
+      "teamNumbers": [5, 6],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 5,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "21:20",
+      "court": "Blue Ct",
+      "teamNumbers": [17, 15],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 17,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "21:20",
+      "court": "Blue Ct",
+      "teamNumbers": [10, 6],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 10,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "21:20",
+      "court": "Blue Ct",
+      "teamNumbers": [1, 9],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 1,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "21:20",
+      "court": "Yellow Ct",
+      "teamNumbers": [8, 4],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 8,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "21:20",
+      "court": "Yellow Ct",
+      "teamNumbers": [1, 14],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 1,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "21:20",
+      "court": "Yellow Ct",
+      "teamNumbers": [3, 8],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "21:20",
+      "court": "Yellow Ct",
+      "teamNumbers": [13, 17],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "21:20",
+      "court": "White Ct",
+      "teamNumbers": [12, 18],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "21:20",
+      "court": "White Ct",
+      "teamNumbers": [3, 2],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "21:20",
+      "court": "White Ct",
+      "teamNumbers": [16, 14],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "21:20",
+      "court": "White Ct",
+      "teamNumbers": [18, 15],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 18,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "22:10",
+      "court": "Blue Ct",
+      "teamNumbers": [12, 4],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "22:10",
+      "court": "Blue Ct",
+      "teamNumbers": [2, 15],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 2,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "22:10",
+      "court": "Blue Ct",
+      "teamNumbers": [3, 16],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 3,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "22:10",
+      "court": "Blue Ct",
+      "teamNumbers": [13, 15],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 13,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "22:10",
+      "court": "Yellow Ct",
+      "teamNumbers": [5, 18],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "22:10",
+      "court": "Yellow Ct",
+      "teamNumbers": [1, 3],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "22:10",
+      "court": "Yellow Ct",
+      "teamNumbers": [6, 14],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "22:10",
+      "court": "Yellow Ct",
+      "teamNumbers": [1, 18],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 1,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-08",
+      "time": "22:10",
+      "court": "White Ct",
+      "teamNumbers": [8, 6],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 8,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-15",
+      "time": "22:10",
+      "court": "White Ct",
+      "teamNumbers": [17, 14],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 17,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    },
+    {
+      "date": "2026-07-22",
+      "time": "22:10",
+      "court": "White Ct",
+      "teamNumbers": [8, 10],
+      "outcome": {
+        "status": "unplayed"
+      }
+    },
+    {
+      "date": "2026-07-29",
+      "time": "22:10",
+      "court": "White Ct",
+      "teamNumbers": [17, 9],
+      "outcome": {
+        "status": "played",
+        "winnerTeamNumber": 17,
+        "setsWinner": 3,
+        "setsLoser": 0
+      }
+    }
+  ]
+}

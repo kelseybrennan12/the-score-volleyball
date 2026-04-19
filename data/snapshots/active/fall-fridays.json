@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "league": {
+    "slug": "fall-fridays",
+    "displayName": "Fall Fridays",
+    "day": "friday",
+    "session": "fall",
+    "year": 2026,
+    "sourceSheetId": "1PUJUOCteg_QNocGSrFhR5iWIm08hy-xUTEQzxAL9kDk"
+  },
+  "ingestedAt": "2026-04-19T15:06:16.232Z",
+  "teams": [
+    {
+      "number": 1,
+      "captain": "Andy Zinck",
+      "division": "Rec"
+    },
+    {
+      "number": 2,
+      "captain": "Rachel Bowers",
+      "division": "Rec"
+    },
+    {
+      "number": 3,
+      "captain": "Daniel Berland",
+      "division": "Rec"
+    },
+    {
+      "number": 4,
+      "captain": "Madisyn Vick",
+      "division": "Rec"
+    },
+    {
+      "number": 5,
+      "captain": "Amelia Eck",
+      "division": "Rec"
+    },
+    {
+      "number": 6,
+      "captain": "Christina Nienhuis",
+      "division": "Rec"
+    },
+    {
+      "number": 7,
+      "captain": "Steve Westrick",
+      "division": "Rec"
+    },
+    {
+      "number": 8,
+      "captain": "Matt Rueffer",
+      "division": "Rec"
+    },
+    {
+      "number": 9,
+      "captain": "Jordyn Taylor",
+      "division": "Rec"
+    }
+  ],
+  "matches": []
+}

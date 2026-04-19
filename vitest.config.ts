@@ -1,18 +1,14 @@
-import { fileURLToPath, URL } from "node:url";
+import path from "node:path";
 import { defineConfig } from "vitest/config";
-
-const srcRoot = fileURLToPath(new URL("./src/", import.meta.url));
 
 export default defineConfig({
   resolve: {
-    alias: [
-      { find: /^backend\/(.*)$/, replacement: `${srcRoot}backend/$1` },
-      { find: /^frontend\/(.*)$/, replacement: `${srcRoot}frontend/$1` },
-      { find: /^@frontend\/(.*)$/, replacement: `${srcRoot}frontend/$1` },
-    ],
+    alias: {
+      "@": path.resolve(__dirname, "src"),
+    },
   },
   test: {
     environment: "node",
-    exclude: ["src/tests/e2e/**"],
+    include: ["src/tests/**/*.test.ts"],
   },
 });

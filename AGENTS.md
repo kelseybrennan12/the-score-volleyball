@@ -6,8 +6,7 @@
 - [docs/README.md](/docs/README.md)
 - [docs/specs/README.md](/docs/specs/README.md)
 - [docs/specs/process/specs-organization.md](/docs/specs/process/specs-organization.md)
-- [docs/figma/README.md](/docs/figma/README.md) — Starter Figma/design guidance and page implementation checklist
-- [docs/specs/process/domain-glossary.md](/docs/specs/process/domain-glossary.md) — Starter term ↔ code/UI mapping
+- [docs/specs/process/domain-glossary.md](/docs/specs/process/domain-glossary.md) — term ↔ code/UI mapping
 
 ## Process
 
@@ -19,27 +18,24 @@
 - [docs/specs/process/testing-policy.md](/docs/specs/process/testing-policy.md)
 - [docs/efforts/README.md](/docs/efforts/README.md)
 
-## File-Type Approach Index
+## Repo Surface
 
-- Backend core decisions: [`/src/backend/logic/core/README.md`](/src/backend/logic/core/README.md)
-  - Pure logic only. No repository writes, network calls, or framework/runtime IO.
-- Backend services: [`/src/backend/logic/services/README.md`](/src/backend/logic/services/README.md)
-  - Orchestration layer (`read -> core -> write`). No direct integration-adapter calls.
-- Backend jobs/handlers: [`/src/backend/logic/jobs/README.md`](/src/backend/logic/jobs/README.md)
-  - Handler shell pattern (`read -> core -> write`), flush decision outputs, explicit transaction boundaries.
-- Runtime contracts: [`/src/backend/runtime/ports/README.md`](/src/backend/runtime/ports/README.md)
-  - Interface/type contracts only (`read.ts`, `write.ts`), no adapter implementation details.
-- Runtime adapters: [`/src/backend/runtime/adapters/README.md`](/src/backend/runtime/adapters/README.md)
-  - Concrete infrastructure and repository implementations behind ports.
-- External integrations:
-  [`/src/backend/runtime/adapters/integrations/README.md`](/src/backend/runtime/adapters/integrations/README.md)
-  - Typed adapter boundary around third-party systems and external data sources.
-- Frontend feature/runtime baseline: [`/src/frontend/README.md`](/src/frontend/README.md)
-  - UI, routing, and client data concerns only; avoid backend-domain orchestration logic in UI components.
-- Starter runtime architecture:
-  [`/docs/specs/technical/platform-architecture.md`](/docs/specs/technical/platform-architecture.md)
-  - Read before broad runtime or layering changes; it defines the retained boundaries for services, jobs, ports, and
-    adapters.
+- Frontend: Next.js App Router under [`/src/app/`](/src/app/) with UI components in
+  [`/src/components/`](/src/components/).
+- Domain types + shared helpers: [`/src/shared/domain/`](/src/shared/domain/). Used by both the UI and the ingestion
+  pipeline.
+- Ingestion:
+  - Pure core: [`/src/backend/logic/core/`](/src/backend/logic/core/) (parsers, outcome mapping, record/rank,
+    roster-diff, league source list).
+  - Adapters:
+    [`/src/backend/runtime/adapters/integrations/google-sheets.ts`](/src/backend/runtime/adapters/integrations/google-sheets.ts)
+    (XLSX fetch) and [`/src/backend/runtime/adapters/snapshots/fs.ts`](/src/backend/runtime/adapters/snapshots/fs.ts)
+    (snapshot filesystem repo).
+  - CLI entrypoint: [`/src/backend/ingest.entry.ts`](/src/backend/ingest.entry.ts).
+- Data: [`/data/snapshots/active/`](/data/snapshots/active/) and [`/data/snapshots/archive/`](/data/snapshots/archive/),
+  checked into the repo.
+- Tests: [`/src/tests/unit/`](/src/tests/unit/) (Vitest) with XLSX fixtures in
+  [`/src/tests/fixtures/`](/src/tests/fixtures/).
 
 ## Testing
 
@@ -48,22 +44,19 @@
 ## Command Preference
 
 - Prefer `mise run <task>` for execution in agent workflows.
-- When a suitable `mise` task exists, use it instead of invoking raw underlying CLI chains directly.
-- In Codex sessions for this repo, MCP server `starter_mise` is available via
-- [`/.codex/config.toml`](/.codex/config.toml). Agents MUST load `mise://tools` when the `starter_mise` MCP server is
-  available.
-- When `starter_mise` is available, agents MUST prefer the available `mise` tool set for development tasks when
-  possible, including inspecting `mise` tasks/config/env and executing defined `mise` tasks.
-- Use direct shell commands for non-`mise` workflows or when raw shell interaction is specifically needed.
+- Key tasks:
+  - `mise run dev` — start Next.js dev server.
+  - `mise run build` — production build.
+  - `mise run ingest [-- --dry-run] [-- --league <slug>]` — refresh snapshots from Google Sheets.
+  - `mise run test` — unit tests.
+  - `mise run lint` / `mise run typecheck` / `mise run fmt-check`.
 - For command-surface details and task naming, follow
   [`/docs/specs/process/developer-commands.md`](/docs/specs/process/developer-commands.md).
 
 ## Agent Redirect Policy
 
 - [`/AGENTS.md`](/AGENTS.md) is the canonical instruction source for AI coding agents in this repository.
-- Tool-specific config files (for example [`/CLAUDE.md`](/CLAUDE.md), [`/.cursorrules`](/.cursorrules),
-  [`/.windsurfrules`](/.windsurfrules), and [`/.github/copilot-instructions.md`](/.github/copilot-instructions.md)) are
-  redirect adapters only.
+- Tool-specific config files (for example [`/CLAUDE.md`](/CLAUDE.md)) are redirect adapters only.
 - Normative rules live in [`/docs/specs/process/agent-skills.md`](/docs/specs/process/agent-skills.md) and
   [`/docs/specs/process/repo-layout.md`](/docs/specs/process/repo-layout.md).
 

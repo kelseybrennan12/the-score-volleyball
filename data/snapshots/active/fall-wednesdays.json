@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "league": {
+    "slug": "fall-wednesdays",
+    "displayName": "Fall Wednesdays",
+    "day": "wednesday",
+    "session": "fall",
+    "year": 2026,
+    "sourceSheetId": "14hShtX2msZDB6K3MWh0QTkI7tiIXGE9NSRYcVGF5R1U"
+  },
+  "ingestedAt": "2026-04-19T15:06:15.605Z",
+  "teams": [
+    {
+      "number": 1,
+      "captain": "Sam VanderWal",
+      "division": "BB"
+    },
+    {
+      "number": 2,
+      "captain": "Kailey Savona",
+      "division": "BB"
+    },
+    {
+      "number": 3,
+      "captain": "Megan Downey",
+      "division": "BB"
+    },
+    {
+      "number": 4,
+      "captain": "Raphael Lopez",
+      "division": "BB"
+    },
+    {
+      "number": 5,
+      "captain": "Sydney McLean",
+      "division": "BB"
+    },
+    {
+      "number": 6,
+      "captain": "Sam Lahti",
+      "division": "BB"
+    },
+    {
+      "number": 7,
+      "captain": "John Hartman",
+      "division": "BB"
+    },
+    {
+      "number": 8,
+      "captain": "Dennis Chase",
+      "division": "BB"
+    },
+    {
+      "number": 9,
+      "captain": "Lexi Wolters",
+      "division": "BB"
+    },
+    {
+      "number": 10,
+      "captain": "Kacie White",
+      "division": "BB"
+    },
+    {
+      "number": 11,
+      "captain": "Casey Lillrose",
+      "division": "BB"
+    },
+    {
+      "number": 12,
+      "captain": "Katherine McCarthy",
+      "division": "BB"
+    }
+  ],
+  "matches": []
+}

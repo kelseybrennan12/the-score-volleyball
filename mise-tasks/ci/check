@@ -1,8 +1,0 @@
-#!/usr/bin/env bash
-#MISE description="Run the non-test CI check graph"
-#MISE depends=["fmt-check", "deps:check", "lint", "build"]
-
-set -euo pipefail
-
-cd "${MISE_PROJECT_ROOT:?}"
-printf 'ci check completed successfully\n'

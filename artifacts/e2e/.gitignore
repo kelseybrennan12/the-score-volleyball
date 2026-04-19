@@ -1,4 +1,0 @@
-# Keep this folder in git, ignore local Playwright e2e artifacts.
-*
-!.gitignore
-!README.md

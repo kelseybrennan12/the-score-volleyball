@@ -2,28 +2,21 @@
 
 ## Scope
 
-This folder contains the repository's normative specifications and supporting indexes.
+Normative specs for the volleyball league viewer app and the spec-driven process that supports its development.
 
 ## Structure
 
 - [`/docs/specs/process/`](/docs/specs/process/): workflow, repo-layout, testing, and agent-process rules.
-- [`/docs/specs/experience/`](/docs/specs/experience/): cross-cutting UI and experience guidance.
-- [`/docs/specs/technical/`](/docs/specs/technical/): active architecture and delivery specs for the starter baseline.
-- [`/docs/specs/product/`](/docs/specs/product/): reserved for future starter-specific product behavior specs.
+- [`/docs/specs/product/`](/docs/specs/product/): product behavior for the viewer app (page UX, data freshness).
+- [`/docs/specs/technical/`](/docs/specs/technical/): architecture specs for ingestion, snapshots, and deployment.
+- [`/docs/specs/experience/`](/docs/specs/experience/): cross-cutting UI guidance.
 
-## Current Starter Surface
+## Current Product Surface
 
-The active starter UI and runtime surface is:
-
-- `dashboard`
-- `database`
-- `jobs`
-- `settings`
-
-The retained specs in this folder now describe the starter as-shipped.
+- `schedule-viewer` — the single Next.js page that renders team schedules, records, ranks, and next matches.
+- Ingestion CLI (`mise run ingest`) — the operator-triggered spreadsheet-to-snapshot pipeline.
 
 ## Related
 
-- [`/docs/README.md`](/docs/README.md)
 - [`/docs/specs/process/specs-organization.md`](/docs/specs/process/specs-organization.md)
 - [`/docs/specs/process/repo-layout.md`](/docs/specs/process/repo-layout.md)

@@ -1,6 +1,0 @@
-{
-  "name": "github-env-staging",
-  "issuer": "https://token.actions.githubusercontent.com",
-  "subject": "repo:<github-owner>/<github-repo>:environment:staging",
-  "audiences": ["api://AzureADTokenExchange"]
-}

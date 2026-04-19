@@ -1,8 +1,9 @@
 import tsParser from "@typescript-eslint/parser";
 
-const envBoundaryMessage = "Use src/backend/runtime/adapters/infra/env.ts for backend environment access";
-
 export default [
+  {
+    ignores: [".next/**", "node_modules/**", "data/**"],
+  },
   {
     files: ["src/**/*.{ts,tsx}"],
     languageOptions: {
@@ -19,46 +20,6 @@ export default [
           next: "import",
         },
       ],
-    },
-  },
-  {
-    files: ["src/backend/**/*.ts"],
-    languageOptions: {
-      parser: tsParser,
-      ecmaVersion: "latest",
-      sourceType: "module",
-    },
-    rules: {
-      "no-restricted-properties": [
-        "error",
-        {
-          object: "process",
-          property: "env",
-          message: envBoundaryMessage,
-        },
-      ],
-      "no-restricted-imports": [
-        "error",
-        {
-          paths: [
-            {
-              name: "process",
-              message: envBoundaryMessage,
-            },
-            {
-              name: "node:process",
-              message: envBoundaryMessage,
-            },
-          ],
-        },
-      ],
-    },
-  },
-  {
-    files: ["src/backend/runtime/adapters/infra/env.ts"],
-    rules: {
-      "no-restricted-properties": "off",
-      "no-restricted-imports": "off",
     },
   },
 ];
