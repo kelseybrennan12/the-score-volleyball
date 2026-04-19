@@ -1,6 +1,8 @@
 "use client";
 
+import { pickCurrentSnapshot } from "@/shared/domain/current-season";
 import { findTeamCandidates } from "@/shared/domain/lookup";
+import { todayIsoInLeagueTimezone } from "@/shared/domain/next-match";
 import type { LeagueDay, Snapshot, Team } from "@/shared/domain/snapshot";
 import { useMemo, useState } from "react";
 import { TeamDetail } from "./team-detail";
@@ -14,6 +16,7 @@ function formatDay(day: LeagueDay): string {
 export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
   const snapshotsByDay = useMemo(() => groupByDay(snapshots), [snapshots]);
   const availableDays = DAYS.filter((d) => snapshotsByDay.get(d)?.length);
+  const today = useMemo(() => todayIsoInLeagueTimezone(), []);
   const [selectedDay, setSelectedDay] = useState<LeagueDay | null>(null);
   const [selectedLeagueSlug, setSelectedLeagueSlug] = useState<string | null>(null);
   const [query, setQuery] = useState("");
@@ -47,8 +50,8 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
               type="button"
               onClick={() => {
                 setSelectedDay(day);
-                const firstLeague = snapshotsByDay.get(day)?.[0]?.league.slug ?? null;
-                setSelectedLeagueSlug(firstLeague);
+                const currentLeague = pickCurrentSnapshot(snapshotsByDay.get(day) ?? [], today);
+                setSelectedLeagueSlug(currentLeague?.league.slug ?? null);
                 setQuery("");
                 setSelectedTeamNumber(null);
               }}
