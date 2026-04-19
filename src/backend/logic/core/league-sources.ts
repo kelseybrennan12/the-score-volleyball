@@ -10,6 +10,9 @@ export interface LeagueSource {
   defaultDivision?: string;
 }
 
+// Only the currently-active Spring 2026 leagues are ingested.
+// Summer/Fall sheets from thescoregr.com still reflect the 2025 season and
+// will be added back here once the new season rosters are published.
 export const LEAGUE_SOURCES: LeagueSource[] = [
   {
     slug: "spring-sundays",
@@ -63,102 +66,5 @@ export const LEAGUE_SOURCES: LeagueSource[] = [
     day: "friday",
     sheetId: "1pmv7GfGvJk_lOkUWEX2Jiyf4T3T8qyNdRu-TKxRXOQ8",
     defaultDivision: "B",
-  },
-  {
-    slug: "summer-sundays",
-    displayName: "Summer Sundays",
-    session: "summer",
-    year: 2025,
-    day: "sunday",
-    sheetId: "1IL4qeqYisQ4SHbbl_rmh05CqAYFJjKh5ZleRVTcOOw0",
-  },
-  {
-    slug: "summer-mondays",
-    displayName: "Summer Mondays",
-    session: "summer",
-    year: 2025,
-    day: "monday",
-    sheetId: "14C1Y-viYvpRpBOu90Hw-hJZhWBcCnOnFPKYdbNUE4TU",
-    defaultDivision: "B",
-  },
-  {
-    slug: "summer-tuesdays",
-    displayName: "Summer Tuesdays",
-    session: "summer",
-    year: 2025,
-    day: "tuesday",
-    sheetId: "1x_gDvpqjBgsudqfKugo524xEOKdq2WDRQnctYfezRPg",
-    defaultDivision: "A",
-  },
-  {
-    slug: "summer-wednesdays",
-    displayName: "Summer Wednesdays",
-    session: "summer",
-    year: 2025,
-    day: "wednesday",
-    sheetId: "1mKil0nE9rx1NIhzKAC0eTgEOm48PHdgteZ6UmIymeEM",
-    defaultDivision: "BB",
-  },
-  {
-    slug: "summer-thursdays",
-    displayName: "Summer Thursdays",
-    session: "summer",
-    year: 2025,
-    day: "thursday",
-    sheetId: "1VO0KAPeyxRNzvoqconBpQXgMWTfYwLkdq_3eih6bJCk",
-    defaultDivision: "A",
-  },
-  {
-    slug: "summer-fridays",
-    displayName: "Summer Fridays",
-    session: "summer",
-    year: 2025,
-    day: "friday",
-    sheetId: "1Hsjl4hB3ca5XrpYPWNJy4MBdXDzeKJG9_LXpm4yf5J8",
-    defaultDivision: "B",
-  },
-  {
-    slug: "fall-sundays",
-    displayName: "Fall Sundays",
-    session: "fall",
-    year: 2025,
-    day: "sunday",
-    sheetId: "15tur6KgSRu3kUAqPHmf4sf9TKCOsbo4pvII95Aa7UHA",
-  },
-  {
-    slug: "fall-mondays",
-    displayName: "Fall Mondays",
-    session: "fall",
-    year: 2025,
-    day: "monday",
-    sheetId: "1G0r-N7PBe5sQENyz5AgNc-4Z1ItuF9aUu63bOeV8QVw",
-    defaultDivision: "B",
-  },
-  {
-    slug: "fall-tuesdays",
-    displayName: "Fall Tuesdays",
-    session: "fall",
-    year: 2025,
-    day: "tuesday",
-    sheetId: "1xikgLuGrFTq0xbusZ-l8xr3R_OBoYIko18oNbLX56F8",
-    defaultDivision: "B",
-  },
-  {
-    slug: "fall-wednesdays",
-    displayName: "Fall Wednesdays",
-    session: "fall",
-    year: 2025,
-    day: "wednesday",
-    sheetId: "14hShtX2msZDB6K3MWh0QTkI7tiIXGE9NSRYcVGF5R1U",
-    defaultDivision: "BB",
-  },
-  {
-    slug: "fall-fridays",
-    displayName: "Fall Fridays",
-    session: "fall",
-    year: 2025,
-    day: "friday",
-    sheetId: "1PUJUOCteg_QNocGSrFhR5iWIm08hy-xUTEQzxAL9kDk",
-    defaultDivision: "Rec",
   },
 ];
