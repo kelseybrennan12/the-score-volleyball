@@ -1,6 +1,6 @@
 "use client";
 
-import { compareMatches, findNextMatch } from "@/shared/domain/next-match";
+import { compareMatches, findNextMatchDate } from "@/shared/domain/next-match";
 import type { Match, Snapshot, Team } from "@/shared/domain/snapshot";
 import { computeTeamStats } from "@/shared/domain/stats";
 import { useMemo } from "react";
@@ -16,7 +16,11 @@ export function TeamDetail({ snapshot, team }: Props) {
   const teamMatches = useMemo(() => {
     return snapshot.matches.filter((m) => m.teamNumbers.includes(team.number)).sort(compareMatches);
   }, [snapshot, team.number]);
-  const nextMatch = useMemo(() => findNextMatch(teamMatches), [teamMatches]);
+  const nextMatchDate = useMemo(() => findNextMatchDate(teamMatches), [teamMatches]);
+  const upcomingMatches = useMemo(
+    () => (nextMatchDate ? teamMatches.filter((m) => m.date === nextMatchDate) : []),
+    [teamMatches, nextMatchDate],
+  );
 
   return (
     <section className="space-y-6">
@@ -44,10 +48,18 @@ export function TeamDetail({ snapshot, team }: Props) {
         <p className="mt-2 text-xs text-neutral-500">Snapshot ingested {formatTimestamp(snapshot.ingestedAt)}</p>
       </div>
 
-      {nextMatch && (
+      {upcomingMatches.length > 0 && (
         <div className="rounded-lg border-2 border-amber-400 bg-amber-50 p-4">
-          <div className="text-xs font-semibold uppercase tracking-wide text-amber-800">Next Match</div>
-          <MatchRow snapshot={snapshot} team={team} match={nextMatch} featured />
+          <div className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+            {upcomingMatches.length === 1 ? "Next Match" : "Next Matches"} · {formatDate(upcomingMatches[0].date)}
+          </div>
+          <ul className="mt-2 divide-y divide-amber-200">
+            {upcomingMatches.map((match, idx) => (
+              <li key={`${match.time}-${match.court}-${idx}`} className="py-2 first:pt-0 last:pb-0">
+                <MatchRow snapshot={snapshot} team={team} match={match} hideDate />
+              </li>
+            ))}
+          </ul>
         </div>
       )}
 
@@ -68,7 +80,7 @@ export function TeamDetail({ snapshot, team }: Props) {
                   {matches.map((match, idx) => (
                     <li
                       key={`${match.date}-${match.time}-${match.court}-${idx}`}
-                      className={`px-4 py-3 ${match === nextMatch ? "bg-amber-50" : ""}`}
+                      className={`px-4 py-3 ${match.date === nextMatchDate ? "bg-amber-50" : ""}`}
                     >
                       <MatchRow snapshot={snapshot} team={team} match={match} hideDate />
                     </li>

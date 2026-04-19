@@ -20,6 +20,18 @@ export default async function HomePage() {
         <p className="mt-1 text-sm text-neutral-600">Pick your league day, find your team, and see your next match.</p>
       </header>
       <ViewerApp snapshots={snapshots} />
+      <footer className="mt-10 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
+        Data from{" "}
+        <a
+          href="https://www.thescoregr.com/volleyball/beach-volleyball-leagues/"
+          target="_blank"
+          rel="noreferrer"
+          className="underline hover:text-neutral-700"
+        >
+          The Score Grand Rapids beach volleyball standings
+        </a>
+        .
+      </footer>
     </main>
   );
 }

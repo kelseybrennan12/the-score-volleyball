@@ -9,6 +9,10 @@ export function findNextMatch(matches: Match[], now: Date = new Date()): Match |
   return [...eligible].sort(compareMatches)[0];
 }
 
+export function findNextMatchDate(matches: Match[], now: Date = new Date()): string | null {
+  return findNextMatch(matches, now)?.date ?? null;
+}
+
 export function compareMatches(a: Match, b: Match): number {
   if (a.date !== b.date) return a.date < b.date ? -1 : 1;
   if (a.time !== b.time) return a.time < b.time ? -1 : 1;

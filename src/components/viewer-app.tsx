@@ -159,26 +159,54 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
             className="mt-2 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
           />
           {selectedTeamNumber == null && (
-            <ul className="mt-2 space-y-1">
-              {candidates.length === 0 && <li className="text-sm text-neutral-500">No teams match.</li>}
-              {candidates.map((team) => (
-                <li key={team.number}>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedTeamNumber(team.number)}
-                    className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-left text-sm hover:bg-neutral-100"
-                  >
-                    <span className="font-medium">#{team.number}</span> {team.captain}{" "}
-                    <span className="text-neutral-500">· {team.division}</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
+            <div className="mt-2">
+              {candidates.length === 0 ? (
+                <p className="text-sm text-neutral-500">No teams match.</p>
+              ) : (
+                <TeamCandidateList candidates={candidates} onSelect={setSelectedTeamNumber} />
+              )}
+            </div>
           )}
         </section>
       )}
 
       {selectedSnapshot && selectedTeam && <TeamDetail snapshot={selectedSnapshot} team={selectedTeam} />}
+    </div>
+  );
+}
+
+function TeamCandidateList({ candidates, onSelect }: { candidates: Team[]; onSelect: (teamNumber: number) => void }) {
+  const divisions = new Map<string, Team[]>();
+  for (const team of candidates) {
+    const list = divisions.get(team.division) ?? [];
+    list.push(team);
+    divisions.set(team.division, list);
+  }
+  const groups = [...divisions.entries()];
+  const multi = groups.length > 1;
+  return (
+    <div className="space-y-4">
+      {groups.map(([division, teams]) => (
+        <div key={division}>
+          {multi && (
+            <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">{division} Division</h4>
+          )}
+          <ul className="space-y-1">
+            {teams.map((team) => (
+              <li key={team.number}>
+                <button
+                  type="button"
+                  onClick={() => onSelect(team.number)}
+                  className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-left text-sm hover:bg-neutral-100"
+                >
+                  <span className="font-medium">#{team.number}</span> {team.captain}
+                  {!multi && <span className="text-neutral-500"> · {team.division}</span>}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      ))}
     </div>
   );
 }
