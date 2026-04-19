@@ -53,17 +53,31 @@ export function TeamDetail({ snapshot, team }: Props) {
 
       <div>
         <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-neutral-600">Schedule</h3>
-        <ul className="divide-y divide-neutral-200 rounded-lg border border-neutral-200 bg-white">
-          {teamMatches.length === 0 && <li className="px-4 py-3 text-sm text-neutral-500">No scheduled matches.</li>}
-          {teamMatches.map((match, idx) => (
-            <li
-              key={`${match.date}-${match.time}-${match.court}-${idx}`}
-              className={`px-4 py-3 ${match === nextMatch ? "bg-amber-50" : ""}`}
-            >
-              <MatchRow snapshot={snapshot} team={team} match={match} />
-            </li>
-          ))}
-        </ul>
+        {teamMatches.length === 0 ? (
+          <p className="rounded-lg border border-neutral-200 bg-white px-4 py-3 text-sm text-neutral-500">
+            No scheduled matches.
+          </p>
+        ) : (
+          <div className="space-y-3">
+            {groupMatchesByDate(teamMatches).map(([date, matches]) => (
+              <section key={date} className="overflow-hidden rounded-lg border border-neutral-200 bg-white">
+                <header className="border-b border-neutral-200 bg-neutral-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-neutral-600">
+                  {formatDate(date)}
+                </header>
+                <ul className="divide-y divide-neutral-200">
+                  {matches.map((match, idx) => (
+                    <li
+                      key={`${match.date}-${match.time}-${match.court}-${idx}`}
+                      className={`px-4 py-3 ${match === nextMatch ? "bg-amber-50" : ""}`}
+                    >
+                      <MatchRow snapshot={snapshot} team={team} match={match} hideDate />
+                    </li>
+                  ))}
+                </ul>
+              </section>
+            ))}
+          </div>
+        )}
       </div>
     </section>
   );
@@ -74,11 +88,13 @@ function MatchRow({
   team,
   match,
   featured = false,
+  hideDate = false,
 }: {
   snapshot: Snapshot;
   team: Team;
   match: Match;
   featured?: boolean;
+  hideDate?: boolean;
 }) {
   const opponentNumber = match.teamNumbers[0] === team.number ? match.teamNumbers[1] : match.teamNumbers[0];
   const opponent = snapshot.teams.find((t) => t.number === opponentNumber);
@@ -88,7 +104,8 @@ function MatchRow({
     <div className={`flex items-baseline justify-between gap-3 ${featured ? "pt-2" : ""}`}>
       <div>
         <div className="text-sm font-medium">
-          {formatDate(match.date)} · {formatTime(match.time)} · {match.court}
+          {hideDate ? "" : `${formatDate(match.date)} · `}
+          {formatTime(match.time)} · {match.court}
         </div>
         <div className="text-sm text-neutral-700">
           vs #{opponentNumber} {opponent?.captain ?? "(unknown captain)"}
@@ -125,6 +142,16 @@ function outcomeLabel(match: Match, teamNumber: number): string | null {
   const didWin = winnerTeamNumber === teamNumber;
   const score = didWin ? `${setsWinner}-${setsLoser}` : `${setsLoser}-${setsWinner}`;
   return `${didWin ? "W" : "L"} ${score}`;
+}
+
+function groupMatchesByDate(matches: Match[]): [string, Match[]][] {
+  const groups = new Map<string, Match[]>();
+  for (const match of matches) {
+    const list = groups.get(match.date) ?? [];
+    list.push(match);
+    groups.set(match.date, list);
+  }
+  return [...groups.entries()];
 }
 
 function formatDate(iso: string): string {
