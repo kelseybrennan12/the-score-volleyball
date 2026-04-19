@@ -1,19 +1,19 @@
 # Product Specs
 
-This folder is reserved for future starter-specific product behavior specs.
+This folder contains product behavior specs for the volleyball league viewer app built on top of the starter.
 
-## Current Starter Surface
+## Active Specs
 
-The active starter-facing pages are:
+- [`/docs/specs/product/schedule-viewer.md`](/docs/specs/product/schedule-viewer.md) — single-page team schedule,
+  record, and rank viewer.
+- [`/docs/specs/product/data-freshness.md`](/docs/specs/product/data-freshness.md) — session labeling and snapshot
+  staleness surfacing.
 
-- `dashboard`
-- `database`
-- `jobs`
-- `settings`
+## Starter Surface (Retained)
 
-Their current design-handoff summary lives in [`/docs/figma/specs/pages.md`](/docs/figma/specs/pages.md).
-
-Add new files here only when the starter gains durable product behavior that deserves its own normative spec.
+The retained starter operational pages (`dashboard`, `database`, `jobs`, `settings`) are summarized in
+[`/docs/figma/specs/pages.md`](/docs/figma/specs/pages.md). Add new product specs here when durable app behavior
+deserves its own normative spec.
 
 ## Related
 

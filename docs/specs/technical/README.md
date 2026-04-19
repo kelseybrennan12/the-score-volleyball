@@ -15,6 +15,12 @@ technical specs here only when they describe reusable repository architecture or
 - [`/docs/specs/technical/delivery-pipeline.md`](/docs/specs/technical/delivery-pipeline.md)
 - [`/docs/specs/technical/dependency-currency.md`](/docs/specs/technical/dependency-currency.md)
 - [`/docs/specs/technical/jobs-operational-visibility.md`](/docs/specs/technical/jobs-operational-visibility.md)
+- [`/docs/specs/technical/spreadsheet-ingestion.md`](/docs/specs/technical/spreadsheet-ingestion.md) — CLI ingestion of
+  thescoregr.com league spreadsheets.
+- [`/docs/specs/technical/data-snapshots.md`](/docs/specs/technical/data-snapshots.md) — on-disk snapshot format and
+  archive layout.
+- [`/docs/specs/technical/deployment.md`](/docs/specs/technical/deployment.md) — Next.js on Vercel Hobby, build-time
+  snapshots, ingest-then-commit workflow.
 
 ## Related
 
