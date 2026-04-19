@@ -96,6 +96,7 @@ function parseSchedule(ws: ExcelJS.Worksheet, year: number, anomalies: string[])
     const row = ws.getRow(r);
     const aText = cellText(row.getCell(1));
     if (!aText) continue;
+    if (MATCH_TIME_HEADER.test(aText)) break;
     const timeLabel = parseTimeLabel(aText);
     if (!timeLabel) continue;
     for (const [col, date] of dateByColumn) {

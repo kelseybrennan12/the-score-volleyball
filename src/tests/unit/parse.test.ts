@@ -20,6 +20,12 @@ describe("parseLeagueWorkbook", () => {
       expect(m.teamNumbers[0]).toBeTypeOf("number");
       expect(m.teamNumbers[1]).toBeTypeOf("number");
     }
+    // Regression: the Sunday sheet has a leftover secondary "Match Time:" block
+    // with Friday dates (May 1, 8, 15, ...) that must NOT bleed into the real
+    // Sunday schedule. Team 32 on 2026-04-26 should only appear in its two
+    // real evening slots (6:00pm and 6:50pm).
+    const team32OnOpeningDay = result.matches.filter((m) => m.date === "2026-04-26" && m.teamNumbers.includes(32));
+    expect(team32OnOpeningDay.map((m) => m.time).sort()).toEqual(["18:00", "18:50"]);
   });
 
   it("parses the Tuesday fixture with default division fallback", async () => {
