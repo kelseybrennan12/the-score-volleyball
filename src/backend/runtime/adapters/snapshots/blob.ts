@@ -1,5 +1,5 @@
 import type { Snapshot } from "@/shared/domain/snapshot";
-import { BlobNotFoundError, del, head, list, put } from "@vercel/blob";
+import { BlobNotFoundError, del, get, list, put } from "@vercel/blob";
 import {
   DEFAULT_ARCHIVE_LIMIT,
   archiveFileName,
@@ -11,6 +11,7 @@ import {
 const ACTIVE_PREFIX = "snapshots/active/";
 const ARCHIVE_PREFIX = "snapshots/archive/";
 const META_PATH = "snapshots/meta.json";
+const ACCESS = "private" as const;
 
 export interface BlobRepoOptions {
   token: string;
@@ -18,7 +19,7 @@ export interface BlobRepoOptions {
 
 export function createBlobSnapshotRepo({ token }: BlobRepoOptions): SnapshotRepo {
   const writeOpts = {
-    access: "public" as const,
+    access: ACCESS,
     token,
     addRandomSuffix: false,
     allowOverwrite: true,
@@ -27,19 +28,15 @@ export function createBlobSnapshotRepo({ token }: BlobRepoOptions): SnapshotRepo
   };
 
   async function readJson<T>(pathname: string): Promise<T | null> {
-    let info;
+    let result;
     try {
-      info = await head(pathname, { token });
+      result = await get(pathname, { access: ACCESS, token, useCache: false });
     } catch (err) {
       if (isNotFound(err)) return null;
       throw err;
     }
-    const response = await fetch(info.downloadUrl, { cache: "no-store" });
-    if (!response.ok) {
-      if (response.status === 404) return null;
-      throw new Error(`Blob fetch failed for ${pathname}: HTTP ${response.status}`);
-    }
-    const raw = await response.text();
+    if (!result || result.statusCode !== 200 || !result.stream) return null;
+    const raw = await new Response(result.stream).text();
     return JSON.parse(raw) as T;
   }
 
@@ -60,10 +57,8 @@ export function createBlobSnapshotRepo({ token }: BlobRepoOptions): SnapshotRepo
       const page = await list({ prefix: ACTIVE_PREFIX, token, cursor, limit: 1000 });
       for (const blob of page.blobs) {
         if (!blob.pathname.endsWith(".json")) continue;
-        const response = await fetch(blob.downloadUrl, { cache: "no-store" });
-        if (!response.ok) continue;
-        const raw = await response.text();
-        snapshots.push(JSON.parse(raw) as Snapshot);
+        const snapshot = await readJson<Snapshot>(blob.pathname);
+        if (snapshot) snapshots.push(snapshot);
       }
       cursor = page.hasMore ? page.cursor : undefined;
     } while (cursor);
