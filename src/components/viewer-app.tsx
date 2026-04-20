@@ -130,7 +130,7 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
               setSelectedLeagueSlug(e.target.value);
               setSelectedTeamNumber(null);
             }}
-            className="mt-2 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            className="mt-2 block w-full rounded-md border border-neutral-300 px-3 py-2 text-base sm:text-sm"
           >
             {leagueOptions.map((snap) => (
               <option key={snap.league.slug} value={snap.league.slug}>
@@ -156,7 +156,7 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
             }}
             placeholder="e.g. 7 or ryan"
             autoComplete="off"
-            className="mt-2 block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
+            className="mt-2 block w-full rounded-md border border-neutral-300 px-3 py-2 text-base sm:text-sm"
           />
           {selectedTeamNumber == null && (
             <div className="mt-2">
