@@ -10,7 +10,7 @@ description: Hidden admin entry, passphrase gate, and operator-facing ingest + r
 - ID: P0003
 - Type: Product
 - Status: active
-- Version: v1
+- Version: v2
 - Last Updated: 2026-04-20
 
 ## Summary
@@ -58,6 +58,10 @@ snapshot from the deployed app, without a local checkout.
     newest-first, each showing the ingestion timestamp and a "Restore" action.
 - Invoking "Ingest now" within 5 minutes of the last successful ingest is rejected with a user-visible message
   indicating the remaining wait time. The rate limit is enforced server-side.
+- After each ingest attempt, the admin page renders a per-league result block listing: league slug, ok/failed status,
+  team and match counts, roster-diff state, and any parser/validation anomalies returned by the server. Anomalies are
+  presented as warnings (distinct from `failed` state) so an ingest that succeeds with anomalies does not render as a
+  failure.
 - Invoking "Restore" on an archive entry promotes that snapshot to the active slot, archives the snapshot it replaced,
   and refreshes the admin view. Rollbacks are not rate-limited.
 - A rollback preserves the previously-active snapshot as the newest archive entry so the operator can immediately roll
@@ -67,8 +71,6 @@ snapshot from the deployed app, without a local checkout.
 
 ### Should:
 
-- The admin page surfaces per-league ingest results (ok / failed, team + match counts) after each ingest so the operator
-  can spot anomalies without leaving the page.
 - The admin page offers an explicit "Sign out" affordance that clears the session cookie.
 
 ### May:

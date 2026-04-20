@@ -20,16 +20,20 @@ interface RollbacksResponse {
   leagues: LeagueBlock[];
 }
 
+interface IngestLeagueResult {
+  slug: string;
+  ok: boolean;
+  teamCount?: number;
+  matchCount?: number;
+  rosterDiff?: "same" | "changed";
+  anomalies?: string[];
+  error?: string;
+}
+
 interface IngestResponse {
   ok: boolean;
   lastIngestedAt: string;
-  results: {
-    slug: string;
-    ok: boolean;
-    teamCount?: number;
-    matchCount?: number;
-    error?: string;
-  }[];
+  results: IngestLeagueResult[];
 }
 
 function formatTimestamp(iso: string | null): string {
@@ -54,6 +58,7 @@ export function AdminApp() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
+  const [lastIngestResults, setLastIngestResults] = useState<IngestLeagueResult[] | null>(null);
 
   const refresh = useCallback(async () => {
     setLoadError(null);
@@ -88,6 +93,7 @@ export function AdminApp() {
       } else if (!response.ok || ("error" in json && json.error)) {
         setMessage(`Ingest failed: ${"error" in json && json.error ? json.error : response.statusText}`);
       } else if ("results" in json) {
+        setLastIngestResults(json.results);
         const failed = json.results.filter((r) => !r.ok);
         if (failed.length === 0) {
           setMessage(`Ingested ${json.results.length} league${json.results.length === 1 ? "" : "s"}.`);
@@ -158,6 +164,13 @@ export function AdminApp() {
         </div>
         {message ? <p className="mt-3 text-sm text-neutral-700">{message}</p> : null}
         {loadError ? <p className="mt-3 text-sm text-red-700">{loadError}</p> : null}
+        {lastIngestResults && lastIngestResults.length > 0 ? (
+          <ul className="mt-4 space-y-2 text-sm">
+            {lastIngestResults.map((result) => (
+              <IngestResultRow key={result.slug} result={result} />
+            ))}
+          </ul>
+        ) : null}
       </section>
 
       <section className="space-y-4">
@@ -200,5 +213,32 @@ export function AdminApp() {
         </button>
       </section>
     </div>
+  );
+}
+
+function IngestResultRow({ result }: { result: IngestLeagueResult }) {
+  const anomalies = result.anomalies ?? [];
+  const statusLabel = result.ok ? "ok" : "failed";
+  const statusClass = result.ok ? (anomalies.length > 0 ? "text-amber-800" : "text-emerald-800") : "text-red-700";
+  const summary = result.ok
+    ? `teams=${result.teamCount ?? 0} matches=${result.matchCount ?? 0} rosterDiff=${result.rosterDiff ?? "?"}`
+    : (result.error ?? "unknown error");
+  return (
+    <li className="rounded border border-neutral-200 p-3">
+      <div className="flex items-baseline justify-between gap-3">
+        <span className="font-medium">{result.slug}</span>
+        <span className={`text-xs uppercase tracking-wide ${statusClass}`}>{statusLabel}</span>
+      </div>
+      <p className="mt-1 text-xs text-neutral-600">{summary}</p>
+      {anomalies.length > 0 ? (
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-xs text-amber-900">
+          {anomalies.map((note, idx) => (
+            <li key={idx}>{note}</li>
+          ))}
+        </ul>
+      ) : result.ok ? (
+        <p className="mt-2 text-xs text-neutral-500">No anomalies.</p>
+      ) : null}
+    </li>
   );
 }

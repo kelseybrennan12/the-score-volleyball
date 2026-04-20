@@ -39,6 +39,22 @@ fi
 pnpm run ingest -- "$@"
 '''
 
+[tasks.report]
+description = "Print a per-team schedule report from active snapshots"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
+usage = '''
+arg "[report_args]" var=#true help="Optional args forwarded to the report CLI (e.g. --league spring-sundays, --team 7, --format md)"
+'''
+run = '''
+if [ -n "${usage_report_args:-}" ]; then
+  eval "set -- ${usage_report_args}"
+else
+  set --
+fi
+pnpm run report -- "$@"
+'''
+
 [tasks.fmt]
 description = "Format repository files"
 depends = ["deps:install"]

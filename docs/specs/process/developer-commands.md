@@ -99,6 +99,8 @@ Define the single source of truth for common developer-facing commands using `mi
 - `mise run ci:check`: run the non-test CI check graph for formatting, dependency advisory checks, lint, and build
   sanity.
 - `mise run build`: produce deployable build artifacts and container build context.
+- `mise run report [-- --league <slug>] [-- --team <number>] [-- --format text|md]`: print a per-team schedule report
+  from `data/snapshots/active/` for spot-checking parsed data against the league spreadsheets.
 - `mise run gh:auth`: verify local GitHub CLI auth context used for repository workflows.
 - `mise run gh:runs`: list recent GitHub Actions runs for this repository.
 - `mise run gh:logs <run-id> [gh run view args]`: fetch logs for a specific GitHub Actions run with optional

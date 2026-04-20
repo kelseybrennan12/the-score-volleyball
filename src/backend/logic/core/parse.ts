@@ -2,6 +2,7 @@ import type { Match, Team } from "@/shared/domain/snapshot";
 import ExcelJS from "exceljs";
 import { parseMonthDay, parseTimeLabel } from "./date-parse";
 import { deriveOutcome } from "./outcome";
+import { validateSnapshot } from "./validate";
 
 export interface ParseInput {
   buffer: Buffer;
@@ -38,6 +39,7 @@ export async function parseLeagueWorkbook(input: ParseInput): Promise<ParseResul
   const rangeMap = buildDivisionRangeMap(worksheet, anomalies);
   const teams = parseTeams(worksheet, input.defaultDivision ?? "A", rangeMap, anomalies);
   const matches = parseSchedule(worksheet, input.year, anomalies);
+  anomalies.push(...validateSnapshot({ teams, matches }));
   return { teams, matches, anomalies };
 }
 

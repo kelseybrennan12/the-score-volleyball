@@ -10,7 +10,7 @@ description: CLI-driven ingestion of thescoregr.com Google Sheets into per-leagu
 - ID: T0001
 - Type: Technical
 - Status: active
-- Version: v4
+- Version: v5
 - Last Updated: 2026-04-20
 
 ## Summary
@@ -128,6 +128,15 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 - The CLI emits a human-readable summary at the end: per league, either `ok` with snapshot path and team count, or
   `failed` with a one-line reason. Anomaly log entries (duplicate team numbers, missing division labels, unparseable
   date headers, etc.) are printed beneath each league's line.
+- After parsing, the ingestion pipeline runs a set of observational invariants over the parsed teams and matches and
+  appends any violations to the same per-league anomaly stream. Invariants are non-fatal — they surface as warnings,
+  they do not cause the league to be reported as `failed`. The current invariant set covers:
+  - No two matches share the same `(date, time, court)` slot.
+  - No team is scheduled in two simultaneous `(date, time)` slots.
+  - Matchups never pair a team with itself; referenced team numbers are present in the standings block.
+  - Played matches obey the winner-first convention (`outcome.winnerTeamNumber === teamNumbers[0]`) and carry a coherent
+    set score (`setsWinner ∈ {2, 3}`, `setsLoser < setsWinner`).
+  - Each team's total match count is within ±1 of the modal count for its division (tolerates a single bye week).
 
 ### Should:
 
