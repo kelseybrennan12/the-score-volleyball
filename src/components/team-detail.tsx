@@ -1,9 +1,10 @@
 "use client";
 
+import { buildTeamIcs, icsFilenameFor } from "@/shared/domain/calendar-export";
 import { compareMatches, findNextMatchDate } from "@/shared/domain/next-match";
 import type { Match, Snapshot, Team } from "@/shared/domain/snapshot";
 import { computeTeamStats } from "@/shared/domain/stats";
-import { useMemo } from "react";
+import { useCallback, useMemo } from "react";
 
 interface Props {
   snapshot: Snapshot;
@@ -21,6 +22,19 @@ export function TeamDetail({ snapshot, team }: Props) {
     () => (nextMatchDate ? teamMatches.filter((m) => m.date === nextMatchDate) : []),
     [teamMatches, nextMatchDate],
   );
+  const handleDownloadIcs = useCallback(() => {
+    const ics = buildTeamIcs(snapshot, team);
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = icsFilenameFor(snapshot, team);
+    document.body.appendChild(anchor);
+    anchor.click();
+    anchor.remove();
+    URL.revokeObjectURL(url);
+  }, [snapshot, team]);
+  const hasMatches = teamMatches.length > 0;
 
   return (
     <section className="space-y-6">
@@ -46,6 +60,17 @@ export function TeamDetail({ snapshot, team }: Props) {
           )}
         </div>
         <p className="mt-2 text-xs text-neutral-500">Snapshot ingested {formatTimestamp(snapshot.ingestedAt)}</p>
+        <div className="mt-3">
+          <button
+            type="button"
+            onClick={handleDownloadIcs}
+            disabled={!hasMatches}
+            title={hasMatches ? undefined : "No scheduled matches to export."}
+            className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            Add to calendar
+          </button>
+        </div>
       </div>
 
       {upcomingMatches.length > 0 && (

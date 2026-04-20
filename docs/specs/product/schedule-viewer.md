@@ -10,7 +10,7 @@ description: Single-page UX for a player to find their team's schedule, next gam
 - ID: P0001
 - Type: Product
 - Status: active
-- Version: v3
+- Version: v4
 - Last Updated: 2026-04-20
 
 ## Summary
@@ -96,6 +96,13 @@ and view their schedule, upcoming match day, record, and rank.
 - The page title is a hidden admin entry point: triple-tapping it within 600 ms opens a passphrase modal that leads to
   `/admin`. The gesture is invisible to normal users and does not interfere with normal page interaction. See
   [/docs/specs/product/admin-tool.md](/docs/specs/product/admin-tool.md) for the admin UX details.
+- When a single team is identified, the team detail view renders an "Add to calendar (.ics)" control that downloads a
+  single iCalendar (RFC 5545) file containing one event per scheduled match for that team. The file is generated
+  client-side from the already-loaded snapshot — no additional server route or Sheets fetch — and reflects the snapshot
+  in use at click time. The control is disabled when the team has no scheduled matches. This is a one-time download, not
+  a live-updating subscription feed; re-clicking regenerates the file from the current snapshot. Events carry
+  `TZID=America/Detroit` with an embedded `VTIMEZONE` component so imports work across Google Calendar, Apple Calendar,
+  and Outlook.
 
 ### Should:
 
