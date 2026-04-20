@@ -39,6 +39,16 @@ function formatTimestamp(iso: string | null): string {
   return date.toLocaleString();
 }
 
+async function parseJsonResponse<T>(response: Response): Promise<T> {
+  const text = await response.text();
+  try {
+    return JSON.parse(text) as T;
+  } catch {
+    const snippet = text.slice(0, 200).trim();
+    throw new Error(`Server returned HTTP ${response.status} with non-JSON response${snippet ? `: ${snippet}` : ""}.`);
+  }
+}
+
 export function AdminApp() {
   const [data, setData] = useState<RollbacksResponse | null>(null);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -49,11 +59,11 @@ export function AdminApp() {
     setLoadError(null);
     try {
       const response = await fetch("/api/admin/rollbacks", { cache: "no-store" });
-      if (!response.ok) {
-        setLoadError(`Failed to load admin data (HTTP ${response.status}).`);
+      const json = await parseJsonResponse<RollbacksResponse & { error?: string }>(response);
+      if (!response.ok || json.error) {
+        setLoadError(json.error ?? `Failed to load admin data (HTTP ${response.status}).`);
         return;
       }
-      const json = (await response.json()) as RollbacksResponse;
       setData(json);
     } catch (err) {
       setLoadError(err instanceof Error ? err.message : "Failed to load admin data.");
@@ -69,12 +79,10 @@ export function AdminApp() {
     setMessage(null);
     try {
       const response = await fetch("/api/admin/ingest", { method: "POST" });
-      const json = (await response.json()) as
+      const json = await parseJsonResponse<
         | (IngestResponse & { error?: string; retryAfterSeconds?: number })
-        | {
-            error: string;
-            retryAfterSeconds?: number;
-          };
+        | { error: string; retryAfterSeconds?: number }
+      >(response);
       if (response.status === 429 && "retryAfterSeconds" in json && json.retryAfterSeconds) {
         setMessage(`Rate-limited — try again in ${json.retryAfterSeconds}s.`);
       } else if (!response.ok || ("error" in json && json.error)) {
@@ -108,7 +116,7 @@ export function AdminApp() {
           headers: { "content-type": "application/json" },
           body: JSON.stringify({ slug, archiveKey }),
         });
-        const json = (await response.json()) as { ok?: boolean; error?: string };
+        const json = await parseJsonResponse<{ ok?: boolean; error?: string }>(response);
         if (!response.ok || json.error) {
           setMessage(`Rollback failed: ${json.error ?? response.statusText}`);
         } else {
