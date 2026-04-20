@@ -14,8 +14,9 @@ const MONTH_NAMES = [
 ];
 
 export function parseMonthDay(label: string, year: number): string | null {
-  const cleaned = label.replace(/(\d+)(st|nd|rd|th)/i, "$1").trim();
-  const match = cleaned.match(/^([A-Za-z]+)\.?\s+(\d+)$/);
+  // Accept any trailing letters after the day number so typos like "June 10h"
+  // (missing the "t" in "th") still parse.
+  const match = label.trim().match(/^([A-Za-z]+)\.?\s+(\d+)[a-z]*\.?$/i);
   if (!match) return null;
   const monthToken = match[1].toLowerCase();
   let monthIndex = MONTH_NAMES.indexOf(monthToken);

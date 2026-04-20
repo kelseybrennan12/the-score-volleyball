@@ -23,6 +23,11 @@ describe("parseMonthDay", () => {
     expect(parseMonthDay("Aug. 3", 2025)).toBe("2025-08-03");
   });
 
+  it("tolerates typo'd ordinal suffixes on the day (regression: Wednesday sheet had 'June 10h')", () => {
+    expect(parseMonthDay("June 10h", 2026)).toBe("2026-06-10");
+    expect(parseMonthDay("June 10st", 2026)).toBe("2026-06-10");
+  });
+
   it("returns null for non-date strings", () => {
     expect(parseMonthDay("Playoffs", 2026)).toBeNull();
     expect(parseMonthDay("", 2026)).toBeNull();
