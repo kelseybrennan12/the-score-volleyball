@@ -1,5 +1,5 @@
 import type { Snapshot } from "@/shared/domain/snapshot";
-import { del, head, list, put } from "@vercel/blob";
+import { BlobNotFoundError, del, head, list, put } from "@vercel/blob";
 import {
   DEFAULT_ARCHIVE_LIMIT,
   archiveFileName,
@@ -142,10 +142,10 @@ export function createBlobSnapshotRepo({ token }: BlobRepoOptions): SnapshotRepo
 }
 
 function isNotFound(err: unknown): boolean {
+  if (err instanceof BlobNotFoundError) return true;
   if (!err || typeof err !== "object") return false;
-  const name = (err as { name?: string }).name;
-  const code = (err as { code?: string }).code;
-  return name === "BlobNotFoundError" || code === "not_found";
+  const message = (err as { message?: unknown }).message;
+  return typeof message === "string" && message.includes("does not exist");
 }
 
 function ingestedAtFromArchiveKey(slug: string, archiveKey: string): string | null {
