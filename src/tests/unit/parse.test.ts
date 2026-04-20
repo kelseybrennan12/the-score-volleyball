@@ -1,9 +1,43 @@
 import { parseLeagueWorkbook } from "@/backend/logic/core/parse";
+import ExcelJS from "exceljs";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 
 const fixturesDir = path.join(process.cwd(), "src/tests/fixtures");
+
+interface StubTeam {
+  number: number;
+  captain: string;
+  rowLabel?: string;
+}
+
+interface StubWorkbookOptions {
+  teams: StubTeam[];
+  legendRows?: string[];
+}
+
+async function buildStubWorkbook(opts: StubWorkbookOptions): Promise<Buffer> {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet("Sheet1");
+  opts.teams.forEach((t, idx) => {
+    const row = ws.getRow(idx + 1);
+    row.getCell(1).value = `${t.number}. ${t.captain}`;
+    if (t.rowLabel) row.getCell(4).value = t.rowLabel;
+  });
+  (opts.legendRows ?? []).forEach((text, idx) => {
+    ws.getRow(idx + 1).getCell(8).value = text;
+  });
+  const headerRowIndex = Math.max(opts.teams.length, opts.legendRows?.length ?? 0) + 2;
+  const header = ws.getRow(headerRowIndex);
+  header.getCell(1).value = "Match Time:";
+  header.getCell(2).value = "May 3rd";
+  const matchRow = ws.getRow(headerRowIndex + 1);
+  matchRow.getCell(1).value = "6:00pm Blue Ct";
+  matchRow.getCell(2).value = `${opts.teams[0].number} v ${opts.teams[1].number}`;
+  const arrayBuffer = await wb.xlsx.writeBuffer();
+  return Buffer.from(arrayBuffer as ArrayBuffer);
+}
 
 describe("parseLeagueWorkbook", () => {
   it("parses the Sunday fixture with divisions and a schedule grid", async () => {
@@ -35,5 +69,82 @@ describe("parseLeagueWorkbook", () => {
     const divisions = new Set(result.teams.map((t) => t.division));
     expect(divisions.has("A")).toBe(true);
     expect(result.matches.length).toBeGreaterThan(0);
+  });
+
+  it("derives divisions from a range legend block (Teams N-M \\ X League)", async () => {
+    const buffer = await buildStubWorkbook({
+      teams: [
+        { number: 1, captain: "Alice" },
+        { number: 2, captain: "Bob" },
+        { number: 5, captain: "Cat" },
+        { number: 8, captain: "Dan" },
+        { number: 10, captain: "Eve" },
+      ],
+      legendRows: [
+        "Sunday Coed 4's B & BB League",
+        "Teams 1-4 \\ B League",
+        "Teams 5-7 \\ BB League",
+        "Teams 8-10 \\ BBB League",
+      ],
+    });
+    const result = await parseLeagueWorkbook({ buffer, year: 2026 });
+    const byNumber = new Map(result.teams.map((t) => [t.number, t.division]));
+    expect(byNumber.get(1)).toBe("B");
+    expect(byNumber.get(2)).toBe("B");
+    expect(byNumber.get(5)).toBe("BB");
+    expect(byNumber.get(8)).toBe("BBB");
+    expect(byNumber.get(10)).toBe("BBB");
+    expect(result.anomalies).toEqual([]);
+  });
+
+  it("falls back to per-row division label when no legend is present", async () => {
+    const buffer = await buildStubWorkbook({
+      teams: [
+        { number: 1, captain: "Alice", rowLabel: "BB Division" },
+        { number: 2, captain: "Bob", rowLabel: "BB Division" },
+      ],
+    });
+    const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "A" });
+    expect(result.teams.map((t) => t.division)).toEqual(["BB", "BB"]);
+  });
+
+  it("prefers the range legend over a per-row label when both are present", async () => {
+    const buffer = await buildStubWorkbook({
+      teams: [
+        { number: 1, captain: "Alice", rowLabel: "A Division" },
+        { number: 2, captain: "Bob", rowLabel: "A Division" },
+      ],
+      legendRows: ["Teams 1-2 \\ BB League"],
+    });
+    const result = await parseLeagueWorkbook({ buffer, year: 2026 });
+    expect(result.teams.map((t) => t.division)).toEqual(["BB", "BB"]);
+  });
+
+  it("falls back to defaultDivision and records an anomaly for teams outside every range", async () => {
+    const buffer = await buildStubWorkbook({
+      teams: [
+        { number: 1, captain: "Alice" },
+        { number: 99, captain: "Outlier" },
+      ],
+      legendRows: ["Teams 1-10 \\ B League"],
+    });
+    const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "A" });
+    const byNumber = new Map(result.teams.map((t) => [t.number, t.division]));
+    expect(byNumber.get(1)).toBe("B");
+    expect(byNumber.get(99)).toBe("A");
+    expect(result.anomalies.some((a) => a.includes("Team 99"))).toBe(true);
+  });
+
+  it("accepts forward slash and pipe separators in the legend", async () => {
+    const buffer = await buildStubWorkbook({
+      teams: [
+        { number: 1, captain: "Alice" },
+        { number: 2, captain: "Bob" },
+        { number: 3, captain: "Cat" },
+      ],
+      legendRows: ["Teams 1-1 / B League", "Teams 2-2 | BB League", "Teams 3-3 \\ BBB League"],
+    });
+    const result = await parseLeagueWorkbook({ buffer, year: 2026 });
+    expect(result.teams.map((t) => t.division)).toEqual(["B", "BB", "BBB"]);
   });
 });

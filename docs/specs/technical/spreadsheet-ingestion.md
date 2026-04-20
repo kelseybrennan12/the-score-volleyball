@@ -10,7 +10,7 @@ description: CLI-driven ingestion of thescoregr.com Google Sheets into per-leagu
 - ID: T0001
 - Type: Technical
 - Status: active
-- Version: v3
+- Version: v4
 - Last Updated: 2026-04-20
 
 ## Summary
@@ -42,6 +42,12 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   rows: `"N. Captain Name"` in column A; optional division label elsewhere in the row), a `"Match Time:"` header row
   beneath the standings, and a schedule grid below that — dates as the column headers and time-plus-court rows below
   (e.g. `"6:00pm Blue Ct"` in column A). Matchup cells hold `"N v M"`.
+- Division labels are authored in one of two ways across league sheets:
+  1. Inline per-row: a `"BB Division"`-style cell in the same row as the team's captain entry (original format).
+  2. Range legend block: a set of rows, typically to the right of the standings, of the form
+     `"Teams <start>-<end> <sep> <label> League"` — e.g. `"Teams 1-18 \ B League"`, `"Teams 19-30 \ BB League"`. The
+     separator may be `\`, `/`, or `|`, and the range delimiter may be a hyphen or an en-dash. This is the format used
+     by the current Spring Sundays sheet.
 - Some sheets (e.g. Spring Sundays) carry a leftover second `"Match Time:"` block further down the sheet with different
   dates — typically a holdover from a prior season or template. Only the first block is authoritative.
 - Date headers are free-form month-plus-day strings (`"April 26th"`, `"June 29"`, `"Jul 27"`, occasionally typo'd as
@@ -89,9 +95,16 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 - For every league, the parser produces the snapshot structure defined in
   [/docs/specs/technical/data-snapshots.md](/docs/specs/technical/data-snapshots.md), including: league identity, teams
   with number and captain, per-team division, matches with date/time/court/teams, and per-match outcome.
-- The parser reads the division label from the standings block for each team row (matching the `"... Division"` text
-  within the row). Every team must end up with a division label. If a team row has no division text, the parser
-  substitutes the `defaultDivision` from the source list (or `"A"` if none is declared) and logs the substitution.
+- The parser assigns each team a division using this precedence, stopping at the first hit:
+  1. Range legend: if any pre-header cell in the sheet matches `Teams <start>-<end> <sep> <label> League` (separator is
+     `\`, `/`, or `|`), the parser builds a `teamNumber → label` map from those rows and uses it. Overlapping ranges log
+     an anomaly; the later legend row wins. Reversed ranges (`start > end`) are ignored with an anomaly.
+  2. Per-row inline label: a cell in the team's own row matching `"… Division"`.
+  3. `defaultDivision` from the source list, or `"A"` if none is declared.
+
+  When a range legend is present but a team number falls outside every range, the parser records an anomaly and uses the
+  `defaultDivision`/`"A"` fallback.
+
 - Record and rank are computed **per division**. Teams are only compared to other teams with the same division label
   when ranking. Inter-division matches are included in both teams' schedules but each team's sets-won/sets-lost total
   for record purposes counts every played match regardless of opponent division.

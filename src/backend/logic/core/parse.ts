@@ -19,6 +19,10 @@ const TEAM_ROW_PATTERN = /^\s*(\d+)\.\s*(.+?)\s*$/;
 const MATCHUP_PATTERN = /^\s*(\d+)\s*v\s*(\d+)\s*$/i;
 const DIVISION_PATTERN = /\bDivision\b/i;
 const MATCH_TIME_HEADER = /^match\s*time:?$/i;
+// Matches legend rows such as "Teams 1-18 \ B League" that live in the block
+// to the right of the standings. Accepts `\`, `/`, or `|` between the range
+// and the division label, and hyphen or en-dash inside the range.
+const RANGE_LEGEND_PATTERN = /\bTeams?\s+(\d+)\s*[-–]\s*(\d+)\s*[\\/|]\s*(.+?)\s+League\b/i;
 
 export async function parseLeagueWorkbook(input: ParseInput): Promise<ParseResult> {
   const workbook = new ExcelJS.Workbook();
@@ -31,12 +35,18 @@ export async function parseLeagueWorkbook(input: ParseInput): Promise<ParseResul
   if (!worksheet) throw new Error("Workbook has no worksheets");
 
   const anomalies: string[] = [];
-  const teams = parseTeams(worksheet, input.defaultDivision ?? "A", anomalies);
+  const rangeMap = buildDivisionRangeMap(worksheet, anomalies);
+  const teams = parseTeams(worksheet, input.defaultDivision ?? "A", rangeMap, anomalies);
   const matches = parseSchedule(worksheet, input.year, anomalies);
   return { teams, matches, anomalies };
 }
 
-function parseTeams(ws: ExcelJS.Worksheet, defaultDivision: string, anomalies: string[]): Team[] {
+function parseTeams(
+  ws: ExcelJS.Worksheet,
+  defaultDivision: string,
+  rangeMap: Map<number, string>,
+  anomalies: string[],
+): Team[] {
   const byNumber = new Map<number, Team>();
   for (let r = 1; r <= ws.rowCount; r++) {
     const row = ws.getRow(r);
@@ -54,12 +64,61 @@ function parseTeams(ws: ExcelJS.Worksheet, defaultDivision: string, anomalies: s
       );
       continue;
     }
-    const division = findDivisionInRow(row) ?? defaultDivision;
+    const rowLabel = findDivisionInRow(row);
+    const rangeLabel = rangeMap.get(number);
+    let division: string;
+    if (rangeLabel) {
+      division = rangeLabel;
+    } else if (rowLabel) {
+      division = rowLabel;
+    } else {
+      division = defaultDivision;
+      if (rangeMap.size > 0) {
+        anomalies.push(`Team ${number} not covered by any "Teams N-M \\ … League" legend row`);
+      }
+    }
     byNumber.set(number, { number, captain, division });
   }
   const teams = [...byNumber.values()].sort((a, b) => a.number - b.number);
   if (teams.length === 0) anomalies.push("No team rows parsed from standings block");
   return teams;
+}
+
+function buildDivisionRangeMap(ws: ExcelJS.Worksheet, anomalies: string[]): Map<number, string> {
+  const numberToDivision = new Map<number, string>();
+  const seenEntries = new Set<string>();
+  for (let r = 1; r <= ws.rowCount; r++) {
+    const row = ws.getRow(r);
+    const aText = cellText(row.getCell(1));
+    if (aText && MATCH_TIME_HEADER.test(aText)) break;
+    for (let c = 2; c <= Math.max(row.cellCount, ws.columnCount); c++) {
+      const text = cellText(row.getCell(c));
+      if (!text) continue;
+      const match = text.match(RANGE_LEGEND_PATTERN);
+      if (!match) continue;
+      const start = Number.parseInt(match[1], 10);
+      const end = Number.parseInt(match[2], 10);
+      const division = match[3].trim();
+      if (!Number.isFinite(start) || !Number.isFinite(end) || !division) continue;
+      if (start > end) {
+        anomalies.push(`Ignoring reversed range "${text}" (start ${start} > end ${end})`);
+        continue;
+      }
+      const entryKey = `${start}-${end}:${division}`;
+      if (seenEntries.has(entryKey)) continue;
+      seenEntries.add(entryKey);
+      for (let n = start; n <= end; n++) {
+        const existing = numberToDivision.get(n);
+        if (existing && existing !== division) {
+          anomalies.push(
+            `Team ${n} appears in overlapping legend ranges ("${existing}" and "${division}"); keeping "${division}"`,
+          );
+        }
+        numberToDivision.set(n, division);
+      }
+    }
+  }
+  return numberToDivision;
 }
 
 function findDivisionInRow(row: ExcelJS.Row): string | null {
