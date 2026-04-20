@@ -10,8 +10,8 @@ description: Target runtime, hosting model, and how ingestion snapshots reach pr
 - ID: T0003
 - Type: Technical
 - Status: active
-- Version: v1
-- Last Updated: 2026-04-19
+- Version: v2
+- Last Updated: 2026-04-20
 
 ## Summary
 
@@ -23,49 +23,54 @@ topology.
 ## Goals
 
 - Run on Vercel's Hobby tier with minimal configuration.
-- Keep data access trivial and free of runtime I/O against Google Sheets.
-- Keep the build reproducible from the repo alone.
+- Keep data access trivial and free of runtime I/O against Google Sheets on the viewer request path.
+- Support operator-triggered runtime ingestion from the deployed app so refreshes don't require a local checkout.
 
 ## Non-Goals
 
-- Runtime ingestion. Ingestion is an operator-triggered CLI, not a request path.
-- A database, KV store, or third-party object storage for snapshot data.
-- Authentication, per-user state, or server-side sessions.
+- A database or SQL store for snapshot data.
+- Per-user accounts or general authentication. The admin tool uses a single shared passphrase.
 
 ## Core Concepts
 
-- **Build-time data**: snapshot JSON files ship with the Vercel build because they live in the repo at
-  `data/snapshots/active/`.
-- **Ingest-then-commit workflow**: the operator runs the ingestion CLI locally, reviews diffs, commits the resulting
-  snapshot changes, and pushes. Vercel redeploys with the refreshed data.
+- **Dual storage backends**: Vercel Blob in production (runtime-writeable), filesystem in local dev. Selected by the
+  factory in [/docs/specs/technical/snapshot-storage.md](/docs/specs/technical/snapshot-storage.md).
+- **Runtime ingestion**: operator triggers an ingest from the hidden admin tool; the route handler runs the shared
+  ingestion core and writes updated snapshots to Blob. See
+  [/docs/specs/technical/runtime-ingestion.md](/docs/specs/technical/runtime-ingestion.md) and
+  [/docs/specs/product/admin-tool.md](/docs/specs/product/admin-tool.md).
+- **CLI fallback**: `mise run ingest` still works locally against the filesystem adapter for development and as a
+  disaster-recovery escape hatch.
 
 ## Requirements
 
 ### Must:
 
 - The app is a Next.js project deployed on a Vercel Hobby account.
-- The production build has no dependency on filesystem writes at runtime. The Vercel runtime filesystem is treated as
-  read-only.
-- Snapshot JSON under `data/snapshots/` is checked into the repo. The Next.js app reads snapshots from the bundled
-  filesystem at runtime (via `fs` in a server component or route handler) or by importing them at build time.
-- Data refresh reaches production via the Git push workflow: operator runs ingestion locally, commits updated snapshots,
-  pushes to the main branch, Vercel redeploys automatically.
+- In production, snapshot reads and writes go through Vercel Blob (`@vercel/blob`) via the Blob adapter. The Vercel
+  runtime filesystem remains read-only for the app; no snapshot file writes occur on the local function filesystem.
+- In local development and CI, snapshot reads and writes go through the filesystem adapter rooted at `data/snapshots/`.
+  The selection is environment-driven (see
+  [/docs/specs/technical/snapshot-storage.md](/docs/specs/technical/snapshot-storage.md)).
+- The deployment exposes a hidden admin tool (see
+  [/docs/specs/product/admin-tool.md](/docs/specs/product/admin-tool.md)) as the primary refresh path in production. The
+  tool is gated by a shared passphrase and a signed session cookie.
+- Environment variables required for the admin tool and Blob storage are documented in `.env.example`:
+  `ADMIN_PASSPHRASE`, `ADMIN_COOKIE_SECRET`, and (auto-injected on Vercel) `BLOB_READ_WRITE_TOKEN`.
 - The ingestion CLI remains independent of Vercel. It runs anywhere the repo is checked out with the project's Node
-  toolchain.
+  toolchain and writes to the local filesystem, unaffected by the Blob adapter.
 
 ### Should:
 
-- The ingestion command's core functions are structured so the same logic can later be invoked from a Next.js route
-  handler (see [/docs/specs/technical/spreadsheet-ingestion.md](/docs/specs/technical/spreadsheet-ingestion.md)). If
-  migrated, a route-handler invocation would need to write snapshots to an external store rather than the repo
-  filesystem, since Vercel's runtime filesystem is ephemeral and read-only outside `/tmp`.
-- Documentation for the snapshot-refresh workflow lives alongside developer commands so operators can find it without
-  reading specs end-to-end.
+- First-deploy bootstrap is documented: on a fresh Vercel project, the Blob store starts empty; the operator opens the
+  admin tool and runs an initial ingest to populate it. The main viewer renders its empty state until that first ingest
+  completes.
+- The ingest-then-commit workflow is preserved as a documented fallback for cases where the admin tool is unavailable
+  (e.g. Blob outage or missing env vars), but the admin tool is the documented primary path.
 
 ### May:
 
-- Add a Vercel cron-triggered route handler in a future iteration once a persistence target (blob store, external DB) is
-  chosen for server-side ingestion output.
+- Add a Vercel cron-triggered route handler in a future iteration so scheduled refreshes land without manual triggering.
 
 ## Open Questions
 
@@ -73,5 +78,5 @@ topology.
 
 ## Completion
 
-- Status: Draft
-- Remaining: Implementation not started.
+- Status: Implemented
+- Remaining: None for v2.

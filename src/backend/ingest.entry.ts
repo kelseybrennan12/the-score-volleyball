@@ -1,26 +1,12 @@
-import type { Snapshot } from "@/shared/domain/snapshot";
 import path from "node:path";
-import { LEAGUE_SOURCES, type LeagueSource } from "./logic/core/league-sources";
-import { parseLeagueWorkbook } from "./logic/core/parse";
-import { diffRoster } from "./logic/core/roster-diff";
-import { createSheetsFetcher, type SheetsFetcher } from "./runtime/adapters/integrations/google-sheets";
-import { createSnapshotRepo, type SnapshotRepo } from "./runtime/adapters/snapshots/fs";
+import { LEAGUE_SOURCES } from "./logic/core/league-sources";
+import { runIngestion, type LeagueResult } from "./logic/services/run-ingestion";
+import { createSheetsFetcher } from "./runtime/adapters/integrations/google-sheets";
+import { createSnapshotRepo } from "./runtime/adapters/snapshots/fs";
 
 interface CliArgs {
   league: string | null;
   dryRun: boolean;
-}
-
-interface LeagueResult {
-  slug: string;
-  ok: boolean;
-  activePath?: string;
-  archivedPath?: string | null;
-  teamCount?: number;
-  matchCount?: number;
-  rosterDiff?: "same" | "changed";
-  anomalies?: string[];
-  error?: string;
 }
 
 async function main(): Promise<void> {
@@ -33,69 +19,10 @@ async function main(): Promise<void> {
   const fetcher = createSheetsFetcher();
   const repo = createSnapshotRepo(path.resolve(process.cwd(), "data/snapshots"));
 
-  const results: LeagueResult[] = [];
-  for (const source of sources) {
-    results.push(await ingestOne(source, fetcher, repo, args.dryRun));
-  }
+  const { results } = await runIngestion({ sources, fetcher, repo, dryRun: args.dryRun });
   printSummary(results, args.dryRun);
   const anyFailed = results.some((r) => !r.ok);
   process.exit(anyFailed ? 1 : 0);
-}
-
-async function ingestOne(
-  source: LeagueSource,
-  fetcher: SheetsFetcher,
-  repo: SnapshotRepo,
-  dryRun: boolean,
-): Promise<LeagueResult> {
-  try {
-    const buffer = await fetcher.fetchXlsx(source.sheetId);
-    const parsed = await parseLeagueWorkbook({
-      buffer,
-      year: source.year,
-      defaultDivision: source.defaultDivision,
-    });
-    const prev = await repo.readActive(source.slug);
-    const rosterDiff = diffRoster(prev?.teams ?? null, parsed.teams);
-    const snapshot: Snapshot = {
-      schemaVersion: 1,
-      league: {
-        slug: source.slug,
-        displayName: source.displayName,
-        day: source.day,
-        session: source.session,
-        year: source.year,
-        sourceSheetId: source.sheetId,
-      },
-      ingestedAt: new Date().toISOString(),
-      teams: parsed.teams,
-      matches: parsed.matches,
-    };
-    if (dryRun) {
-      return {
-        slug: source.slug,
-        ok: true,
-        teamCount: parsed.teams.length,
-        matchCount: parsed.matches.length,
-        rosterDiff,
-        anomalies: parsed.anomalies,
-      };
-    }
-    const archivedPath = await repo.archiveExisting(source.slug);
-    const activePath = await repo.writeActive(snapshot);
-    return {
-      slug: source.slug,
-      ok: true,
-      activePath,
-      archivedPath,
-      teamCount: parsed.teams.length,
-      matchCount: parsed.matches.length,
-      rosterDiff,
-      anomalies: parsed.anomalies,
-    };
-  } catch (err) {
-    return { slug: source.slug, ok: false, error: err instanceof Error ? err.message : String(err) };
-  }
 }
 
 function parseArgs(argv: string[]): CliArgs {

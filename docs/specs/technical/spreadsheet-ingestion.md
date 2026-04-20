@@ -10,8 +10,8 @@ description: CLI-driven ingestion of thescoregr.com Google Sheets into per-leagu
 - ID: T0001
 - Type: Technical
 - Status: active
-- Version: v2
-- Last Updated: 2026-04-19
+- Version: v3
+- Last Updated: 2026-04-20
 
 ## Summary
 
@@ -60,8 +60,11 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 
 ### Must:
 
-- Ingestion is invoked as a `mise` task (`mise run ingest`) that runs a TypeScript CLI entrypoint under the backend
-  source tree.
+- Ingestion is invokable in two ways that share a single orchestration service (`runIngestion` in
+  `src/backend/logic/services/run-ingestion.ts`):
+  - CLI: `mise run ingest`, used for local development and as a disaster-recovery fallback.
+  - HTTP: `POST /api/admin/ingest`, used by the operator-facing admin tool in production (see
+    [/docs/specs/technical/runtime-ingestion.md](/docs/specs/technical/runtime-ingestion.md)).
 - The ingestion command reads a checked-in list of in-scope league sources (`LEAGUE_SOURCES`). Each entry carries
   `(slug, displayName, session, year, day, sheetId, defaultDivision?)`. Queen of the Beach sheets are excluded. The list
   is scoped to the currently-active season(s); sheets for a future or not-yet-rostered season are added back to the list
@@ -69,10 +72,13 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 - For each in-scope league, the command fetches the sheet via the public XLSX export endpoint
   `https://docs.google.com/spreadsheets/d/<sheet_id>/export?format=xlsx` (no OAuth, public-link access). The XLSX export
   is the authoritative source because it preserves cell background colors; CSV is not used because it strips colors.
-- The ingestion pipeline is structured so that the fetch, parse, and write steps can be invoked from a Node runtime
-  other than the CLI (specifically a future Next.js route handler) without source changes beyond the entrypoint wiring.
-  The core fetch/parse/write functions must not depend on CLI-only APIs (process args, stdout formatting, file paths
-  relative to `process.cwd()` for anything other than the snapshots root).
+- The fetch/parse/write core is shared between the CLI and the route handler via `runIngestion`. The core must not
+  depend on CLI-only APIs (process args, stdout formatting, file paths relative to `process.cwd()` for anything other
+  than the snapshots root).
+- The runtime-ingestion route handler honors the same per-league failure semantics as the CLI: a single league failing
+  does not abort the run; the response reports which leagues succeeded and which failed.
+- The runtime-ingestion route handler is rate-limited via the snapshot repo's `getLastIngestedAt` / `setLastIngestedAt`
+  pair. The CLI is not rate-limited because it runs in a trusted developer context.
 - A single parser is used for all in-scope leagues. It auto-detects the standings block, the schedule's `Match Time:`
   header row, the date-column mapping, and the time-plus-court rows. When multiple `Match Time:` headers appear in a
   sheet, only the first block is treated as authoritative and schedule-row scanning halts when a subsequent header is
@@ -139,5 +145,5 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 ## Completion
 
 - Status: Implemented
-- Remaining: None for v2. Summer and Fall 2026 leagues return to `LEAGUE_SOURCES` once those sheets are rostered for the
+- Remaining: None for v3. Summer and Fall 2026 leagues return to `LEAGUE_SOURCES` once those sheets are rostered for the
   new season.

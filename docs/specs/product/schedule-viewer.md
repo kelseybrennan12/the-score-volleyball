@@ -10,8 +10,8 @@ description: Single-page UX for a player to find their team's schedule, next gam
 - ID: P0001
 - Type: Product
 - Status: active
-- Version: v2
-- Last Updated: 2026-04-19
+- Version: v3
+- Last Updated: 2026-04-20
 
 ## Summary
 
@@ -93,6 +93,9 @@ and view their schedule, upcoming match day, record, and rank.
 - The page renders a footer link back to the source standings page at
   `https://www.thescoregr.com/volleyball/beach-volleyball-leagues/` so users can cross-reference the authoritative
   spreadsheet.
+- The page title is a hidden admin entry point: triple-tapping it within 600 ms opens a passphrase modal that leads to
+  `/admin`. The gesture is invisible to normal users and does not interfere with normal page interaction. See
+  [/docs/specs/product/admin-tool.md](/docs/specs/product/admin-tool.md) for the admin UX details.
 
 ### Should:
 
@@ -113,4 +116,4 @@ and view their schedule, upcoming match day, record, and rank.
 ## Completion
 
 - Status: Implemented
-- Remaining: None for v2. Playwright e2e coverage is still deferred per the MVP effort.
+- Remaining: None for v3. Playwright e2e coverage is still deferred per the MVP effort.

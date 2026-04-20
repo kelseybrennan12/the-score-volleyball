@@ -1,12 +1,12 @@
-import { createSnapshotRepo } from "@/backend/runtime/adapters/snapshots/fs";
+import { resolveSnapshotRepo } from "@/backend/runtime/adapters/snapshots";
+import { AdminGate } from "@/components/admin-gate";
 import { ViewerApp } from "@/components/viewer-app";
 import type { Snapshot } from "@/shared/domain/snapshot";
-import path from "node:path";
 
-export const dynamic = "force-static";
+export const dynamic = "force-dynamic";
 
 async function loadSnapshots(): Promise<Snapshot[]> {
-  const repo = createSnapshotRepo(path.join(process.cwd(), "data/snapshots"));
+  const repo = resolveSnapshotRepo();
   const snapshots = await repo.listActive();
   return snapshots.sort((a, b) => a.league.displayName.localeCompare(b.league.displayName));
 }
@@ -16,7 +16,9 @@ export default async function HomePage() {
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <header className="mb-6">
-        <h1 className="text-2xl font-semibold">Volleyball League Viewer</h1>
+        <AdminGate>
+          <h1 className="text-2xl font-semibold select-none">Volleyball League Viewer</h1>
+        </AdminGate>
         <p className="mt-1 text-sm text-neutral-600">Pick your league day, find your team, and see your next match.</p>
       </header>
       <ViewerApp snapshots={snapshots} />

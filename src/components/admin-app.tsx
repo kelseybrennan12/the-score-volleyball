@@ -1,0 +1,196 @@
+"use client";
+
+import { useCallback, useEffect, useState } from "react";
+
+interface ArchiveEntry {
+  slug: string;
+  archiveKey: string;
+  ingestedAt: string;
+}
+
+interface LeagueBlock {
+  slug: string;
+  displayName: string;
+  activeIngestedAt: string;
+  archive: ArchiveEntry[];
+}
+
+interface RollbacksResponse {
+  lastIngestedAt: string | null;
+  leagues: LeagueBlock[];
+}
+
+interface IngestResponse {
+  ok: boolean;
+  lastIngestedAt: string;
+  results: {
+    slug: string;
+    ok: boolean;
+    teamCount?: number;
+    matchCount?: number;
+    error?: string;
+  }[];
+}
+
+function formatTimestamp(iso: string | null): string {
+  if (!iso) return "never";
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleString();
+}
+
+export function AdminApp() {
+  const [data, setData] = useState<RollbacksResponse | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+
+  const refresh = useCallback(async () => {
+    setLoadError(null);
+    try {
+      const response = await fetch("/api/admin/rollbacks", { cache: "no-store" });
+      if (!response.ok) {
+        setLoadError(`Failed to load admin data (HTTP ${response.status}).`);
+        return;
+      }
+      const json = (await response.json()) as RollbacksResponse;
+      setData(json);
+    } catch (err) {
+      setLoadError(err instanceof Error ? err.message : "Failed to load admin data.");
+    }
+  }, []);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  const runIngest = useCallback(async () => {
+    setBusy(true);
+    setMessage(null);
+    try {
+      const response = await fetch("/api/admin/ingest", { method: "POST" });
+      const json = (await response.json()) as
+        | (IngestResponse & { error?: string; retryAfterSeconds?: number })
+        | {
+            error: string;
+            retryAfterSeconds?: number;
+          };
+      if (response.status === 429 && "retryAfterSeconds" in json && json.retryAfterSeconds) {
+        setMessage(`Rate-limited — try again in ${json.retryAfterSeconds}s.`);
+      } else if (!response.ok || ("error" in json && json.error)) {
+        setMessage(`Ingest failed: ${"error" in json && json.error ? json.error : response.statusText}`);
+      } else if ("results" in json) {
+        const failed = json.results.filter((r) => !r.ok);
+        if (failed.length === 0) {
+          setMessage(`Ingested ${json.results.length} league${json.results.length === 1 ? "" : "s"}.`);
+        } else {
+          setMessage(
+            `Ingested with ${failed.length} failure${failed.length === 1 ? "" : "s"}: ${failed.map((f) => f.slug).join(", ")}.`,
+          );
+        }
+      }
+      await refresh();
+    } catch (err) {
+      setMessage(err instanceof Error ? err.message : "Ingest failed.");
+    } finally {
+      setBusy(false);
+    }
+  }, [refresh]);
+
+  const restore = useCallback(
+    async (slug: string, archiveKey: string, ingestedAt: string) => {
+      if (!window.confirm(`Restore ${slug} to snapshot from ${formatTimestamp(ingestedAt)}?`)) return;
+      setBusy(true);
+      setMessage(null);
+      try {
+        const response = await fetch("/api/admin/rollback", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ slug, archiveKey }),
+        });
+        const json = (await response.json()) as { ok?: boolean; error?: string };
+        if (!response.ok || json.error) {
+          setMessage(`Rollback failed: ${json.error ?? response.statusText}`);
+        } else {
+          setMessage(`Restored ${slug} to ${formatTimestamp(ingestedAt)}.`);
+        }
+        await refresh();
+      } catch (err) {
+        setMessage(err instanceof Error ? err.message : "Rollback failed.");
+      } finally {
+        setBusy(false);
+      }
+    },
+    [refresh],
+  );
+
+  const signOut = useCallback(async () => {
+    await fetch("/api/admin/session", { method: "DELETE" });
+    window.location.href = "/";
+  }, []);
+
+  return (
+    <div className="space-y-6">
+      <section className="rounded border border-neutral-200 p-4">
+        <div className="flex items-center justify-between gap-3">
+          <div>
+            <h2 className="text-lg font-medium">Ingest</h2>
+            <p className="mt-1 text-sm text-neutral-600">
+              Last successful ingest: {formatTimestamp(data?.lastIngestedAt ?? null)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={runIngest}
+            disabled={busy}
+            className="rounded bg-neutral-900 px-4 py-2 text-sm font-medium text-white disabled:opacity-50"
+          >
+            {busy ? "Working…" : "Ingest now"}
+          </button>
+        </div>
+        {message ? <p className="mt-3 text-sm text-neutral-700">{message}</p> : null}
+        {loadError ? <p className="mt-3 text-sm text-red-700">{loadError}</p> : null}
+      </section>
+
+      <section className="space-y-4">
+        <h2 className="text-lg font-medium">Rollback</h2>
+        {data?.leagues.length === 0 ? <p className="text-sm text-neutral-600">No leagues cached yet.</p> : null}
+        {data?.leagues.map((league) => (
+          <div key={league.slug} className="rounded border border-neutral-200 p-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <div>
+                <h3 className="font-medium">{league.displayName}</h3>
+                <p className="text-xs text-neutral-600">Active from {formatTimestamp(league.activeIngestedAt)}</p>
+              </div>
+            </div>
+            {league.archive.length === 0 ? (
+              <p className="mt-3 text-sm text-neutral-600">No previous snapshots.</p>
+            ) : (
+              <ul className="mt-3 space-y-2">
+                {league.archive.map((entry) => (
+                  <li key={entry.archiveKey} className="flex items-center justify-between gap-3 text-sm">
+                    <span className="text-neutral-700">{formatTimestamp(entry.ingestedAt)}</span>
+                    <button
+                      type="button"
+                      onClick={() => void restore(entry.slug, entry.archiveKey, entry.ingestedAt)}
+                      disabled={busy}
+                      className="rounded border border-neutral-300 px-3 py-1 text-xs font-medium hover:bg-neutral-100 disabled:opacity-50"
+                    >
+                      Restore
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </section>
+
+      <section className="flex justify-end">
+        <button type="button" onClick={() => void signOut()} className="text-sm text-neutral-600 hover:underline">
+          Sign out
+        </button>
+      </section>
+    </div>
+  );
+}

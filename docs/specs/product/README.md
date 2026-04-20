@@ -8,6 +8,8 @@ This folder contains product behavior specs for the volleyball league viewer app
   record, and rank viewer.
 - [`/docs/specs/product/data-freshness.md`](/docs/specs/product/data-freshness.md) — session labeling and snapshot
   staleness surfacing.
+- [`/docs/specs/product/admin-tool.md`](/docs/specs/product/admin-tool.md) — hidden admin entry, passphrase gate,
+  ingest + rollback UI.
 
 ## Starter Surface (Retained)
 

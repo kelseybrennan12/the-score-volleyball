@@ -10,8 +10,8 @@ description: On-disk JSON snapshot format, filename convention, and archive layo
 - ID: T0002
 - Type: Technical
 - Status: active
-- Version: v1
-- Last Updated: 2026-04-19
+- Version: v2
+- Last Updated: 2026-04-20
 
 ## Summary
 
@@ -29,14 +29,20 @@ convention, active-vs-archive layout, and schema versioning.
 - Defining a database schema. Snapshots are flat files, not a relational store.
 - Defining UI behavior; see [/docs/specs/product/schedule-viewer.md](/docs/specs/product/schedule-viewer.md).
 
-## On-Disk Layout
+## Layout
 
-- Root: `data/snapshots/` (checked into the repo so snapshots ship with the Vercel build)
-  - Active: `data/snapshots/active/<league-slug>.json`
-  - Archive: `data/snapshots/archive/<league-slug>/<league-slug>-<YYYY-MM-DD-HH-MM-SS>.json`
+Two storage backends exist (see [/docs/specs/technical/snapshot-storage.md](/docs/specs/technical/snapshot-storage.md)).
+Both use the same logical layout:
+
+- Root: `data/snapshots/` (filesystem, for local dev) or `snapshots/` (Vercel Blob, for production)
+  - Active: `<root>/active/<league-slug>.json`
+  - Archive: `<root>/archive/<league-slug>/<league-slug>-<YYYY-MM-DD-HH-MM-SS>.json`
 - `<league-slug>` is a kebab-case identifier combining session and day, e.g. `spring-sundays`, `summer-tuesdays`.
 - The active file for a league is always the single most recent snapshot for that league slot.
-- Archived files retain the ingestion timestamp in the filename and are never overwritten.
+- Archived files retain the ingestion timestamp in the filename.
+- Archive entries are retained across normal ingestion. A rollback moves an archive entry back to the active slot (see
+  snapshot-storage); archive entries beyond the 10-entry rollback window may be pruned in a future iteration but are
+  otherwise retained.
 
 ## Filename Convention
 
@@ -109,9 +115,9 @@ derived):
   does not invent or normalize them beyond trimming whitespace.
 - `outcome.status` is one of `"played"` or `"unplayed"`. When `"played"`, `winnerTeamNumber`, `setsWinner`, and
   `setsLoser` are present and `setsWinner + setsLoser == 3`.
-- The Schedule Viewer reads only from `data/snapshots/active/` at runtime.
-- The ingestion pipeline is the sole writer to `data/snapshots/`. No other process creates, edits, or deletes files
-  under this directory.
+- The Schedule Viewer reads only from the active path of the selected storage backend at runtime.
+- Writers to the snapshot store are: the ingestion pipeline (via the CLI or the runtime ingest route handler) and the
+  admin rollback route handler. No other process creates, edits, or deletes snapshot files.
 
 ### Should:
 
@@ -130,5 +136,5 @@ derived):
 
 ## Completion
 
-- Status: Draft
-- Remaining: Implementation not started.
+- Status: Implemented
+- Remaining: None for v2.
