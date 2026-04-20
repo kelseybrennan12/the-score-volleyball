@@ -10,7 +10,7 @@ description: CLI-driven ingestion of thescoregr.com Google Sheets into per-leagu
 - ID: T0001
 - Type: Technical
 - Status: active
-- Version: v1
+- Version: v2
 - Last Updated: 2026-04-19
 
 ## Summary
@@ -38,29 +38,34 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 - League index: `https://www.thescoregr.com/volleyball/beach-volleyball-leagues/` Schedules & Standings section.
 - Each league outside the Queen of the Beach tournament links to a public Google Sheet. Those standard-format
   spreadsheets are in-scope; the Queen of the Beach sheet is out of scope.
-- Observed spreadsheet shapes across in-scope leagues:
-  - **Vertical schedule** (most leagues, e.g. Sunday Coed 4's): standings block in columns A..F/G (Captain, Wins,
-    Losses, Standing/Division, Paid, Waivers), schedule block below with time slots down, court labels, and matchup
-    cells containing `"N v M"`.
-  - **Horizontal schedule** (e.g. Tuesday Coed 2's): standings block on the left, schedule laid out with date columns
-    across the top and time/court rows down.
+- Observed spreadsheet shape across in-scope leagues: a single grid with the standings block along the top-left (captain
+  rows: `"N. Captain Name"` in column A; optional division label elsewhere in the row), a `"Match Time:"` header row
+  beneath the standings, and a schedule grid below that — dates as the column headers and time-plus-court rows below
+  (e.g. `"6:00pm Blue Ct"` in column A). Matchup cells hold `"N v M"`.
+- Some sheets (e.g. Spring Sundays) carry a leftover second `"Match Time:"` block further down the sheet with different
+  dates — typically a holdover from a prior season or template. Only the first block is authoritative.
+- Date headers are free-form month-plus-day strings (`"April 26th"`, `"June 29"`, `"Jul 27"`, occasionally typo'd as
+  `"June 10h"`). No year is carried in-cell; the year comes from the source list.
 - Matchup cells always contain two team numbers separated by `v`.
 - Winner convention (manual league-admin edit): the team number listed **first** in the cell is the winner once the
   match is played. Cells for unplayed matches retain their original pre-game ordering.
 - Cell background color encodes set count:
   - Magenta: the first-listed team won 3-0.
   - Blue: the first-listed team won 2-1.
-  - Any other (default/white) background: the match has not been played yet.
+  - Any other background (default/white, row-stripe yellow, placeholder orange/aqua text blocks): the match has not been
+    played yet.
 - A team's **record** is measured in sets won / sets lost, not matches won / matches lost.
 
 ## Requirements
 
 ### Must:
 
-- Ingestion is invoked as a `mise` task (e.g. `mise run ingest`) that runs a TypeScript CLI entrypoint under the backend
+- Ingestion is invoked as a `mise` task (`mise run ingest`) that runs a TypeScript CLI entrypoint under the backend
   source tree.
-- The ingestion command has a known, checked-in list of in-scope league sources: `(session, day, sheet_id)` tuples.
-  Queen of the Beach sheets are excluded from this list.
+- The ingestion command reads a checked-in list of in-scope league sources (`LEAGUE_SOURCES`). Each entry carries
+  `(slug, displayName, session, year, day, sheetId, defaultDivision?)`. Queen of the Beach sheets are excluded. The list
+  is scoped to the currently-active season(s); sheets for a future or not-yet-rostered season are added back to the list
+  when the league publishes their roster.
 - For each in-scope league, the command fetches the sheet via the public XLSX export endpoint
   `https://docs.google.com/spreadsheets/d/<sheet_id>/export?format=xlsx` (no OAuth, public-link access). The XLSX export
   is the authoritative source because it preserves cell background colors; CSV is not used because it strips colors.
@@ -68,25 +73,26 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   other than the CLI (specifically a future Next.js route handler) without source changes beyond the entrypoint wiring.
   The core fetch/parse/write functions must not depend on CLI-only APIs (process args, stdout formatting, file paths
   relative to `process.cwd()` for anything other than the snapshots root).
-- The parser supports the vertical-schedule shape as the baseline. Horizontal-schedule leagues use a dedicated parser
-  variant selected per-league in the source list.
+- A single parser is used for all in-scope leagues. It auto-detects the standings block, the schedule's `Match Time:`
+  header row, the date-column mapping, and the time-plus-court rows. When multiple `Match Time:` headers appear in a
+  sheet, only the first block is treated as authoritative and schedule-row scanning halts when a subsequent header is
+  encountered.
+- Date-header parsing accepts: full or abbreviated month names (`"June"`, `"Jul"`, `"Aug."`), optional ordinal suffix on
+  the day (`"26th"`, `"3rd"`, `"29"`), and tolerates typo'd ordinals (`"10h"`, `"10st"`). When a cell does not parse as
+  a date, that column is simply skipped.
 - For every league, the parser produces the snapshot structure defined in
   [/docs/specs/technical/data-snapshots.md](/docs/specs/technical/data-snapshots.md), including: league identity, teams
   with number and captain, per-team division, matches with date/time/court/teams, and per-match outcome.
-- The parser reads the division label from the standings block's Standing/Division column (typically column D) for each
-  team. Every team must end up with a division label. If a team row is missing a division label, the parser substitutes
-  a single placeholder label shared across the league (e.g. `"A"` for a single-division league) and logs the
-  substitution so operators can confirm whether the league actually has one division or a row was missed.
+- The parser reads the division label from the standings block for each team row (matching the `"... Division"` text
+  within the row). Every team must end up with a division label. If a team row has no division text, the parser
+  substitutes the `defaultDivision` from the source list (or `"A"` if none is declared) and logs the substitution.
 - Record and rank are computed **per division**. Teams are only compared to other teams with the same division label
   when ranking. Inter-division matches are included in both teams' schedules but each team's sets-won/sets-lost total
   for record purposes counts every played match regardless of opponent division.
 - Match outcome derivation — only two played states exist:
-  - Unplayed: cell color is default/white; no winner, no set score.
-  - Played 3-0: cell color is magenta; winner is the first team listed; set score is 3-0 in favor of the winner.
-  - Played 2-1: cell color is blue; winner is the first team listed; set score is 2-1 in favor of the winner.
-- Any other non-default cell color is treated as a parser error for that match (logged; the match is recorded as
-  `unplayed` and the league summary notes the anomaly). The league does not use additional colors for forfeits or 2-0
-  defaults.
+  - Unplayed: cell color is default/white/other; no winner, no set score.
+  - Played 3-0: cell color is magenta (`FFFF00FF`); winner is the first team listed; set score is 3-0.
+  - Played 2-1: cell color is blue (`FF4A86E8`); winner is the first team listed; set score is 2-1.
 - Each team's record is computed by summing sets won and sets lost across all played matches in that snapshot. The
   parser does not trust any pre-tallied Wins/Losses cell in the standings block for the record shown in the app, but may
   read it for cross-check logging.
@@ -101,7 +107,8 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 - Per-league parse failure does not abort the command. The CLI continues to the next league and exits non-zero only if
   at least one league failed.
 - The CLI emits a human-readable summary at the end: per league, either `ok` with snapshot path and team count, or
-  `failed` with a one-line reason.
+  `failed` with a one-line reason. Anomaly log entries (duplicate team numbers, missing division labels, unparseable
+  date headers, etc.) are printed beneath each league's line.
 
 ### Should:
 
@@ -110,8 +117,6 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 - Parser logic lives under `src/backend/logic/core/` as pure functions over a decoded workbook structure, and the
   Google-Sheets fetch/decode is an adapter under `src/backend/runtime/adapters/integrations/`. This layout is what lets
   the same fetch/parse/write core be re-wired behind a Next.js route handler in the future.
-- When the parsed Wins/Losses standings block disagrees with the computed record by more than one set, the CLI logs a
-  warning for the operator but still writes the computed record.
 
 ### May:
 
@@ -133,5 +138,6 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 
 ## Completion
 
-- Status: Draft
-- Remaining: Implementation not started.
+- Status: Implemented
+- Remaining: None for v2. Summer and Fall 2026 leagues return to `LEAGUE_SOURCES` once those sheets are rostered for the
+  new season.

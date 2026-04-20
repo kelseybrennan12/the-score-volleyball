@@ -358,6 +358,35 @@ Modified:
 - Spec backport removed five starter specs and one operations folder outright rather than marking them superseded, since
   they describe infrastructure (Postgres, Fastify, OIDC, observability, Azure deploy) that no longer exists in the repo.
 
+### Post-MVP iterations (spec-backported 2026-04-19)
+
+Follow-on work that shipped after the initial MVP commit and has now been folded into the specs (schedule-viewer v2,
+data-freshness v2, spreadsheet-ingestion v2):
+
+- Parser: stop scanning schedule rows at a second `Match Time:` header — a Sunday-style leftover block with stale Friday
+  dates was bleeding matches into the current schedule.
+- Parser: accept abbreviated month names (`Jul`, `Aug.`), bare day numbers (`June 29`), and typo'd ordinals (`June 10h`)
+  in date-header cells; the earlier regex ate the `st` out of `August` and rejected the malformed Wednesday header.
+- Source list: trimmed to the six Spring 2026 entries. Summer and Fall sheets on the league site still reflect the 2025
+  season; they'll be added back once new-season rosters publish. `LEAGUE_SOURCES` went from "all 17 in-scope leagues" to
+  "currently-active leagues only".
+- Year correction: Summer and Fall source entries updated from `2026` to `2025` while those sheets still carried the
+  prior-year data (since reverted by removing those entries for now).
+- UI: day buttons now auto-select the session whose match-date range contains today (else next upcoming, else most
+  recently ended), with a dropdown appearing when multiple sessions are available.
+- UI: team list renders the full sorted roster as soon as a league is picked, filtering down as the user types.
+  Multi-division leagues render the list under per-division headers.
+- UI: schedule matches are grouped by date in their own per-day cards instead of a flat list.
+- UI: next-match highlight now covers every match on the next eligible match day (typically both games of a night)
+  rather than just the single earliest match. `findNextMatchDate` added to `src/shared/domain/next-match.ts`; the "Next
+  Match" card renames to "Next Matches" when multiple are present.
+- UI: `{ day, leagueSlug, teamNumber }` persist to `localStorage` under `volleyball-viewer:selection` and restore on
+  mount. Stale entries (snapshot no longer shipped, team number missing) are dropped silently.
+- UI: footer link back to `https://www.thescoregr.com/volleyball/beach-volleyball-leagues/` on every page.
+
+None of these changed the frozen spec set listed at the top of this effort; they extend or tighten the behavior those
+specs describe.
+
 ## Status
 
 In Progress — one deferred checklist item (Playwright e2e spec) remains. All other acceptance criteria are met and the

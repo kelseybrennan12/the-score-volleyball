@@ -10,7 +10,7 @@ description: How snapshot age and season identity are surfaced to users of the S
 - ID: P0002
 - Type: Product
 - Status: active
-- Version: v1
+- Version: v2
 - Last Updated: 2026-04-19
 
 ## Summary
@@ -46,6 +46,9 @@ it.
 - When no snapshot exists for the selected league, the page shows an empty state rather than an error.
 - The app does not render a staleness warning, threshold-based badge, or alarm based on snapshot age. Showing the
   ingestion timestamp is sufficient; interpretation is left to the user.
+- The page renders a footer link to the source standings page
+  (`https://www.thescoregr.com/volleyball/beach-volleyball-leagues/`) so users can cross-reference the authoritative
+  spreadsheet when they want to double-check the displayed data.
 
 ### Should:
 
@@ -64,5 +67,5 @@ it.
 
 ## Completion
 
-- Status: Draft
-- Remaining: Implementation not started.
+- Status: Implemented
+- Remaining: None.
