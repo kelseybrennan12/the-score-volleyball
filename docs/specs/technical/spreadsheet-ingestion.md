@@ -139,8 +139,11 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   - Played matches obey the winner-first convention (`outcome.winnerTeamNumber === teamNumbers[0]`) and carry a coherent
     set score (`setsWinner ∈ {2, 3}`, `setsLoser < setsWinner`).
   - Each team's total match count is within ±1 of the modal count for its division (tolerates a single bye week).
-  - Every date advertised in the schedule header row has at least one parsed match (catches silently-dropped columns —
-    e.g. a future parser regression that fails to recognize a header cell type).
+  - Every date advertised in the schedule header row whose body carries at least one matchup-shaped cell (`\d+ v \d+`)
+    produces at least one parsed match. Columns whose bodies are entirely placeholder text (e.g.
+    `"Memorial Day Holiday"`, `"Playoffs Schedule TBD"`) are intentionally reserved by the league admins and are
+    excluded from this check. The invariant still fires when a column has matchup-shaped text but strict parsing drops
+    every row, which catches typos and format regressions rather than intentional empty weeks.
 
 ### Should:
 

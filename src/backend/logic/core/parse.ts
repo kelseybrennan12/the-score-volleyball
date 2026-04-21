@@ -157,6 +157,15 @@ function parseSchedule(
     return { matches, headerDates: [] };
   }
 
+  // Track which columns carry at least one matchup-like string ("N v M"). A
+  // column whose header parsed as a date but whose body is entirely reserved
+  // placeholder text (e.g. "Memorial Day Holiday", "Playoffs Schedule TBD")
+  // is intentionally empty and should not trigger the header-coverage
+  // invariant. Columns with at least one matchup-shaped cell stay in the
+  // coverage set so a typo like "7vs3" that fails strict parsing still
+  // lights up the anomaly.
+  const MATCHUP_HINT = /\d+\s*v\s*\d+/i;
+  const columnsWithMatchupHints = new Set<number>();
   for (let r = headerRowIndex + 1; r <= ws.rowCount; r++) {
     const row = ws.getRow(r);
     const aText = cellText(row.getCell(1));
@@ -168,6 +177,7 @@ function parseSchedule(
       const cell = row.getCell(col);
       const text = cellText(cell);
       if (!text) continue;
+      if (MATCHUP_HINT.test(text)) columnsWithMatchupHints.add(col);
       const matchup = text.match(MATCHUP_PATTERN);
       if (!matchup) continue;
       const a = Number.parseInt(matchup[1], 10);
@@ -184,7 +194,11 @@ function parseSchedule(
       });
     }
   }
-  return { matches, headerDates: [...new Set(dateByColumn.values())] };
+  const scheduledDates = new Set<string>();
+  for (const [col, date] of dateByColumn) {
+    if (columnsWithMatchupHints.has(col)) scheduledDates.add(date);
+  }
+  return { matches, headerDates: [...scheduledDates] };
 }
 
 function findHeaderRow(ws: ExcelJS.Worksheet): number | null {

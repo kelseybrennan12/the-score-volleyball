@@ -156,6 +156,47 @@ describe("parseLeagueWorkbook", () => {
     expect(dates.has("2026-05-03")).toBe(true);
   });
 
+  it("does not flag header-date coverage for columns filled with placeholder text only", async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Sheet1");
+    ws.getRow(1).getCell(1).value = "1. Alice";
+    ws.getRow(2).getCell(1).value = "2. Bob";
+    const header = ws.getRow(4);
+    header.getCell(1).value = "Match Time:";
+    header.getCell(2).value = "May 3rd";
+    header.getCell(3).value = "May 24th";
+    header.getCell(4).value = "June 21st";
+    const matchRow = ws.getRow(5);
+    matchRow.getCell(1).value = "6:00pm Blue Ct";
+    matchRow.getCell(2).value = "1 v 2";
+    matchRow.getCell(3).value = "Memorial Day Holiday";
+    matchRow.getCell(4).value = "Playoffs Schedule TBD";
+    const arrayBuffer = await wb.xlsx.writeBuffer();
+    const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
+    const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "B" });
+    expect(result.anomalies.some((a) => a.includes("Header advertises"))).toBe(false);
+    expect(result.matches).toHaveLength(1);
+  });
+
+  it("flags header-date coverage when a column has matchup-shaped cells but none parse", async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Sheet1");
+    ws.getRow(1).getCell(1).value = "1. Alice";
+    ws.getRow(2).getCell(1).value = "2. Bob";
+    const header = ws.getRow(4);
+    header.getCell(1).value = "Match Time:";
+    header.getCell(2).value = "May 3rd";
+    header.getCell(3).value = "May 10th";
+    const matchRow = ws.getRow(5);
+    matchRow.getCell(1).value = "6:00pm Blue Ct";
+    matchRow.getCell(2).value = "1 v 2";
+    matchRow.getCell(3).value = "1 v 2 (TBD)";
+    const arrayBuffer = await wb.xlsx.writeBuffer();
+    const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
+    const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "B" });
+    expect(result.anomalies.some((a) => a.includes("Header advertises 2026-05-10"))).toBe(true);
+  });
+
   it("accepts forward slash and pipe separators in the legend", async () => {
     const buffer = await buildStubWorkbook({
       teams: [
