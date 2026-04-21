@@ -101,8 +101,9 @@ Define the single source of truth for common developer-facing commands using `mi
 - `mise run build`: produce deployable build artifacts and container build context.
 - `mise run report [-- --league <slug>] [-- --team <number>] [-- --format text|md]`: print a per-team schedule report
   from `data/snapshots/active/` for spot-checking parsed data against the league spreadsheets.
-- `mise run verify:sunday-csv`: diff a Spring Sundays CSV export placed at `tmp/Spring sunday copy - Sheet1.csv` against
-  the currently-active Spring Sundays snapshot. Exit non-zero if slots or matchups differ.
+- `mise run verify:csvs`: for every `tmp/*.csv` export, infer the league from the weekday in the filename and diff it
+  against the matching active snapshot. Exit non-zero if any league has slot or matchup differences (team-order
+  differences for played matches are expected and not treated as failures).
 - `mise run gh:auth`: verify local GitHub CLI auth context used for repository workflows.
 - `mise run gh:runs`: list recent GitHub Actions runs for this repository.
 - `mise run gh:logs <run-id> [gh run view args]`: fetch logs for a specific GitHub Actions run with optional
