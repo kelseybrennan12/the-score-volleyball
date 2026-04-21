@@ -6,6 +6,7 @@ import { todayIsoInLeagueTimezone } from "@/shared/domain/next-match";
 import type { LeagueDay, Snapshot, Team } from "@/shared/domain/snapshot";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { TeamDetail } from "./team-detail";
+import { DivisionPill } from "./theme-tokens";
 
 const DAYS: LeagueDay[] = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday"];
 const STORAGE_KEY = "volleyball-viewer:selection";
@@ -109,10 +110,10 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
                 setQuery("");
                 setSelectedTeamNumber(null);
               }}
-              className={`rounded-md border px-3 py-1 text-sm ${
+              className={`rounded-md border px-3 py-1 text-sm transition-colors ${
                 selectedDay === day
-                  ? "border-neutral-900 bg-neutral-900 text-white"
-                  : "border-neutral-300 bg-white text-neutral-800 hover:bg-neutral-100"
+                  ? "border-teal-600 bg-teal-600 text-white"
+                  : "border-neutral-300 bg-white text-neutral-800 hover:border-teal-300 hover:bg-teal-50"
               }`}
             >
               {formatDay(day)}
@@ -139,6 +140,19 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
             ))}
           </select>
         </section>
+      )}
+
+      {selectedSnapshot && (
+        <p className="text-xs text-neutral-500">
+          <a
+            href={`https://docs.google.com/spreadsheets/d/${selectedSnapshot.league.sourceSheetId}/view`}
+            target="_blank"
+            rel="noreferrer"
+            className="inline-flex items-center gap-1 text-teal-700 underline hover:text-teal-900"
+          >
+            View {selectedSnapshot.league.displayName} source spreadsheet ↗
+          </a>
+        </p>
       )}
 
       {selectedSnapshot && (
@@ -189,7 +203,10 @@ function TeamCandidateList({ candidates, onSelect }: { candidates: Team[]; onSel
       {groups.map(([division, teams]) => (
         <div key={division}>
           {multi && (
-            <h4 className="mb-1 text-xs font-semibold uppercase tracking-wide text-neutral-500">{division} Division</h4>
+            <h4 className="mb-1 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-neutral-500">
+              <DivisionPill division={division} />
+              <span>Division</span>
+            </h4>
           )}
           <ul className="space-y-1">
             {teams.map((team) => (
@@ -197,10 +214,11 @@ function TeamCandidateList({ candidates, onSelect }: { candidates: Team[]; onSel
                 <button
                   type="button"
                   onClick={() => onSelect(team.number)}
-                  className="w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-left text-sm hover:bg-neutral-100"
+                  className="flex w-full items-center gap-2 rounded-md border border-neutral-300 bg-white px-3 py-2 text-left text-sm transition-colors hover:border-teal-300 hover:bg-teal-50"
                 >
-                  <span className="font-medium">#{team.number}</span> {team.captain}
-                  {!multi && <span className="text-neutral-500"> · {team.division}</span>}
+                  <span className="font-medium">#{team.number}</span>
+                  <span>{team.captain}</span>
+                  {!multi && <DivisionPill division={team.division} />}
                 </button>
               </li>
             ))}

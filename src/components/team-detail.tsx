@@ -5,6 +5,7 @@ import { compareMatches, findNextMatchDate } from "@/shared/domain/next-match";
 import type { Match, Snapshot, Team } from "@/shared/domain/snapshot";
 import { computeTeamStats } from "@/shared/domain/stats";
 import { useCallback, useMemo } from "react";
+import { CourtLabel, DivisionPill } from "./theme-tokens";
 
 interface Props {
   snapshot: Snapshot;
@@ -44,8 +45,11 @@ export function TeamDetail({ snapshot, team }: Props) {
             <h2 className="text-xl font-semibold">
               #{team.number} {team.captain}
             </h2>
-            <p className="text-sm text-neutral-600">
-              {snapshot.league.displayName} {snapshot.league.year} · {team.division} Division
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-neutral-600">
+              <span>
+                {snapshot.league.displayName} {snapshot.league.year}
+              </span>
+              <DivisionPill division={team.division} />
             </p>
           </div>
           {teamStats && (
@@ -74,11 +78,11 @@ export function TeamDetail({ snapshot, team }: Props) {
       </div>
 
       {upcomingMatches.length > 0 && (
-        <div className="rounded-lg border-2 border-amber-400 bg-amber-50 p-4">
-          <div className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+        <div className="rounded-lg border border-rose-200 bg-rose-50/60 p-4">
+          <div className="text-xs font-semibold uppercase tracking-wide text-rose-700">
             {upcomingMatches.length === 1 ? "Next Match" : "Next Matches"} · {formatDate(upcomingMatches[0].date)}
           </div>
-          <ul className="mt-2 divide-y divide-amber-200">
+          <ul className="mt-2 divide-y divide-rose-100">
             {upcomingMatches.map((match, idx) => (
               <li key={`${match.time}-${match.court}-${idx}`} className="py-2 first:pt-0 last:pb-0">
                 <MatchRow snapshot={snapshot} team={team} match={match} hideDate />
@@ -103,10 +107,7 @@ export function TeamDetail({ snapshot, team }: Props) {
                 </header>
                 <ul className="divide-y divide-neutral-200">
                   {matches.map((match, idx) => (
-                    <li
-                      key={`${match.date}-${match.time}-${match.court}-${idx}`}
-                      className={`px-4 py-3 ${match.date === nextMatchDate ? "bg-amber-50" : ""}`}
-                    >
+                    <li key={`${match.date}-${match.time}-${match.court}-${idx}`} className="px-4 py-3">
                       <MatchRow snapshot={snapshot} team={team} match={match} hideDate />
                     </li>
                   ))}
@@ -140,17 +141,21 @@ function MatchRow({
   return (
     <div className={`flex items-baseline justify-between gap-3 ${featured ? "pt-2" : ""}`}>
       <div>
-        <div className="text-sm font-medium">
-          {hideDate ? "" : `${formatDate(match.date)} · `}
-          {formatTime(match.time)} · {match.court}
+        <div className="flex flex-wrap items-center gap-x-2 text-sm font-medium">
+          {!hideDate && <span>{formatDate(match.date)}</span>}
+          {!hideDate && <span className="text-neutral-400">·</span>}
+          <span>{formatTime(match.time)}</span>
+          <span className="text-neutral-400">·</span>
+          <CourtLabel court={match.court} />
         </div>
-        <div className="text-sm text-neutral-700">
-          vs #{opponentNumber} {opponent?.captain ?? "(unknown captain)"}
-          {opponent && <span className="text-neutral-500"> · {opponent.division}</span>}
+        <div className="mt-0.5 flex flex-wrap items-center gap-x-2 text-sm text-neutral-700">
+          <span>
+            vs #{opponentNumber} {opponent?.captain ?? "(unknown captain)"}
+          </span>
+          {opponent && <DivisionPill division={opponent.division} />}
           {opponentStats && (
             <span className="text-neutral-500">
-              {" "}
-              · {opponentStats.setsWon}–{opponentStats.setsLost}
+              {opponentStats.setsWon}–{opponentStats.setsLost}
             </span>
           )}
         </div>
