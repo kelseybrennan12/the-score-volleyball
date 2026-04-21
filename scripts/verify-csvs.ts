@@ -28,6 +28,7 @@ interface LeagueResult {
   onlyInSnapshot: MatchKey[];
   pairDiffs: { slot: MatchKey; csv: string; snapshot: string }[];
   orderDiffs: { slot: MatchKey; csv: string; snapshot: string }[];
+  csvSlotCollisions: { slot: MatchKey; first: string; second: string }[];
 }
 
 const WEEKDAY_TO_SLUG: Record<string, string> = {
@@ -126,7 +127,20 @@ async function verifyOne(job: Job): Promise<LeagueResult> {
   const csvMatches = parseCsv(csvRaw, snapshot.league.year, job.slug);
 
   const csvBySlot = new Map<MatchKey, CsvMatch>();
-  for (const m of csvMatches) csvBySlot.set(key(m.date, m.time, m.court), m);
+  const csvSlotCollisions: LeagueResult["csvSlotCollisions"] = [];
+  for (const m of csvMatches) {
+    const slotKey = key(m.date, m.time, m.court);
+    const existing = csvBySlot.get(slotKey);
+    if (existing) {
+      csvSlotCollisions.push({
+        slot: slotKey,
+        first: `${existing.teams[0]} v ${existing.teams[1]}`,
+        second: `${m.teams[0]} v ${m.teams[1]}`,
+      });
+      continue;
+    }
+    csvBySlot.set(slotKey, m);
+  }
   const snapshotBySlot = new Map<MatchKey, { teams: [number, number] }>();
   for (const m of snapshot.matches) snapshotBySlot.set(key(m.date, m.time, m.court), { teams: m.teamNumbers });
 
@@ -163,12 +177,16 @@ async function verifyOne(job: Job): Promise<LeagueResult> {
     onlyInSnapshot,
     pairDiffs,
     orderDiffs,
+    csvSlotCollisions,
   };
 }
 
 function renderResult(result: LeagueResult): boolean {
   const hasHardFailures =
-    result.onlyInCsv.length > 0 || result.onlyInSnapshot.length > 0 || result.pairDiffs.length > 0;
+    result.onlyInCsv.length > 0 ||
+    result.onlyInSnapshot.length > 0 ||
+    result.pairDiffs.length > 0 ||
+    result.csvSlotCollisions.length > 0;
   const statusIcon = hasHardFailures ? "❌" : "✅";
   console.log(
     `\n${statusIcon} ${result.slug}  csv=${result.csvCount} snapshot=${result.snapshotCount}` +
@@ -189,6 +207,12 @@ function renderResult(result: LeagueResult): boolean {
   if (result.pairDiffs.length > 0) {
     console.log(`  Matchup differences (${result.pairDiffs.length}):`);
     for (const t of result.pairDiffs) console.log(`    ${t.slot}  csv=${t.csv}  snapshot=${t.snapshot}`);
+  }
+  if (result.csvSlotCollisions.length > 0) {
+    console.log(`  CSV slot collisions (${result.csvSlotCollisions.length}):`);
+    for (const t of result.csvSlotCollisions) {
+      console.log(`    ${t.slot}  first=${t.first}  duplicate=${t.second}`);
+    }
   }
   return hasHardFailures;
 }
