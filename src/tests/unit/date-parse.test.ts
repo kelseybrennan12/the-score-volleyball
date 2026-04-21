@@ -33,4 +33,10 @@ describe("parseMonthDay", () => {
     expect(parseMonthDay("", 2026)).toBeNull();
     expect(parseMonthDay("32 v 17", 2026)).toBeNull();
   });
+
+  it("parses ISO-8601 date strings that come from ExcelJS Date cells", () => {
+    expect(parseMonthDay("2026-04-26T00:00:00.000Z", 2026)).toBe("2026-04-26");
+    expect(parseMonthDay("2026-04-26", 2026)).toBe("2026-04-26");
+    expect(parseMonthDay("2026-12-31T12:34:56Z", 2026)).toBe("2026-12-31");
+  });
 });

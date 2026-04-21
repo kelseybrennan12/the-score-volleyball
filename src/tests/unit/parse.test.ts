@@ -135,6 +135,27 @@ describe("parseLeagueWorkbook", () => {
     expect(result.anomalies.some((a) => a.includes("Team 99"))).toBe(true);
   });
 
+  it("parses a Date-valued schedule header cell (regression: opening Sunday 2026-04-26)", async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Sheet1");
+    ws.getRow(1).getCell(1).value = "1. Alice";
+    ws.getRow(2).getCell(1).value = "2. Bob";
+    const header = ws.getRow(4);
+    header.getCell(1).value = "Match Time:";
+    header.getCell(2).value = new Date(Date.UTC(2026, 3, 26));
+    header.getCell(3).value = "May 3rd";
+    const matchRow = ws.getRow(5);
+    matchRow.getCell(1).value = "6:00pm Blue Ct";
+    matchRow.getCell(2).value = "1 v 2";
+    matchRow.getCell(3).value = "2 v 1";
+    const arrayBuffer = await wb.xlsx.writeBuffer();
+    const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
+    const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "B" });
+    const dates = new Set(result.matches.map((m) => m.date));
+    expect(dates.has("2026-04-26")).toBe(true);
+    expect(dates.has("2026-05-03")).toBe(true);
+  });
+
   it("accepts forward slash and pipe separators in the legend", async () => {
     const buffer = await buildStubWorkbook({
       teams: [

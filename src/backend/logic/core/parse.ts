@@ -38,8 +38,8 @@ export async function parseLeagueWorkbook(input: ParseInput): Promise<ParseResul
   const anomalies: string[] = [];
   const rangeMap = buildDivisionRangeMap(worksheet, anomalies);
   const teams = parseTeams(worksheet, input.defaultDivision ?? "A", rangeMap, anomalies);
-  const matches = parseSchedule(worksheet, input.year, anomalies);
-  anomalies.push(...validateSnapshot({ teams, matches }));
+  const { matches, headerDates } = parseSchedule(worksheet, input.year, anomalies);
+  anomalies.push(...validateSnapshot({ teams, matches, headerDates }));
   return { teams, matches, anomalies };
 }
 
@@ -133,12 +133,16 @@ function findDivisionInRow(row: ExcelJS.Row): string | null {
   return null;
 }
 
-function parseSchedule(ws: ExcelJS.Worksheet, year: number, anomalies: string[]): Match[] {
+function parseSchedule(
+  ws: ExcelJS.Worksheet,
+  year: number,
+  anomalies: string[],
+): { matches: Match[]; headerDates: string[] } {
   const matches: Match[] = [];
   const headerRowIndex = findHeaderRow(ws);
   if (headerRowIndex === null) {
     anomalies.push('Schedule header row ("Match Time:") not found');
-    return matches;
+    return { matches, headerDates: [] };
   }
   const headerRow = ws.getRow(headerRowIndex);
   const dateByColumn = new Map<number, string>();
@@ -150,7 +154,7 @@ function parseSchedule(ws: ExcelJS.Worksheet, year: number, anomalies: string[])
   }
   if (dateByColumn.size === 0) {
     anomalies.push("No parseable date columns in schedule header row");
-    return matches;
+    return { matches, headerDates: [] };
   }
 
   for (let r = headerRowIndex + 1; r <= ws.rowCount; r++) {
@@ -180,7 +184,7 @@ function parseSchedule(ws: ExcelJS.Worksheet, year: number, anomalies: string[])
       });
     }
   }
-  return matches;
+  return { matches, headerDates: [...new Set(dateByColumn.values())] };
 }
 
 function findHeaderRow(ws: ExcelJS.Worksheet): number | null {

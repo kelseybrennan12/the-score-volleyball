@@ -17,3 +17,4 @@ playwright-report/
 test-results/
 .claude/settings.local.json
 data/snapshots/meta.json
+tmp/

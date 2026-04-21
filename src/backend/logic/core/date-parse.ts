@@ -14,9 +14,23 @@ const MONTH_NAMES = [
 ];
 
 export function parseMonthDay(label: string, year: number): string | null {
+  const trimmed = label.trim();
+  // ExcelJS returns cells that are actual Date values as ISO-8601 strings via
+  // the parser's cellText helper. Accept a YYYY-MM-DD prefix so such columns
+  // still resolve to a date. The caller already knows the league's year; we
+  // trust whatever year is in the ISO prefix since it originates from the
+  // sheet itself.
+  const isoMatch = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})(?:[T ]|$)/);
+  if (isoMatch) {
+    const [, y, mm, dd] = isoMatch;
+    const day = Number.parseInt(dd, 10);
+    const monthIndex = Number.parseInt(mm, 10) - 1;
+    if (monthIndex < 0 || monthIndex > 11 || day < 1 || day > 31) return null;
+    return `${y}-${mm}-${dd}`;
+  }
   // Accept any trailing letters after the day number so typos like "June 10h"
   // (missing the "t" in "th") still parse.
-  const match = label.trim().match(/^([A-Za-z]+)\.?\s+(\d+)[a-z]*\.?$/i);
+  const match = trimmed.match(/^([A-Za-z]+)\.?\s+(\d+)[a-z]*\.?$/i);
   if (!match) return null;
   const monthToken = match[1].toLowerCase();
   let monthIndex = MONTH_NAMES.indexOf(monthToken);

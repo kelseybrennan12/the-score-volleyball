@@ -3,6 +3,7 @@ import type { Match, Team } from "@/shared/domain/snapshot";
 export interface ValidateInput {
   teams: Team[];
   matches: Match[];
+  headerDates?: string[];
 }
 
 export function validateSnapshot(input: ValidateInput): string[] {
@@ -12,7 +13,19 @@ export function validateSnapshot(input: ValidateInput): string[] {
   anomalies.push(...checkPerTeamSlotUniqueness(input.matches));
   anomalies.push(...checkWinnerFirst(input.matches));
   anomalies.push(...checkPerTeamCountUniformity(input.teams, input.matches));
+  if (input.headerDates) anomalies.push(...checkHeaderDateCoverage(input.headerDates, input.matches));
   return anomalies;
+}
+
+function checkHeaderDateCoverage(headerDates: string[], matches: Match[]): string[] {
+  const datesWithMatches = new Set(matches.map((m) => m.date));
+  const out: string[] = [];
+  for (const date of headerDates) {
+    if (!datesWithMatches.has(date)) {
+      out.push(`Header advertises ${date} but no matches were parsed for that date`);
+    }
+  }
+  return out;
 }
 
 function checkMatchIntegrity(matches: Match[], knownNumbers: Set<number>): string[] {

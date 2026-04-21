@@ -39,6 +39,12 @@ fi
 pnpm run ingest -- "$@"
 '''
 
+[tasks."verify:sunday-csv"]
+description = "Diff tmp/Spring sunday copy - Sheet1.csv against the active Spring Sundays snapshot"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
+run = "pnpm exec tsx scripts/verify-sunday-csv.ts"
+
 [tasks.report]
 description = "Print a per-team schedule report from active snapshots"
 depends = ["deps:install"]

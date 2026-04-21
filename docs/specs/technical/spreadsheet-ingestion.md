@@ -10,8 +10,8 @@ description: CLI-driven ingestion of thescoregr.com Google Sheets into per-leagu
 - ID: T0001
 - Type: Technical
 - Status: active
-- Version: v5
-- Last Updated: 2026-04-20
+- Version: v6
+- Last Updated: 2026-04-21
 
 ## Summary
 
@@ -90,8 +90,10 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   sheet, only the first block is treated as authoritative and schedule-row scanning halts when a subsequent header is
   encountered.
 - Date-header parsing accepts: full or abbreviated month names (`"June"`, `"Jul"`, `"Aug."`), optional ordinal suffix on
-  the day (`"26th"`, `"3rd"`, `"29"`), and tolerates typo'd ordinals (`"10h"`, `"10st"`). When a cell does not parse as
-  a date, that column is simply skipped.
+  the day (`"26th"`, `"3rd"`, `"29"`), and tolerates typo'd ordinals (`"10h"`, `"10st"`). It also accepts ISO-8601-style
+  strings prefixed with `YYYY-MM-DD`, which is how ExcelJS surfaces a header cell whose raw value is a real `Date`
+  (Google Sheets often auto-converts a bare `"April 26"` into a date cell). When a cell does not parse as a date, that
+  column is simply skipped.
 - For every league, the parser produces the snapshot structure defined in
   [/docs/specs/technical/data-snapshots.md](/docs/specs/technical/data-snapshots.md), including: league identity, teams
   with number and captain, per-team division, matches with date/time/court/teams, and per-match outcome.
@@ -137,6 +139,8 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   - Played matches obey the winner-first convention (`outcome.winnerTeamNumber === teamNumbers[0]`) and carry a coherent
     set score (`setsWinner ∈ {2, 3}`, `setsLoser < setsWinner`).
   - Each team's total match count is within ±1 of the modal count for its division (tolerates a single bye week).
+  - Every date advertised in the schedule header row has at least one parsed match (catches silently-dropped columns —
+    e.g. a future parser regression that fails to recognize a header cell type).
 
 ### Should:
 

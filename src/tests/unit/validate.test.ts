@@ -91,6 +91,29 @@ describe("validateSnapshot", () => {
     expect(anomalies.some((a) => a.includes("nonsense set score"))).toBe(true);
   });
 
+  it("flags header dates that have zero parsed matches", () => {
+    const teams = [team(1), team(2)];
+    const matches = [unplayed("2026-05-03", "18:00", "Blue", 1, 2)];
+    const anomalies = validateSnapshot({
+      teams,
+      matches,
+      headerDates: ["2026-04-26", "2026-05-03"],
+    });
+    expect(anomalies.some((a) => a.includes("Header advertises 2026-04-26"))).toBe(true);
+    expect(anomalies.some((a) => a.includes("2026-05-03"))).toBe(false);
+  });
+
+  it("stays silent on header-date coverage when every header date has matches", () => {
+    const teams = [team(1), team(2)];
+    const matches = [unplayed("2026-04-26", "18:00", "Blue", 1, 2), unplayed("2026-05-03", "18:00", "Blue", 1, 2)];
+    const anomalies = validateSnapshot({
+      teams,
+      matches,
+      headerDates: ["2026-04-26", "2026-05-03"],
+    });
+    expect(anomalies.some((a) => a.includes("Header advertises"))).toBe(false);
+  });
+
   it("flags teams whose match count deviates from the divisional mode by more than 1", () => {
     const teams = [team(1), team(2), team(3), team(4)];
     const base = uniformSeason(teams);
