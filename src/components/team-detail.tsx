@@ -4,8 +4,11 @@ import { buildTeamIcs, icsFilenameFor } from "@/shared/domain/calendar-export";
 import { compareMatches, findNextMatchDate } from "@/shared/domain/next-match";
 import type { Match, Snapshot, Team } from "@/shared/domain/snapshot";
 import { computeTeamStats } from "@/shared/domain/stats";
+import { isFavoriteTeam, parseFavoriteTeams } from "@/shared/favorites";
 import { useCallback, useMemo } from "react";
 import { CourtLabel, DivisionPill } from "./theme-tokens";
+
+const FAVORITES = parseFavoriteTeams(process.env.NEXT_PUBLIC_FAVORITE_TEAMS);
 
 interface Props {
   snapshot: Snapshot;
@@ -36,10 +39,23 @@ export function TeamDetail({ snapshot, team }: Props) {
     URL.revokeObjectURL(url);
   }, [snapshot, team]);
   const hasMatches = teamMatches.length > 0;
+  const isFavorite = isFavoriteTeam(FAVORITES, snapshot.league.day, team.number);
 
   return (
     <section className="space-y-6">
-      <div className="rounded-lg border border-neutral-200 bg-white p-4">
+      <div
+        className={`relative overflow-hidden rounded-lg p-4 ${
+          isFavorite ? "favorite-card animate-gradient-shift" : "border border-neutral-200 bg-white"
+        }`}
+      >
+        {isFavorite && (
+          <span
+            aria-hidden
+            className="pointer-events-none absolute right-3 bottom-2 inline-block animate-wave text-4xl"
+          >
+            👋
+          </span>
+        )}
         <div className="flex items-baseline justify-between">
           <div>
             <h2 className="text-xl font-semibold">
@@ -72,7 +88,7 @@ export function TeamDetail({ snapshot, team }: Props) {
             title={hasMatches ? undefined : "No scheduled matches to export."}
             className="inline-flex items-center rounded-md border border-neutral-300 bg-white px-3 py-1.5 text-sm font-medium text-neutral-800 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
           >
-            Add to calendar
+            📅 Add to calendar
           </button>
         </div>
       </div>

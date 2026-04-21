@@ -22,3 +22,62 @@ body {
   background-color: #fafafa;
   color: #111;
 }
+
+@keyframes gradient-shift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.animate-gradient-shift {
+  animation: gradient-shift 6s ease-in-out infinite;
+}
+
+/* Two-layer gradient: lighter fill inside padding-box, saturated fill in the
+ * border-box ring. Both layers share background-size so the gradient-shift
+ * animation moves them in sync, giving the impression of a color-cycling
+ * border around a color-cycling card. */
+.favorite-card {
+  background:
+    linear-gradient(to right, #ccfbf1, #fecdd3, #fef3c7) padding-box,
+    linear-gradient(to right, #5eead4, #fb7185, #fcd34d) border-box;
+  background-size: 300% 100%;
+  border: 2px solid transparent;
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: rotate(0deg) translateY(0);
+  }
+  10% {
+    transform: rotate(18deg) translateY(-3px);
+  }
+  20% {
+    transform: rotate(-12deg) translateY(0);
+  }
+  30% {
+    transform: rotate(18deg) translateY(-3px);
+  }
+  40% {
+    transform: rotate(-8deg) translateY(0);
+  }
+  50% {
+    transform: rotate(14deg) translateY(-2px);
+  }
+  60% {
+    transform: rotate(0deg) translateY(0);
+  }
+}
+
+.animate-wave {
+  animation: wave 2.6s ease-in-out infinite;
+  transform-origin: 70% 80%;
+  display: inline-block;
+}
