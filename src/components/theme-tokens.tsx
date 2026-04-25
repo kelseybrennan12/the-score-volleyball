@@ -17,6 +17,7 @@ function courtDotClasses(court: string): string {
   if (lower.includes("red")) return "bg-red-500";
   if (lower.includes("orange")) return "bg-orange-500";
   if (lower.includes("pink")) return "bg-pink-400";
+  if (lower.includes("black")) return "bg-black";
   return "bg-neutral-300";
 }
 
