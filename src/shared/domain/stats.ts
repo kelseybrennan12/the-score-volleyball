@@ -5,7 +5,7 @@ export interface TeamStats {
   division: string;
   setsWon: number;
   setsLost: number;
-  rank: number;
+  rank: number | null;
   divisionSize: number;
 }
 
@@ -14,14 +14,21 @@ export function computeTeamStats(snapshot: Snapshot): Map<number, TeamStats> {
   const byDivision = groupByDivision(snapshot.teams);
   const stats = new Map<number, TeamStats>();
   for (const [division, list] of byDivision) {
-    const sorted = [...list].sort((a, b) => {
+    const ranked: Team[] = [];
+    const unranked: Team[] = [];
+    for (const team of list) {
+      const record = records.get(team.number)!;
+      if (record.setsWon === 0 && record.setsLost === 0) unranked.push(team);
+      else ranked.push(team);
+    }
+    ranked.sort((a, b) => {
       const ra = records.get(a.number)!;
       const rb = records.get(b.number)!;
       if (rb.setsWon !== ra.setsWon) return rb.setsWon - ra.setsWon;
       if (ra.setsLost !== rb.setsLost) return ra.setsLost - rb.setsLost;
       return a.number - b.number;
     });
-    sorted.forEach((team, idx) => {
+    ranked.forEach((team, idx) => {
       const record = records.get(team.number)!;
       stats.set(team.number, {
         teamNumber: team.number,
@@ -29,9 +36,20 @@ export function computeTeamStats(snapshot: Snapshot): Map<number, TeamStats> {
         setsWon: record.setsWon,
         setsLost: record.setsLost,
         rank: idx + 1,
-        divisionSize: sorted.length,
+        divisionSize: list.length,
       });
     });
+    for (const team of unranked) {
+      const record = records.get(team.number)!;
+      stats.set(team.number, {
+        teamNumber: team.number,
+        division,
+        setsWon: record.setsWon,
+        setsLost: record.setsLost,
+        rank: null,
+        divisionSize: list.length,
+      });
+    }
   }
   return stats;
 }

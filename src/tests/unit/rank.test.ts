@@ -30,15 +30,35 @@ describe("computeRanks", () => {
     expect(ranks.get(2)).toMatchObject({ division: b[0], rank: 1, divisionSize: b[1] });
     expect(ranks.get(3)).toMatchObject({ division: b[0], rank: 2 });
     expect(ranks.get(1)).toMatchObject({ division: b[0], rank: 3 });
-    expect(ranks.get(10)).toMatchObject({ division: "BB", rank: 1, divisionSize: 2 });
-    expect(ranks.get(11)).toMatchObject({ division: "BB", rank: 2 });
+    expect(ranks.get(10)).toMatchObject({ division: "BB", rank: null, divisionSize: 2 });
+    expect(ranks.get(11)).toMatchObject({ division: "BB", rank: null, divisionSize: 2 });
   });
 
   it("breaks ties with team-number asc", () => {
-    const records = computeRecords(teams, []);
+    const matches = [match([1, 2], 1, 3), match([2, 3], 2, 3), match([3, 1], 3, 3)];
+    const records = computeRecords(teams, matches);
     const ranks = computeRanks(teams, records);
     expect(ranks.get(1)!.rank).toBe(1);
     expect(ranks.get(2)!.rank).toBe(2);
     expect(ranks.get(3)!.rank).toBe(3);
+  });
+
+  it("marks teams with no sets played as unranked", () => {
+    const records = computeRecords(teams, []);
+    const ranks = computeRanks(teams, records);
+    expect(ranks.get(1)).toMatchObject({ division: "B", rank: null, divisionSize: 3 });
+    expect(ranks.get(2)).toMatchObject({ division: "B", rank: null, divisionSize: 3 });
+    expect(ranks.get(3)).toMatchObject({ division: "B", rank: null, divisionSize: 3 });
+    expect(ranks.get(10)).toMatchObject({ division: "BB", rank: null, divisionSize: 2 });
+    expect(ranks.get(11)).toMatchObject({ division: "BB", rank: null, divisionSize: 2 });
+  });
+
+  it("ranks only teams that have played, leaving the rest unranked", () => {
+    const matches = [match([1, 2], 1, 3)];
+    const records = computeRecords(teams, matches);
+    const ranks = computeRanks(teams, records);
+    expect(ranks.get(1)).toMatchObject({ rank: 1, divisionSize: 3 });
+    expect(ranks.get(2)).toMatchObject({ rank: 2, divisionSize: 3 });
+    expect(ranks.get(3)).toMatchObject({ rank: null, divisionSize: 3 });
   });
 });

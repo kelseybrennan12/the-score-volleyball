@@ -40,7 +40,9 @@ function renderTeamBlock(snapshot: Snapshot, team: Team, stats: TeamStats | unde
   const teamMatches = snapshot.matches.filter((m) => m.teamNumbers.includes(team.number)).sort(compareMatches);
   const leagueLabel = `${snapshot.league.displayName} ${snapshot.league.year}`;
   const statsLine = stats
-    ? `Record: ${stats.setsWon}–${stats.setsLost} (sets) · Rank ${stats.rank} of ${stats.divisionSize} in ${stats.division}`
+    ? `Record: ${stats.setsWon}–${stats.setsLost} (sets) · ${
+        stats.rank != null ? `Rank ${stats.rank} of ${stats.divisionSize}` : "Unranked"
+      } in ${stats.division}`
     : "Record: unavailable";
   if (format === "md") {
     const rows = teamMatches.map((m) => renderMarkdownRow(snapshot, team, m));

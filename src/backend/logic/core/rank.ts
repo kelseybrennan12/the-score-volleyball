@@ -4,7 +4,7 @@ import type { TeamRecord } from "./record";
 export interface TeamRank {
   teamNumber: number;
   division: string;
-  rank: number;
+  rank: number | null;
   divisionSize: number;
 }
 
@@ -17,21 +17,36 @@ export function computeRanks(teams: Team[], records: Map<number, TeamRecord>): M
   }
   const ranks = new Map<number, TeamRank>();
   for (const [division, list] of byDivision) {
-    const sorted = [...list].sort((a, b) => {
+    const ranked: Team[] = [];
+    const unranked: Team[] = [];
+    for (const team of list) {
+      const record = records.get(team.number) ?? { setsWon: 0, setsLost: 0, teamNumber: team.number };
+      if (record.setsWon === 0 && record.setsLost === 0) unranked.push(team);
+      else ranked.push(team);
+    }
+    ranked.sort((a, b) => {
       const ra = records.get(a.number) ?? { setsWon: 0, setsLost: 0, teamNumber: a.number };
       const rb = records.get(b.number) ?? { setsWon: 0, setsLost: 0, teamNumber: b.number };
       if (rb.setsWon !== ra.setsWon) return rb.setsWon - ra.setsWon;
       if (ra.setsLost !== rb.setsLost) return ra.setsLost - rb.setsLost;
       return a.number - b.number;
     });
-    sorted.forEach((team, idx) => {
+    ranked.forEach((team, idx) => {
       ranks.set(team.number, {
         teamNumber: team.number,
         division,
         rank: idx + 1,
-        divisionSize: sorted.length,
+        divisionSize: list.length,
       });
     });
+    for (const team of unranked) {
+      ranks.set(team.number, {
+        teamNumber: team.number,
+        division,
+        rank: null,
+        divisionSize: list.length,
+      });
+    }
   }
   return ranks;
 }

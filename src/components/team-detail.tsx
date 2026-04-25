@@ -74,7 +74,9 @@ export function TeamDetail({ snapshot, team }: Props) {
                 Record: {teamStats.setsWon}–{teamStats.setsLost} <span className="text-neutral-500">(sets)</span>
               </div>
               <div className="text-neutral-600">
-                Rank {teamStats.rank} of {teamStats.divisionSize} in {teamStats.division}
+                {teamStats.rank != null
+                  ? `Rank ${teamStats.rank} of ${teamStats.divisionSize} in ${teamStats.division}`
+                  : `Unranked in ${teamStats.division}`}
               </div>
             </div>
           )}
