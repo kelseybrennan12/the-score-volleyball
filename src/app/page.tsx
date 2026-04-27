@@ -1,7 +1,9 @@
 import { resolveSnapshotRepo } from "@/backend/runtime/adapters/snapshots";
 import { AdminGate } from "@/components/admin-gate";
 import { ViewerApp } from "@/components/viewer-app";
+import { IS_DEV, MOCK_NOW_COOKIE, parseMockNow } from "@/shared/dev-now";
 import type { Snapshot } from "@/shared/domain/snapshot";
+import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
@@ -13,6 +15,9 @@ async function loadSnapshots(): Promise<Snapshot[]> {
 
 export default async function HomePage() {
   const snapshots = await loadSnapshots();
+  const mockNowIso = IS_DEV
+    ? (parseMockNow((await cookies()).get(MOCK_NOW_COOKIE)?.value)?.toISOString() ?? null)
+    : null;
   return (
     <main className="mx-auto max-w-3xl px-4 py-8">
       <header className="mb-6">
@@ -26,7 +31,7 @@ export default async function HomePage() {
         </AdminGate>
         <p className="mt-1 text-sm text-neutral-600">Pick your league day, find your team, and see your next match.</p>
       </header>
-      <ViewerApp snapshots={snapshots} />
+      <ViewerApp snapshots={snapshots} mockNowIso={mockNowIso} />
       <footer className="mt-10 space-y-2 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
         <p>
           We do our best to accurately reflect each team&rsquo;s schedule, but use this app at your own risk — the

@@ -2,7 +2,7 @@
 
 import { selectNowMatches, type NowMatch } from "@/shared/domain/now-view";
 import type { Snapshot } from "@/shared/domain/snapshot";
-import { useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { CourtLabel, DivisionPill } from "./theme-tokens";
 
 const WEEKDAY_LABEL: Record<string, string> = {
@@ -15,18 +15,16 @@ const WEEKDAY_LABEL: Record<string, string> = {
   saturday: "Saturday",
 };
 
-export function NowView({ snapshots, onSwitchToTeamView }: { snapshots: Snapshot[]; onSwitchToTeamView: () => void }) {
-  const [now, setNow] = useState<Date | null>(null);
-
-  useEffect(() => {
-    setNow(new Date());
-  }, []);
-
-  const selection = useMemo(() => (now ? selectNowMatches(snapshots, now) : null), [now, snapshots]);
-
-  if (!selection) {
-    return <p className="text-sm text-neutral-600">Loading current matches…</p>;
-  }
+export function NowView({
+  snapshots,
+  now,
+  onSwitchToTeamView,
+}: {
+  snapshots: Snapshot[];
+  now: Date;
+  onSwitchToTeamView: () => void;
+}) {
+  const selection = useMemo(() => selectNowMatches(snapshots, now), [now, snapshots]);
 
   const courts = [...selection.groupsByCourt.entries()].sort(([a], [b]) => a.localeCompare(b));
   const upcomingCourts = [...selection.upcomingByCourt.entries()].sort(([a], [b]) => a.localeCompare(b));

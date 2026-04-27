@@ -13,15 +13,16 @@ const FAVORITES = parseFavoriteTeams(process.env.NEXT_PUBLIC_FAVORITE_TEAMS);
 interface Props {
   snapshot: Snapshot;
   team: Team;
+  now: Date;
 }
 
-export function TeamDetail({ snapshot, team }: Props) {
+export function TeamDetail({ snapshot, team, now }: Props) {
   const stats = useMemo(() => computeTeamStats(snapshot), [snapshot]);
   const teamStats = stats.get(team.number);
   const teamMatches = useMemo(() => {
     return snapshot.matches.filter((m) => m.teamNumbers.includes(team.number)).sort(compareMatches);
   }, [snapshot, team.number]);
-  const nextMatchDate = useMemo(() => findNextMatchDate(teamMatches), [teamMatches]);
+  const nextMatchDate = useMemo(() => findNextMatchDate(teamMatches, now), [teamMatches, now]);
   const upcomingMatches = useMemo(
     () => (nextMatchDate ? teamMatches.filter((m) => m.date === nextMatchDate) : []),
     [teamMatches, nextMatchDate],

@@ -7,6 +7,7 @@ import type { LeagueDay, Snapshot, Team } from "@/shared/domain/snapshot";
 import { DAYS, validateUrlSelection } from "@/shared/domain/url-selection";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { DevTimePanel } from "./dev-time-panel";
 import { NowView } from "./now-view";
 import { TeamDetail } from "./team-detail";
 import { DivisionPill } from "./theme-tokens";
@@ -27,10 +28,11 @@ function formatDay(day: LeagueDay): string {
 const dayParser = parseAsStringLiteral(DAYS);
 const viewParser = parseAsStringLiteral(VIEW_MODES).withDefault("team");
 
-export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
+export function ViewerApp({ snapshots, mockNowIso }: { snapshots: Snapshot[]; mockNowIso: string | null }) {
   const snapshotsByDay = useMemo(() => groupByDay(snapshots), [snapshots]);
   const availableDays = DAYS.filter((d) => snapshotsByDay.get(d)?.length);
-  const today = useMemo(() => todayIsoInLeagueTimezone(), []);
+  const now = useMemo(() => (mockNowIso ? new Date(mockNowIso) : new Date()), [mockNowIso]);
+  const today = useMemo(() => todayIsoInLeagueTimezone(now), [now]);
 
   const [view, setView] = useQueryState("view", viewParser.withOptions({ history: "replace", clearOnDefault: true }));
   const [selectedDay, setSelectedDay] = useQueryState("day", dayParser.withOptions({ history: "replace" }));
@@ -125,8 +127,9 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
   if (view === "now") {
     return (
       <div className="space-y-6">
+        <DevTimePanel mockNowIso={mockNowIso} />
         <ViewToggle view={view} onChange={setView} />
-        <NowView snapshots={snapshots} onSwitchToTeamView={() => void setView("team")} />
+        <NowView snapshots={snapshots} now={now} onSwitchToTeamView={() => void setView("team")} />
       </div>
     );
   }
@@ -134,6 +137,7 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
   if (availableDays.length === 0) {
     return (
       <div className="space-y-6">
+        <DevTimePanel mockNowIso={mockNowIso} />
         <ViewToggle view={view} onChange={setView} />
         <p className="text-sm text-neutral-600">No league snapshots are available yet.</p>
       </div>
@@ -142,6 +146,7 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
 
   return (
     <div className="space-y-6">
+      <DevTimePanel mockNowIso={mockNowIso} />
       <ViewToggle view={view} onChange={setView} />
 
       <section>
@@ -232,7 +237,7 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
         </section>
       )}
 
-      {selectedSnapshot && selectedTeam && <TeamDetail snapshot={selectedSnapshot} team={selectedTeam} />}
+      {selectedSnapshot && selectedTeam && <TeamDetail snapshot={selectedSnapshot} team={selectedTeam} now={now} />}
     </div>
   );
 }
