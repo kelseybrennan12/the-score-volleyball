@@ -10,8 +10,8 @@ description: Single-page UX for a player to find their team's schedule, next gam
 - ID: P0001
 - Type: Product
 - Status: active
-- Version: v4
-- Last Updated: 2026-04-20
+- Version: v5
+- Last Updated: 2026-04-26
 
 ## Summary
 
@@ -24,13 +24,33 @@ and view their schedule, upcoming match day, record, and rank.
 - Make the next upcoming match day visually prominent.
 - Show each opponent's current record alongside every scheduled match.
 - Remember the user's last selection so reopening the app lands them back on the same team.
+- Offer a quick at-the-courts "what's playing right now" view so a spectator can identify currently-running matches
+  across courts without first locating a team.
+- Make views and selections shareable by URL while preserving the existing per-device "remember my last team" behavior.
 
 ## Non-Goals
 
 - Authentication, accounts, or per-user preferences persisted server-side.
-- In-app navigation between multiple pages or routes.
+- In-app navigation between multiple pages or routes. (View modes are query-parameter-driven on the same single page;
+  they are not separate routes.)
 - Editing, submitting, or correcting league results from the app.
 - Supporting the Thursday Women's Queen of the Beach tournament format. Only standard league spreadsheets are supported.
+- A full season-wide schedule browser (every court / every team / every date). The `now` view scaffolds the query-param
+  view-mode model that a future `schedule` view will reuse, but the schedule browser itself is a future spec increment.
+- Auto-refreshing the `now` view in the background. The user re-renders by reloading the page or interacting with the
+  app; periodic polling is not in scope.
+
+## View Modes
+
+The page renders one of two view modes at a time, selected by the user via a toggle near the top of the page:
+
+- **`team` view** (default): the existing day → league → team flow described in this spec.
+- **`now` view**: a compact, read-only list of matches whose scheduled start time equals the current time, aggregated
+  across every league snapshot whose league day matches today's day-of-week (in `America/Detroit`).
+
+The active view mode is persisted in the URL as `?view=team|now`. Absence of the parameter is equivalent to `view=team`.
+Future view modes (e.g. a season-wide `schedule` browser) will extend this same parameter without changing the URL
+shape.
 
 ## Core Concepts
 
@@ -89,7 +109,44 @@ and view their schedule, upcoming match day, record, and rank.
   `volleyball-viewer:selection` whenever any of those change. On mount it restores any stored entries that still resolve
   against the currently-shipped snapshots (stale entries — a league slug we no longer ingest or a team number that no
   longer exists — are dropped silently and the app falls back to the auto-selected current session).
-- The search query text is not persisted.
+- The page also reflects `{ view, day, leagueSlug, teamNumber }` in the URL as query parameters, using a typed
+  query-state library (`nuqs`). Parameter shapes:
+  - `view`: `team` | `now` (omitted when default `team`).
+  - `day`: lowercase weekday name (`sunday`..`friday`), only meaningful in `team` view.
+  - `league`: league slug, only meaningful in `team` view.
+  - `team`: integer team number, only meaningful in `team` view.
+- Query-parameter and `localStorage` hydration rules:
+  - On mount, if a query parameter is present, it wins over the corresponding `localStorage` value.
+  - On mount, if a query parameter is absent, the corresponding value is hydrated from `localStorage` and pushed back
+    into the URL so the displayed URL is shareable.
+  - On every change to `day`, `leagueSlug`, or `teamNumber`, both `localStorage` and the URL are updated.
+  - The `view` parameter is URL-only; it is not persisted in `localStorage`. The default view on first load (no URL
+    parameter, no prior visit) is `team`.
+  - Invalid or stale URL values are silently dropped and the URL is rewritten without them, using `history: "replace"`
+    so the cleanup does not pollute the back-stack. The same rules apply to invalid `localStorage` entries.
+    Specifically:
+    - `view` not in `{team, now}` is treated as the default `team`.
+    - `day` not in `{sunday..friday}` is treated as null; dependent `league` and `team` are also cleared.
+    - `league` whose slug is not present in the current snapshot set for the resolved `day` is treated as null;
+      dependent `team` is also cleared.
+    - `team` that is not an integer, or whose number does not exist on the resolved league snapshot, is treated as null.
+    - Orphan children (e.g. `team` without `league`, or `league` without `day`) are cleared.
+    - Cleanup is silent; no error UI is rendered.
+- The search query text is not persisted in either `localStorage` or the URL.
+- The `now` view:
+  - Renders independently of the user's selected day, league, or team. It always reflects the current real-world moment.
+  - Aggregates matches from every active snapshot whose `league.day` equals today's day-of-week in `America/Detroit`.
+  - Includes a match if and only if the match has already started and the elapsed time since its scheduled start is less
+    than `NOW_WINDOW_MINUTES` (a single tunable constant, default `50` — the slot length between consecutive league
+    matches). Future-dated matches are never included; the moment the next slot begins, the previous slot's matches drop
+    out and the new slot's matches appear. Widening or narrowing the window must remain a one-line change.
+  - For each included match shows: court, time, division pill, and both team numbers (`#A vs #B`). Captain names and
+    opponent records are not shown in this compact view.
+  - Groups matches by court for at-a-glance scanning. Within a court, matches are ordered by start time.
+  - When no matches are currently playing under the configured window, displays an empty-state message naming the next
+    upcoming start time today (if any) so the spectator knows when to check back. If no league plays today at all,
+    displays a different empty state pointing the user toward the `team` view.
+  - Does not poll or auto-refresh; the user refreshes by reloading the page.
 - The page renders a footer link back to the source standings page at
   `https://www.thescoregr.com/volleyball/beach-volleyball-leagues/` so users can cross-reference the authoritative
   spreadsheet.
@@ -123,4 +180,6 @@ and view their schedule, upcoming match day, record, and rank.
 ## Completion
 
 - Status: Implemented
-- Remaining: None for v3. Playwright e2e coverage is still deferred per the MVP effort.
+- Remaining: `now` view (v5) and the `nuqs`-driven URL state model are pending implementation under the effort
+  [/docs/efforts/2026-04-27-01-49-now-view-and-query-params.md](/docs/efforts/2026-04-27-01-49-now-view-and-query-params.md).
+  Playwright e2e coverage is still deferred per the MVP effort.

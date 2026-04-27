@@ -4,12 +4,15 @@ import { pickCurrentSnapshot } from "@/shared/domain/current-season";
 import { findTeamCandidates } from "@/shared/domain/lookup";
 import { todayIsoInLeagueTimezone } from "@/shared/domain/next-match";
 import type { LeagueDay, Snapshot, Team } from "@/shared/domain/snapshot";
+import { DAYS, validateUrlSelection } from "@/shared/domain/url-selection";
+import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useEffect, useMemo, useRef, useState } from "react";
+import { NowView } from "./now-view";
 import { TeamDetail } from "./team-detail";
 import { DivisionPill } from "./theme-tokens";
 
-const DAYS: LeagueDay[] = ["sunday", "monday", "tuesday", "wednesday", "thursday", "friday"];
 const STORAGE_KEY = "volleyball-viewer:selection";
+const VIEW_MODES = ["team", "now"] as const;
 
 interface StoredSelection {
   day?: LeagueDay;
@@ -21,41 +24,70 @@ function formatDay(day: LeagueDay): string {
   return day.charAt(0).toUpperCase() + day.slice(1);
 }
 
+const dayParser = parseAsStringLiteral(DAYS);
+const viewParser = parseAsStringLiteral(VIEW_MODES).withDefault("team");
+
 export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
   const snapshotsByDay = useMemo(() => groupByDay(snapshots), [snapshots]);
   const availableDays = DAYS.filter((d) => snapshotsByDay.get(d)?.length);
   const today = useMemo(() => todayIsoInLeagueTimezone(), []);
-  const [selectedDay, setSelectedDay] = useState<LeagueDay | null>(null);
-  const [selectedLeagueSlug, setSelectedLeagueSlug] = useState<string | null>(null);
+
+  const [view, setView] = useQueryState("view", viewParser.withOptions({ history: "replace", clearOnDefault: true }));
+  const [selectedDay, setSelectedDay] = useQueryState("day", dayParser.withOptions({ history: "replace" }));
+  const [selectedLeagueSlug, setSelectedLeagueSlug] = useQueryState(
+    "league",
+    parseAsString.withOptions({ history: "replace" }),
+  );
+  const [selectedTeamNumber, setSelectedTeamNumber] = useQueryState(
+    "team",
+    parseAsInteger.withOptions({ history: "replace" }),
+  );
+
   const [query, setQuery] = useState("");
-  const [selectedTeamNumber, setSelectedTeamNumber] = useState<number | null>(null);
   const hydratedRef = useRef(false);
 
   useEffect(() => {
     if (hydratedRef.current) return;
     hydratedRef.current = true;
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      const stored = JSON.parse(raw) as StoredSelection;
-      const day = stored.day && DAYS.includes(stored.day) ? stored.day : null;
-      const daySnapshots = day ? (snapshotsByDay.get(day) ?? []) : [];
-      if (!day || daySnapshots.length === 0) return;
-      setSelectedDay(day);
-      const slug =
-        stored.leagueSlug && daySnapshots.some((s) => s.league.slug === stored.leagueSlug) ? stored.leagueSlug : null;
-      const resolvedSlug = slug ?? pickCurrentSnapshot(daySnapshots, today)?.league.slug ?? null;
-      setSelectedLeagueSlug(resolvedSlug);
-      if (stored.teamNumber != null && resolvedSlug) {
-        const snap = daySnapshots.find((s) => s.league.slug === resolvedSlug);
-        if (snap?.teams.some((t) => t.number === stored.teamNumber)) {
-          setSelectedTeamNumber(stored.teamNumber);
+
+    const validatedFromUrl = validateUrlSelection(snapshots, {
+      day: selectedDay,
+      league: selectedLeagueSlug,
+      team: selectedTeamNumber,
+    });
+
+    let nextDay: LeagueDay | null = validatedFromUrl.day;
+    let nextLeague: string | null = validatedFromUrl.league;
+    let nextTeam: number | null = validatedFromUrl.team;
+
+    if (nextDay == null && nextLeague == null && nextTeam == null) {
+      try {
+        const raw = window.localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const stored = JSON.parse(raw) as StoredSelection;
+          const validatedFromStorage = validateUrlSelection(snapshots, {
+            day: stored.day ?? null,
+            league: stored.leagueSlug ?? null,
+            team: stored.teamNumber ?? null,
+          });
+          nextDay = validatedFromStorage.day;
+          nextLeague = validatedFromStorage.league;
+          nextTeam = validatedFromStorage.team;
         }
+      } catch {
+        // Ignore storage or parse errors; fall back to defaults.
       }
-    } catch {
-      // Ignore storage or parse errors; fall back to defaults.
     }
-  }, [snapshotsByDay, today]);
+
+    if (nextDay && nextLeague == null) {
+      const daySnapshots = snapshotsByDay.get(nextDay) ?? [];
+      nextLeague = pickCurrentSnapshot(daySnapshots, today)?.league.slug ?? null;
+    }
+
+    if (nextDay !== selectedDay) void setSelectedDay(nextDay);
+    if (nextLeague !== selectedLeagueSlug) void setSelectedLeagueSlug(nextLeague);
+    if (nextTeam !== selectedTeamNumber) void setSelectedTeamNumber(nextTeam);
+  }, []);
 
   useEffect(() => {
     if (!hydratedRef.current) return;
@@ -90,12 +122,28 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
     return selectedSnapshot.teams.find((t) => t.number === selectedTeamNumber) ?? null;
   }, [selectedSnapshot, selectedTeamNumber]);
 
+  if (view === "now") {
+    return (
+      <div className="space-y-6">
+        <ViewToggle view={view} onChange={setView} />
+        <NowView snapshots={snapshots} onSwitchToTeamView={() => void setView("team")} />
+      </div>
+    );
+  }
+
   if (availableDays.length === 0) {
-    return <p className="text-sm text-neutral-600">No league snapshots are available yet.</p>;
+    return (
+      <div className="space-y-6">
+        <ViewToggle view={view} onChange={setView} />
+        <p className="text-sm text-neutral-600">No league snapshots are available yet.</p>
+      </div>
+    );
   }
 
   return (
     <div className="space-y-6">
+      <ViewToggle view={view} onChange={setView} />
+
       <section>
         <label className="block text-sm font-medium text-neutral-700">Day</label>
         <div className="mt-2 flex flex-wrap gap-2">
@@ -104,11 +152,11 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
               key={day}
               type="button"
               onClick={() => {
-                setSelectedDay(day);
+                void setSelectedDay(day);
                 const currentLeague = pickCurrentSnapshot(snapshotsByDay.get(day) ?? [], today);
-                setSelectedLeagueSlug(currentLeague?.league.slug ?? null);
+                void setSelectedLeagueSlug(currentLeague?.league.slug ?? null);
                 setQuery("");
-                setSelectedTeamNumber(null);
+                void setSelectedTeamNumber(null);
               }}
               className={`rounded-md border px-3 py-1 text-sm transition-colors ${
                 selectedDay === day
@@ -128,8 +176,8 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
           <select
             value={selectedLeagueSlug ?? ""}
             onChange={(e) => {
-              setSelectedLeagueSlug(e.target.value);
-              setSelectedTeamNumber(null);
+              void setSelectedLeagueSlug(e.target.value || null);
+              void setSelectedTeamNumber(null);
             }}
             className="mt-2 block w-full rounded-md border border-neutral-300 px-3 py-2 text-base sm:text-sm"
           >
@@ -166,7 +214,7 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
-              setSelectedTeamNumber(null);
+              void setSelectedTeamNumber(null);
             }}
             placeholder="e.g. 7 or ryan"
             autoComplete="off"
@@ -177,7 +225,7 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
               {candidates.length === 0 ? (
                 <p className="text-sm text-neutral-500">No teams match.</p>
               ) : (
-                <TeamCandidateList candidates={candidates} onSelect={setSelectedTeamNumber} />
+                <TeamCandidateList candidates={candidates} onSelect={(n) => void setSelectedTeamNumber(n)} />
               )}
             </div>
           )}
@@ -185,6 +233,29 @@ export function ViewerApp({ snapshots }: { snapshots: Snapshot[] }) {
       )}
 
       {selectedSnapshot && selectedTeam && <TeamDetail snapshot={selectedSnapshot} team={selectedTeam} />}
+    </div>
+  );
+}
+
+function ViewToggle({ view, onChange }: { view: "team" | "now"; onChange: (next: "team" | "now") => void }) {
+  return (
+    <div className="flex flex-wrap gap-2" role="tablist" aria-label="View mode">
+      {VIEW_MODES.map((mode) => (
+        <button
+          key={mode}
+          type="button"
+          role="tab"
+          aria-selected={view === mode}
+          onClick={() => onChange(mode)}
+          className={`rounded-md border px-3 py-1 text-sm transition-colors ${
+            view === mode
+              ? "border-teal-600 bg-teal-600 text-white"
+              : "border-neutral-300 bg-white text-neutral-800 hover:border-teal-300 hover:bg-teal-50"
+          }`}
+        >
+          {mode === "team" ? "Find My Team" : "Now Playing"}
+        </button>
+      ))}
     </div>
   );
 }

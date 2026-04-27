@@ -8,7 +8,7 @@
     "year": 2026,
     "sourceSheetId": "1WEAya6DXP78Md-FxvfE-Ripk0lo_BWjNY9TY4Tw31v4"
   },
-  "ingestedAt": "2026-04-27T02:07:24.007Z",
+  "ingestedAt": "2026-04-21T02:17:56.018Z",
   "teams": [
     {
       "number": 1,
@@ -225,7 +225,7 @@
     {
       "date": "2026-04-26",
       "time": "11:20",
-      "court": "Blue Ct (playground)",
+      "court": "Blue Ct",
       "teamNumbers": [23, 22],
       "outcome": {
         "status": "unplayed"
@@ -234,7 +234,7 @@
     {
       "date": "2026-05-03",
       "time": "11:20",
-      "court": "Blue Ct (playground)",
+      "court": "Blue Ct",
       "teamNumbers": [1, 16],
       "outcome": {
         "status": "unplayed"
@@ -243,7 +243,7 @@
     {
       "date": "2026-05-10",
       "time": "11:20",
-      "court": "Blue Ct (playground)",
+      "court": "Blue Ct",
       "teamNumbers": [26, 23],
       "outcome": {
         "status": "unplayed"
@@ -252,7 +252,7 @@
     {
       "date": "2026-05-17",
       "time": "11:20",
-      "court": "Blue Ct (playground)",
+      "court": "Blue Ct",
       "teamNumbers": [16, 13],
       "outcome": {
         "status": "unplayed"
@@ -261,7 +261,7 @@
     {
       "date": "2026-05-31",
       "time": "11:20",
-      "court": "Blue Ct (playground)",
+      "court": "Blue Ct",
       "teamNumbers": [15, 18],
       "outcome": {
         "status": "unplayed"
@@ -270,7 +270,7 @@
     {
       "date": "2026-06-07",
       "time": "11:20",
-      "court": "Blue Ct (playground)",
+      "court": "Blue Ct",
       "teamNumbers": [6, 10],
       "outcome": {
         "status": "unplayed"
@@ -279,7 +279,7 @@
     {
       "date": "2026-06-14",
       "time": "11:20",
-      "court": "Blue Ct (playground)",
+      "court": "Blue Ct",
       "teamNumbers": [38, 36],
       "outcome": {
         "status": "unplayed"
@@ -288,7 +288,7 @@
     {
       "date": "2026-04-26",
       "time": "11:20",
-      "court": "Black Ct (McDs)",
+      "court": "Yellow Ct",
       "teamNumbers": [24, 20],
       "outcome": {
         "status": "unplayed"
@@ -297,7 +297,7 @@
     {
       "date": "2026-05-03",
       "time": "11:20",
-      "court": "Black Ct (McDs)",
+      "court": "Yellow Ct",
       "teamNumbers": [7, 18],
       "outcome": {
         "status": "unplayed"
@@ -306,7 +306,7 @@
     {
       "date": "2026-05-10",
       "time": "11:20",
-      "court": "Black Ct (McDs)",
+      "court": "Yellow Ct",
       "teamNumbers": [22, 28],
       "outcome": {
         "status": "unplayed"
@@ -315,7 +315,7 @@
     {
       "date": "2026-05-17",
       "time": "11:20",
-      "court": "Black Ct (McDs)",
+      "court": "Yellow Ct",
       "teamNumbers": [14, 7],
       "outcome": {
         "status": "unplayed"
@@ -324,7 +324,7 @@
     {
       "date": "2026-05-31",
       "time": "11:20",
-      "court": "Black Ct (McDs)",
+      "court": "Yellow Ct",
       "teamNumbers": [1, 9],
       "outcome": {
         "status": "unplayed"
@@ -333,7 +333,7 @@
     {
       "date": "2026-06-07",
       "time": "11:20",
-      "court": "Black Ct (McDs)",
+      "court": "Yellow Ct",
       "teamNumbers": [8, 3],
       "outcome": {
         "status": "unplayed"
@@ -342,7 +342,7 @@
     {
       "date": "2026-06-14",
       "time": "11:20",
-      "court": "Black Ct (McDs)",
+      "court": "Yellow Ct",
       "teamNumbers": [31, 40],
       "outcome": {
         "status": "unplayed"
@@ -351,7 +351,7 @@
     {
       "date": "2026-04-26",
       "time": "11:20",
-      "court": "Red Ct (red/white/blue)",
+      "court": "White Ct",
       "teamNumbers": [19, 21],
       "outcome": {
         "status": "unplayed"
@@ -360,7 +360,7 @@
     {
       "date": "2026-05-03",
       "time": "11:20",
-      "court": "Red Ct (red/white/blue)",
+      "court": "White Ct",
       "teamNumbers": [17, 8],
       "outcome": {
         "status": "unplayed"
@@ -369,7 +369,7 @@
     {
       "date": "2026-05-10",
       "time": "11:20",
-      "court": "Red Ct (red/white/blue)",
+      "court": "White Ct",
       "teamNumbers": [20, 25],
       "outcome": {
         "status": "unplayed"
@@ -378,7 +378,7 @@
     {
       "date": "2026-05-17",
       "time": "11:20",
-      "court": "Red Ct (red/white/blue)",
+      "court": "White Ct",
       "teamNumbers": [9, 11],
       "outcome": {
         "status": "unplayed"
@@ -387,7 +387,7 @@
     {
       "date": "2026-05-31",
       "time": "11:20",
-      "court": "Red Ct (red/white/blue)",
+      "court": "White Ct",
       "teamNumbers": [5, 13],
       "outcome": {
         "status": "unplayed"
@@ -396,7 +396,7 @@
     {
       "date": "2026-06-07",
       "time": "11:20",
-      "court": "Red Ct (red/white/blue)",
+      "court": "White Ct",
       "teamNumbers": [16, 14],
       "outcome": {
         "status": "unplayed"
@@ -405,7 +405,7 @@
     {
       "date": "2026-06-14",
       "time": "11:20",
-      "court": "Red Ct (red/white/blue)",
+      "court": "White Ct",
       "teamNumbers": [33, 37],
       "outcome": {
         "status": "unplayed"
@@ -477,7 +477,7 @@
     {
       "date": "2026-04-26",
       "time": "12:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [22, 21],
       "outcome": {
         "status": "unplayed"
@@ -486,7 +486,7 @@
     {
       "date": "2026-05-03",
       "time": "12:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [1, 17],
       "outcome": {
         "status": "unplayed"
@@ -495,7 +495,7 @@
     {
       "date": "2026-05-10",
       "time": "12:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [25, 23],
       "outcome": {
         "status": "unplayed"
@@ -504,7 +504,7 @@
     {
       "date": "2026-05-17",
       "time": "12:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [16, 11],
       "outcome": {
         "status": "unplayed"
@@ -513,7 +513,7 @@
     {
       "date": "2026-05-31",
       "time": "12:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [13, 15],
       "outcome": {
         "status": "unplayed"
@@ -522,7 +522,7 @@
     {
       "date": "2026-06-07",
       "time": "12:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [6, 14],
       "outcome": {
         "status": "unplayed"
@@ -531,7 +531,7 @@
     {
       "date": "2026-06-14",
       "time": "12:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [37, 36],
       "outcome": {
         "status": "unplayed"
@@ -540,7 +540,7 @@
     {
       "date": "2026-04-26",
       "time": "12:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [24, 23],
       "outcome": {
         "status": "unplayed"
@@ -549,7 +549,7 @@
     {
       "date": "2026-05-03",
       "time": "12:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [16, 18],
       "outcome": {
         "status": "unplayed"
@@ -558,7 +558,7 @@
     {
       "date": "2026-05-10",
       "time": "12:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [26, 28],
       "outcome": {
         "status": "unplayed"
@@ -567,7 +567,7 @@
     {
       "date": "2026-05-17",
       "time": "12:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [14, 13],
       "outcome": {
         "status": "unplayed"
@@ -576,7 +576,7 @@
     {
       "date": "2026-05-31",
       "time": "12:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [1, 18],
       "outcome": {
         "status": "unplayed"
@@ -585,7 +585,7 @@
     {
       "date": "2026-06-07",
       "time": "12:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [8, 10],
       "outcome": {
         "status": "unplayed"
@@ -594,7 +594,7 @@
     {
       "date": "2026-06-14",
       "time": "12:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [31, 38],
       "outcome": {
         "status": "unplayed"
@@ -666,7 +666,7 @@
     {
       "date": "2026-04-26",
       "time": "13:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [11, 6],
       "outcome": {
         "status": "unplayed"
@@ -675,7 +675,7 @@
     {
       "date": "2026-05-03",
       "time": "13:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [14, 12],
       "outcome": {
         "status": "unplayed"
@@ -684,7 +684,7 @@
     {
       "date": "2026-05-10",
       "time": "13:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [13, 9],
       "outcome": {
         "status": "unplayed"
@@ -693,7 +693,7 @@
     {
       "date": "2026-05-17",
       "time": "13:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [22, 25],
       "outcome": {
         "status": "unplayed"
@@ -702,7 +702,7 @@
     {
       "date": "2026-05-31",
       "time": "13:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [3, 6],
       "outcome": {
         "status": "unplayed"
@@ -711,7 +711,7 @@
     {
       "date": "2026-06-07",
       "time": "13:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [4, 17],
       "outcome": {
         "status": "unplayed"
@@ -720,7 +720,7 @@
     {
       "date": "2026-06-14",
       "time": "13:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [41, 35],
       "outcome": {
         "status": "unplayed"
@@ -729,7 +729,7 @@
     {
       "date": "2026-04-26",
       "time": "13:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [3, 15],
       "outcome": {
         "status": "unplayed"
@@ -738,7 +738,7 @@
     {
       "date": "2026-05-03",
       "time": "13:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [9, 10],
       "outcome": {
         "status": "unplayed"
@@ -747,7 +747,7 @@
     {
       "date": "2026-05-10",
       "time": "13:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [11, 7],
       "outcome": {
         "status": "unplayed"
@@ -756,7 +756,7 @@
     {
       "date": "2026-05-17",
       "time": "13:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [23, 29],
       "outcome": {
         "status": "unplayed"
@@ -765,7 +765,7 @@
     {
       "date": "2026-05-31",
       "time": "13:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [16, 8],
       "outcome": {
         "status": "unplayed"
@@ -774,7 +774,7 @@
     {
       "date": "2026-06-07",
       "time": "13:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [2, 7],
       "outcome": {
         "status": "unplayed"
@@ -783,7 +783,7 @@
     {
       "date": "2026-06-14",
       "time": "13:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [42, 34],
       "outcome": {
         "status": "unplayed"
@@ -855,7 +855,7 @@
     {
       "date": "2026-04-26",
       "time": "13:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [4, 3],
       "outcome": {
         "status": "unplayed"
@@ -864,7 +864,7 @@
     {
       "date": "2026-05-03",
       "time": "13:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [2, 9],
       "outcome": {
         "status": "unplayed"
@@ -873,7 +873,7 @@
     {
       "date": "2026-05-10",
       "time": "13:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [11, 10],
       "outcome": {
         "status": "unplayed"
@@ -882,7 +882,7 @@
     {
       "date": "2026-05-17",
       "time": "13:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [20, 29],
       "outcome": {
         "status": "unplayed"
@@ -891,7 +891,7 @@
     {
       "date": "2026-05-31",
       "time": "13:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [14, 8],
       "outcome": {
         "status": "unplayed"
@@ -900,7 +900,7 @@
     {
       "date": "2026-06-07",
       "time": "13:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [2, 11],
       "outcome": {
         "status": "unplayed"
@@ -909,7 +909,7 @@
     {
       "date": "2026-06-14",
       "time": "13:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [34, 39],
       "outcome": {
         "status": "unplayed"
@@ -918,7 +918,7 @@
     {
       "date": "2026-04-26",
       "time": "13:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [11, 13],
       "outcome": {
         "status": "unplayed"
@@ -927,7 +927,7 @@
     {
       "date": "2026-05-03",
       "time": "13:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [5, 14],
       "outcome": {
         "status": "unplayed"
@@ -936,7 +936,7 @@
     {
       "date": "2026-05-10",
       "time": "13:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [9, 16],
       "outcome": {
         "status": "unplayed"
@@ -945,7 +945,7 @@
     {
       "date": "2026-05-17",
       "time": "13:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [25, 26],
       "outcome": {
         "status": "unplayed"
@@ -954,7 +954,7 @@
     {
       "date": "2026-05-31",
       "time": "13:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [3, 10],
       "outcome": {
         "status": "unplayed"
@@ -963,7 +963,7 @@
     {
       "date": "2026-06-07",
       "time": "13:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [12, 17],
       "outcome": {
         "status": "unplayed"
@@ -972,7 +972,7 @@
     {
       "date": "2026-06-14",
       "time": "13:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [41, 32],
       "outcome": {
         "status": "unplayed"
@@ -1044,7 +1044,7 @@
     {
       "date": "2026-04-26",
       "time": "14:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [10, 5],
       "outcome": {
         "status": "unplayed"
@@ -1053,7 +1053,7 @@
     {
       "date": "2026-05-03",
       "time": "14:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [42, 37],
       "outcome": {
         "status": "unplayed"
@@ -1062,7 +1062,7 @@
     {
       "date": "2026-05-10",
       "time": "14:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [1, 15],
       "outcome": {
         "status": "unplayed"
@@ -1071,7 +1071,7 @@
     {
       "date": "2026-05-17",
       "time": "14:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [6, 18],
       "outcome": {
         "status": "unplayed"
@@ -1080,7 +1080,7 @@
     {
       "date": "2026-05-31",
       "time": "14:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [26, 30],
       "outcome": {
         "status": "unplayed"
@@ -1089,7 +1089,7 @@
     {
       "date": "2026-06-07",
       "time": "14:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [9, 15],
       "outcome": {
         "status": "unplayed"
@@ -1098,7 +1098,7 @@
     {
       "date": "2026-06-14",
       "time": "14:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [24, 25],
       "outcome": {
         "status": "unplayed"
@@ -1107,7 +1107,7 @@
     {
       "date": "2026-04-26",
       "time": "14:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [9, 12],
       "outcome": {
         "status": "unplayed"
@@ -1116,7 +1116,7 @@
     {
       "date": "2026-05-03",
       "time": "14:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [36, 31],
       "outcome": {
         "status": "unplayed"
@@ -1125,7 +1125,7 @@
     {
       "date": "2026-05-10",
       "time": "14:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [14, 3],
       "outcome": {
         "status": "unplayed"
@@ -1134,7 +1134,7 @@
     {
       "date": "2026-05-17",
       "time": "14:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [8, 12],
       "outcome": {
         "status": "unplayed"
@@ -1143,7 +1143,7 @@
     {
       "date": "2026-05-31",
       "time": "14:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [22, 27],
       "outcome": {
         "status": "unplayed"
@@ -1152,7 +1152,7 @@
     {
       "date": "2026-06-07",
       "time": "14:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [1, 5],
       "outcome": {
         "status": "unplayed"
@@ -1161,7 +1161,7 @@
     {
       "date": "2026-06-14",
       "time": "14:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [19, 26],
       "outcome": {
         "status": "unplayed"
@@ -1233,7 +1233,7 @@
     {
       "date": "2026-04-26",
       "time": "15:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [9, 14],
       "outcome": {
         "status": "unplayed"
@@ -1242,7 +1242,7 @@
     {
       "date": "2026-05-03",
       "time": "15:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [36, 40],
       "outcome": {
         "status": "unplayed"
@@ -1251,7 +1251,7 @@
     {
       "date": "2026-05-10",
       "time": "15:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [14, 15],
       "outcome": {
         "status": "unplayed"
@@ -1260,7 +1260,7 @@
     {
       "date": "2026-05-17",
       "time": "15:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [5, 8],
       "outcome": {
         "status": "unplayed"
@@ -1269,7 +1269,7 @@
     {
       "date": "2026-05-31",
       "time": "15:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [27, 25],
       "outcome": {
         "status": "unplayed"
@@ -1278,7 +1278,7 @@
     {
       "date": "2026-06-07",
       "time": "15:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [1, 13],
       "outcome": {
         "status": "unplayed"
@@ -1287,7 +1287,7 @@
     {
       "date": "2026-06-14",
       "time": "15:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [19, 28],
       "outcome": {
         "status": "unplayed"
@@ -1296,7 +1296,7 @@
     {
       "date": "2026-04-26",
       "time": "15:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [2, 10],
       "outcome": {
         "status": "unplayed"
@@ -1305,7 +1305,7 @@
     {
       "date": "2026-05-03",
       "time": "15:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [42, 32],
       "outcome": {
         "status": "unplayed"
@@ -1314,7 +1314,7 @@
     {
       "date": "2026-05-10",
       "time": "15:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [1, 2],
       "outcome": {
         "status": "unplayed"
@@ -1323,7 +1323,7 @@
     {
       "date": "2026-05-17",
       "time": "15:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [4, 18],
       "outcome": {
         "status": "unplayed"
@@ -1332,7 +1332,7 @@
     {
       "date": "2026-05-31",
       "time": "15:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [21, 26],
       "outcome": {
         "status": "unplayed"
@@ -1341,7 +1341,7 @@
     {
       "date": "2026-06-07",
       "time": "15:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [9, 18],
       "outcome": {
         "status": "unplayed"
@@ -1350,7 +1350,7 @@
     {
       "date": "2026-06-14",
       "time": "15:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [25, 21],
       "outcome": {
         "status": "unplayed"
@@ -1422,7 +1422,7 @@
     {
       "date": "2026-04-26",
       "time": "16:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [39, 40],
       "outcome": {
         "status": "unplayed"
@@ -1431,7 +1431,7 @@
     {
       "date": "2026-05-03",
       "time": "16:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [41, 39],
       "outcome": {
         "status": "unplayed"
@@ -1440,7 +1440,7 @@
     {
       "date": "2026-05-10",
       "time": "16:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [24, 29],
       "outcome": {
         "status": "unplayed"
@@ -1449,7 +1449,7 @@
     {
       "date": "2026-05-17",
       "time": "16:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [36, 39],
       "outcome": {
         "status": "unplayed"
@@ -1458,7 +1458,7 @@
     {
       "date": "2026-05-31",
       "time": "16:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [42, 38],
       "outcome": {
         "status": "unplayed"
@@ -1467,7 +1467,7 @@
     {
       "date": "2026-06-07",
       "time": "16:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [26, 29],
       "outcome": {
         "status": "unplayed"
@@ -1476,7 +1476,7 @@
     {
       "date": "2026-06-14",
       "time": "16:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [6, 7],
       "outcome": {
         "status": "unplayed"
@@ -1485,7 +1485,7 @@
     {
       "date": "2026-04-26",
       "time": "16:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [42, 41],
       "outcome": {
         "status": "unplayed"
@@ -1494,7 +1494,7 @@
     {
       "date": "2026-05-03",
       "time": "16:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [33, 35],
       "outcome": {
         "status": "unplayed"
@@ -1503,7 +1503,7 @@
     {
       "date": "2026-05-10",
       "time": "16:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [21, 27],
       "outcome": {
         "status": "unplayed"
@@ -1512,7 +1512,7 @@
     {
       "date": "2026-05-17",
       "time": "16:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [42, 33],
       "outcome": {
         "status": "unplayed"
@@ -1521,7 +1521,7 @@
     {
       "date": "2026-05-31",
       "time": "16:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [34, 39],
       "outcome": {
         "status": "unplayed"
@@ -1530,7 +1530,7 @@
     {
       "date": "2026-06-07",
       "time": "16:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [27, 30],
       "outcome": {
         "status": "unplayed"
@@ -1539,7 +1539,7 @@
     {
       "date": "2026-06-14",
       "time": "16:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [1, 4],
       "outcome": {
         "status": "unplayed"
@@ -1611,7 +1611,7 @@
     {
       "date": "2026-04-26",
       "time": "17:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [42, 38],
       "outcome": {
         "status": "unplayed"
@@ -1620,7 +1620,7 @@
     {
       "date": "2026-05-03",
       "time": "17:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [33, 38],
       "outcome": {
         "status": "unplayed"
@@ -1629,7 +1629,7 @@
     {
       "date": "2026-05-10",
       "time": "17:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [19, 27],
       "outcome": {
         "status": "unplayed"
@@ -1638,7 +1638,7 @@
     {
       "date": "2026-05-17",
       "time": "17:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [33, 31],
       "outcome": {
         "status": "unplayed"
@@ -1647,7 +1647,7 @@
     {
       "date": "2026-05-31",
       "time": "17:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [37, 39],
       "outcome": {
         "status": "unplayed"
@@ -1656,7 +1656,7 @@
     {
       "date": "2026-06-07",
       "time": "17:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [28, 30],
       "outcome": {
         "status": "unplayed"
@@ -1665,7 +1665,7 @@
     {
       "date": "2026-06-14",
       "time": "17:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [4, 10],
       "outcome": {
         "status": "unplayed"
@@ -1674,7 +1674,7 @@
     {
       "date": "2026-04-26",
       "time": "17:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [37, 39],
       "outcome": {
         "status": "unplayed"
@@ -1683,7 +1683,7 @@
     {
       "date": "2026-05-03",
       "time": "17:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [34, 41],
       "outcome": {
         "status": "unplayed"
@@ -1692,7 +1692,7 @@
     {
       "date": "2026-05-10",
       "time": "17:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [24, 30],
       "outcome": {
         "status": "unplayed"
@@ -1701,7 +1701,7 @@
     {
       "date": "2026-05-17",
       "time": "17:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [42, 39],
       "outcome": {
         "status": "unplayed"
@@ -1710,7 +1710,7 @@
     {
       "date": "2026-05-31",
       "time": "17:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [33, 38],
       "outcome": {
         "status": "unplayed"
@@ -1719,7 +1719,7 @@
     {
       "date": "2026-06-07",
       "time": "17:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [29, 25],
       "outcome": {
         "status": "unplayed"
@@ -1728,7 +1728,7 @@
     {
       "date": "2026-06-14",
       "time": "17:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [7, 15],
       "outcome": {
         "status": "unplayed"
@@ -1800,7 +1800,7 @@
     {
       "date": "2026-04-26",
       "time": "18:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [34, 33],
       "outcome": {
         "status": "unplayed"
@@ -1809,7 +1809,7 @@
     {
       "date": "2026-05-03",
       "time": "18:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [22, 26],
       "outcome": {
         "status": "unplayed"
@@ -1818,7 +1818,7 @@
     {
       "date": "2026-05-10",
       "time": "18:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [5, 18],
       "outcome": {
         "status": "unplayed"
@@ -1827,7 +1827,7 @@
     {
       "date": "2026-05-17",
       "time": "18:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [37, 34],
       "outcome": {
         "status": "unplayed"
@@ -1836,7 +1836,7 @@
     {
       "date": "2026-05-31",
       "time": "18:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [19, 29],
       "outcome": {
         "status": "unplayed"
@@ -1845,7 +1845,7 @@
     {
       "date": "2026-06-07",
       "time": "18:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [33, 36],
       "outcome": {
         "status": "unplayed"
@@ -1854,7 +1854,7 @@
     {
       "date": "2026-06-14",
       "time": "18:00",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [12, 13],
       "outcome": {
         "status": "unplayed"
@@ -1863,7 +1863,7 @@
     {
       "date": "2026-04-26",
       "time": "18:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [36, 35],
       "outcome": {
         "status": "unplayed"
@@ -1872,7 +1872,7 @@
     {
       "date": "2026-05-03",
       "time": "18:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [23, 21],
       "outcome": {
         "status": "unplayed"
@@ -1881,7 +1881,7 @@
     {
       "date": "2026-05-10",
       "time": "18:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [6, 8],
       "outcome": {
         "status": "unplayed"
@@ -1890,7 +1890,7 @@
     {
       "date": "2026-05-17",
       "time": "18:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [41, 35],
       "outcome": {
         "status": "unplayed"
@@ -1899,7 +1899,7 @@
     {
       "date": "2026-05-31",
       "time": "18:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [24, 20],
       "outcome": {
         "status": "unplayed"
@@ -1908,7 +1908,7 @@
     {
       "date": "2026-06-07",
       "time": "18:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [34, 31],
       "outcome": {
         "status": "unplayed"
@@ -1917,7 +1917,7 @@
     {
       "date": "2026-06-14",
       "time": "18:00",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [16, 2],
       "outcome": {
         "status": "unplayed"
@@ -1989,7 +1989,7 @@
     {
       "date": "2026-04-26",
       "time": "18:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [36, 32],
       "outcome": {
         "status": "unplayed"
@@ -1998,7 +1998,7 @@
     {
       "date": "2026-05-03",
       "time": "18:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [23, 27],
       "outcome": {
         "status": "unplayed"
@@ -2007,7 +2007,7 @@
     {
       "date": "2026-05-10",
       "time": "18:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [8, 4],
       "outcome": {
         "status": "unplayed"
@@ -2016,7 +2016,7 @@
     {
       "date": "2026-05-17",
       "time": "18:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [32, 41],
       "outcome": {
         "status": "unplayed"
@@ -2025,7 +2025,7 @@
     {
       "date": "2026-05-31",
       "time": "18:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [23, 24],
       "outcome": {
         "status": "unplayed"
@@ -2034,7 +2034,7 @@
     {
       "date": "2026-06-07",
       "time": "18:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [31, 35],
       "outcome": {
         "status": "unplayed"
@@ -2043,7 +2043,7 @@
     {
       "date": "2026-06-14",
       "time": "18:50",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [16, 5],
       "outcome": {
         "status": "unplayed"
@@ -2052,7 +2052,7 @@
     {
       "date": "2026-04-26",
       "time": "18:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [31, 33],
       "outcome": {
         "status": "unplayed"
@@ -2061,7 +2061,7 @@
     {
       "date": "2026-05-03",
       "time": "18:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [22, 29],
       "outcome": {
         "status": "unplayed"
@@ -2070,7 +2070,7 @@
     {
       "date": "2026-05-10",
       "time": "18:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [12, 18],
       "outcome": {
         "status": "unplayed"
@@ -2079,7 +2079,7 @@
     {
       "date": "2026-05-17",
       "time": "18:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [37, 38],
       "outcome": {
         "status": "unplayed"
@@ -2088,7 +2088,7 @@
     {
       "date": "2026-05-31",
       "time": "18:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [28, 29],
       "outcome": {
         "status": "unplayed"
@@ -2097,7 +2097,7 @@
     {
       "date": "2026-06-07",
       "time": "18:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [33, 32],
       "outcome": {
         "status": "unplayed"
@@ -2106,7 +2106,7 @@
     {
       "date": "2026-06-14",
       "time": "18:50",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [3, 12],
       "outcome": {
         "status": "unplayed"
@@ -2178,7 +2178,7 @@
     {
       "date": "2026-04-26",
       "time": "19:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [7, 16],
       "outcome": {
         "status": "unplayed"
@@ -2187,7 +2187,7 @@
     {
       "date": "2026-05-03",
       "time": "19:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [25, 30],
       "outcome": {
         "status": "unplayed"
@@ -2196,7 +2196,7 @@
     {
       "date": "2026-05-10",
       "time": "19:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [37, 35],
       "outcome": {
         "status": "unplayed"
@@ -2205,7 +2205,7 @@
     {
       "date": "2026-05-17",
       "time": "19:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [24, 27],
       "outcome": {
         "status": "unplayed"
@@ -2214,7 +2214,7 @@
     {
       "date": "2026-05-31",
       "time": "19:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [4, 11],
       "outcome": {
         "status": "unplayed"
@@ -2223,7 +2223,7 @@
     {
       "date": "2026-06-07",
       "time": "19:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [38, 41],
       "outcome": {
         "status": "unplayed"
@@ -2232,7 +2232,7 @@
     {
       "date": "2026-06-14",
       "time": "19:40",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [23, 29],
       "outcome": {
         "status": "unplayed"
@@ -2241,7 +2241,7 @@
     {
       "date": "2026-04-26",
       "time": "19:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [18, 17],
       "outcome": {
         "status": "unplayed"
@@ -2250,7 +2250,7 @@
     {
       "date": "2026-05-03",
       "time": "19:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [19, 24],
       "outcome": {
         "status": "unplayed"
@@ -2259,7 +2259,7 @@
     {
       "date": "2026-05-10",
       "time": "19:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [38, 40],
       "outcome": {
         "status": "unplayed"
@@ -2268,7 +2268,7 @@
     {
       "date": "2026-05-17",
       "time": "19:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [21, 30],
       "outcome": {
         "status": "unplayed"
@@ -2277,7 +2277,7 @@
     {
       "date": "2026-05-31",
       "time": "19:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [7, 17],
       "outcome": {
         "status": "unplayed"
@@ -2286,7 +2286,7 @@
     {
       "date": "2026-06-07",
       "time": "19:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [42, 39],
       "outcome": {
         "status": "unplayed"
@@ -2295,7 +2295,7 @@
     {
       "date": "2026-06-14",
       "time": "19:40",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [22, 30],
       "outcome": {
         "status": "unplayed"
@@ -2367,7 +2367,7 @@
     {
       "date": "2026-04-26",
       "time": "20:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [18, 8],
       "outcome": {
         "status": "unplayed"
@@ -2376,7 +2376,7 @@
     {
       "date": "2026-05-03",
       "time": "20:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [24, 28],
       "outcome": {
         "status": "unplayed"
@@ -2385,7 +2385,7 @@
     {
       "date": "2026-05-10",
       "time": "20:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [34, 40],
       "outcome": {
         "status": "unplayed"
@@ -2394,7 +2394,7 @@
     {
       "date": "2026-05-17",
       "time": "20:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [21, 19],
       "outcome": {
         "status": "unplayed"
@@ -2403,7 +2403,7 @@
     {
       "date": "2026-05-31",
       "time": "20:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [12, 7],
       "outcome": {
         "status": "unplayed"
@@ -2412,7 +2412,7 @@
     {
       "date": "2026-06-07",
       "time": "20:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [42, 40],
       "outcome": {
         "status": "unplayed"
@@ -2421,7 +2421,7 @@
     {
       "date": "2026-06-14",
       "time": "20:30",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [22, 27],
       "outcome": {
         "status": "unplayed"
@@ -2430,7 +2430,7 @@
     {
       "date": "2026-04-26",
       "time": "20:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [7, 1],
       "outcome": {
         "status": "unplayed"
@@ -2439,7 +2439,7 @@
     {
       "date": "2026-05-03",
       "time": "20:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [20, 30],
       "outcome": {
         "status": "unplayed"
@@ -2448,7 +2448,7 @@
     {
       "date": "2026-05-10",
       "time": "20:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [32, 37],
       "outcome": {
         "status": "unplayed"
@@ -2457,7 +2457,7 @@
     {
       "date": "2026-05-17",
       "time": "20:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [24, 28],
       "outcome": {
         "status": "unplayed"
@@ -2466,7 +2466,7 @@
     {
       "date": "2026-05-31",
       "time": "20:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [2, 4],
       "outcome": {
         "status": "unplayed"
@@ -2475,7 +2475,7 @@
     {
       "date": "2026-06-07",
       "time": "20:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [37, 41],
       "outcome": {
         "status": "unplayed"
@@ -2484,7 +2484,7 @@
     {
       "date": "2026-06-14",
       "time": "20:30",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [20, 29],
       "outcome": {
         "status": "unplayed"
@@ -2556,7 +2556,7 @@
     {
       "date": "2026-04-26",
       "time": "21:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [27, 28],
       "outcome": {
         "status": "unplayed"
@@ -2565,7 +2565,7 @@
     {
       "date": "2026-05-03",
       "time": "21:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [6, 13],
       "outcome": {
         "status": "unplayed"
@@ -2574,7 +2574,7 @@
     {
       "date": "2026-05-10",
       "time": "21:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [36, 41],
       "outcome": {
         "status": "unplayed"
@@ -2583,7 +2583,7 @@
     {
       "date": "2026-05-17",
       "time": "21:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [3, 1],
       "outcome": {
         "status": "unplayed"
@@ -2592,7 +2592,7 @@
     {
       "date": "2026-05-31",
       "time": "21:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [41, 31],
       "outcome": {
         "status": "unplayed"
@@ -2601,7 +2601,7 @@
     {
       "date": "2026-06-07",
       "time": "21:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [22, 19],
       "outcome": {
         "status": "unplayed"
@@ -2610,7 +2610,7 @@
     {
       "date": "2026-06-14",
       "time": "21:20",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [9, 8],
       "outcome": {
         "status": "unplayed"
@@ -2619,7 +2619,7 @@
     {
       "date": "2026-04-26",
       "time": "21:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [30, 29],
       "outcome": {
         "status": "unplayed"
@@ -2628,7 +2628,7 @@
     {
       "date": "2026-05-03",
       "time": "21:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [3, 11],
       "outcome": {
         "status": "unplayed"
@@ -2637,7 +2637,7 @@
     {
       "date": "2026-05-10",
       "time": "21:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [33, 39],
       "outcome": {
         "status": "unplayed"
@@ -2646,7 +2646,7 @@
     {
       "date": "2026-05-17",
       "time": "21:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [10, 17],
       "outcome": {
         "status": "unplayed"
@@ -2655,7 +2655,7 @@
     {
       "date": "2026-05-31",
       "time": "21:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [32, 36],
       "outcome": {
         "status": "unplayed"
@@ -2664,7 +2664,7 @@
     {
       "date": "2026-06-07",
       "time": "21:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [20, 23],
       "outcome": {
         "status": "unplayed"
@@ -2673,7 +2673,7 @@
     {
       "date": "2026-06-14",
       "time": "21:20",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [14, 17],
       "outcome": {
         "status": "unplayed"
@@ -2745,7 +2745,7 @@
     {
       "date": "2026-04-26",
       "time": "22:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [30, 26],
       "outcome": {
         "status": "unplayed"
@@ -2754,7 +2754,7 @@
     {
       "date": "2026-05-03",
       "time": "22:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [15, 11],
       "outcome": {
         "status": "unplayed"
@@ -2763,7 +2763,7 @@
     {
       "date": "2026-05-10",
       "time": "22:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [31, 39],
       "outcome": {
         "status": "unplayed"
@@ -2772,7 +2772,7 @@
     {
       "date": "2026-05-17",
       "time": "22:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [15, 17],
       "outcome": {
         "status": "unplayed"
@@ -2781,7 +2781,7 @@
     {
       "date": "2026-05-31",
       "time": "22:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [36, 35],
       "outcome": {
         "status": "unplayed"
@@ -2790,7 +2790,7 @@
     {
       "date": "2026-06-07",
       "time": "22:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [21, 20],
       "outcome": {
         "status": "unplayed"
@@ -2799,7 +2799,7 @@
     {
       "date": "2026-06-14",
       "time": "22:10",
-      "court": "Black Ct",
+      "court": "Yellow Ct",
       "teamNumbers": [14, 18],
       "outcome": {
         "status": "unplayed"
@@ -2808,7 +2808,7 @@
     {
       "date": "2026-04-26",
       "time": "22:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [27, 25],
       "outcome": {
         "status": "unplayed"
@@ -2817,7 +2817,7 @@
     {
       "date": "2026-05-03",
       "time": "22:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [6, 4],
       "outcome": {
         "status": "unplayed"
@@ -2826,7 +2826,7 @@
     {
       "date": "2026-05-10",
       "time": "22:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [42, 36],
       "outcome": {
         "status": "unplayed"
@@ -2835,7 +2835,7 @@
     {
       "date": "2026-05-17",
       "time": "22:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [2, 3],
       "outcome": {
         "status": "unplayed"
@@ -2844,7 +2844,7 @@
     {
       "date": "2026-05-31",
       "time": "22:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [41, 40],
       "outcome": {
         "status": "unplayed"
@@ -2853,7 +2853,7 @@
     {
       "date": "2026-06-07",
       "time": "22:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [24, 22],
       "outcome": {
         "status": "unplayed"
@@ -2862,7 +2862,7 @@
     {
       "date": "2026-06-14",
       "time": "22:10",
-      "court": "Red Ct",
+      "court": "White Ct",
       "teamNumbers": [11, 8],
       "outcome": {
         "status": "unplayed"
