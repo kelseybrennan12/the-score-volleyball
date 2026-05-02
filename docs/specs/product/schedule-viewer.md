@@ -10,8 +10,8 @@ description: Single-page UX for a player to find their team's schedule, next gam
 - ID: P0001
 - Type: Product
 - Status: active
-- Version: v5
-- Last Updated: 2026-04-26
+- Version: v6
+- Last Updated: 2026-05-02
 
 ## Summary
 
@@ -42,15 +42,16 @@ and view their schedule, upcoming match day, record, and rank.
 
 ## View Modes
 
-The page renders one of two view modes at a time, selected by the user via a toggle near the top of the page:
+The page renders one of three view modes at a time, selected by the user via a toggle near the top of the page:
 
 - **`team` view** (default): the existing day → league → team flow described in this spec.
 - **`now` view**: a compact, read-only list of matches whose scheduled start time equals the current time, aggregated
   across every league snapshot whose league day matches today's day-of-week (in `America/Detroit`).
+- **`standings` view**: a per-division standings table for any single league snapshot, selected via a flat row of
+  day/division pills (`Sunday B`, `Sunday BB`, `Monday B`, …) ordered by day of week.
 
-The active view mode is persisted in the URL as `?view=team|now`. Absence of the parameter is equivalent to `view=team`.
-Future view modes (e.g. a season-wide `schedule` browser) will extend this same parameter without changing the URL
-shape.
+The active view mode is persisted in the URL as `?view=team|now|standings`. Absence of the parameter is equivalent to
+`view=team`. Future view modes will extend this same parameter without changing the URL shape.
 
 ## Core Concepts
 
@@ -109,12 +110,13 @@ shape.
   `volleyball-viewer:selection` whenever any of those change. On mount it restores any stored entries that still resolve
   against the currently-shipped snapshots (stale entries — a league slug we no longer ingest or a team number that no
   longer exists — are dropped silently and the app falls back to the auto-selected current session).
-- The page also reflects `{ view, day, leagueSlug, teamNumber }` in the URL as query parameters, using a typed
+- The page also reflects `{ view, day, leagueSlug, teamNumber, division }` in the URL as query parameters, using a typed
   query-state library (`nuqs`). Parameter shapes:
-  - `view`: `team` | `now` (omitted when default `team`).
+  - `view`: `team` | `now` | `standings` (omitted when default `team`).
   - `day`: lowercase weekday name (`sunday`..`friday`), only meaningful in `team` view.
-  - `league`: league slug, only meaningful in `team` view.
+  - `league`: league slug. In `team` view scopes the team picker; in `standings` view scopes the table.
   - `team`: integer team number, only meaningful in `team` view.
+  - `division`: division name (e.g. `B`, `BB`, `BBB`), only meaningful in `standings` view.
 - Query-parameter and `localStorage` hydration rules:
   - On mount, if a query parameter is present, it wins over the corresponding `localStorage` value.
   - On mount, if a query parameter is absent, the corresponding value is hydrated from `localStorage` and pushed back
@@ -125,7 +127,7 @@ shape.
   - Invalid or stale URL values are silently dropped and the URL is rewritten without them, using `history: "replace"`
     so the cleanup does not pollute the back-stack. The same rules apply to invalid `localStorage` entries.
     Specifically:
-    - `view` not in `{team, now}` is treated as the default `team`.
+    - `view` not in `{team, now, standings}` is treated as the default `team`.
     - `day` not in `{sunday..friday}` is treated as null; dependent `league` and `team` are also cleared.
     - `league` whose slug is not present in the current snapshot set for the resolved `day` is treated as null;
       dependent `team` is also cleared.
@@ -146,6 +148,19 @@ shape.
   - When no matches are currently playing under the configured window, displays an empty-state message naming the next
     upcoming start time today (if any) so the spectator knows when to check back. If no league plays today at all,
     displays a different empty state pointing the user toward the `team` view.
+  - Does not poll or auto-refresh; the user refreshes by reloading the page.
+- The `standings` view:
+  - Renders a flat row of pills, one per `(league snapshot, division)` pair, labeled `"<Day> <Division>"` (e.g.
+    `Sunday B`, `Sunday BB`, `Monday B`). Pills are ordered by canonical day-of-week (Sunday first, then Monday, …),
+    with divisions sorted alphabetically inside each day.
+  - Selecting a pill writes `?league=<slug>&division=<name>` (history-replace) and renders a per-division standings
+    table for that snapshot. The table has three columns: rank, team (number + captain), and sets won–lost.
+  - Ranking rule: teams are ordered by sets won descending, then sets lost ascending. Two teams sharing the same
+    `(setsWon, setsLost)` share a rank using skip-method numbering and are labeled `T-N` (e.g. tied for third → both
+    show `T-3`, the next team shows `5`). Tie-breakers beyond `(setsWon, setsLost)` are intentionally not modeled.
+  - Teams that have not yet played a single set (record of `0-0`) appear at the bottom of the table, sorted by team
+    number, with a rank label of `—` rather than a numeric rank.
+  - When the rendered table contains at least one tied row, a footnote below the table explains the `T-N` marker.
   - Does not poll or auto-refresh; the user refreshes by reloading the page.
 - The page renders a footer link back to the source standings page at
   `https://www.thescoregr.com/volleyball/beach-volleyball-leagues/` so users can cross-reference the authoritative
@@ -171,7 +186,6 @@ shape.
 ### May:
 
 - Offer a "copy schedule" affordance for sharing.
-- Surface division standings as a secondary view adjacent to the team's schedule.
 
 ## Open Questions
 
@@ -180,6 +194,9 @@ shape.
 ## Completion
 
 - Status: Implemented
-- Remaining: `now` view (v5) and the `nuqs`-driven URL state model are pending implementation under the effort
-  [/docs/efforts/2026-04-27-01-49-now-view-and-query-params.md](/docs/efforts/2026-04-27-01-49-now-view-and-query-params.md).
-  Playwright e2e coverage is still deferred per the MVP effort.
+- Remaining: Playwright e2e coverage is still deferred per the MVP effort.
+- Implemented under:
+  - [/docs/efforts/2026-04-27-01-49-now-view-and-query-params.md](/docs/efforts/2026-04-27-01-49-now-view-and-query-params.md)
+    (now view + nuqs URL state).
+  - [/docs/efforts/2026-05-02-13-19-standings-view.md](/docs/efforts/2026-05-02-13-19-standings-view.md) (standings
+    view).

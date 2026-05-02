@@ -47,10 +47,11 @@ Map volleyball-league-facing UI labels, conversational terms, and implementation
 
 ### UI Concepts
 
-| Term            | Code Location                                                                  | Notes                                                                                                                  |
-| --------------- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| Viewer app      | [/src/app/page.tsx](/src/app/page.tsx)                                         | Server Component that loads snapshots and mounts the UI tree.                                                          |
-| Day selector    | [/src/components/viewer-app.tsx](/src/components/viewer-app.tsx)               | Buttons for each league day with a cached snapshot.                                                                    |
-| Team search     | [/src/components/viewer-app.tsx](/src/components/viewer-app.tsx)               | Lookup by team number or captain name.                                                                                 |
-| Team detail     | [/src/components/team-detail.tsx](/src/components/team-detail.tsx)             | Record/rank header, next-match card, chronological schedule.                                                           |
-| Calendar export | [/src/shared/domain/calendar-export.ts](/src/shared/domain/calendar-export.ts) | Pure `buildTeamIcs` helper that renders a team's schedule as an RFC 5545 iCalendar string for one-off `.ics` download. |
+| Term            | Code Location                                                                  | Notes                                                                                                                      |
+| --------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- |
+| Viewer app      | [/src/app/page.tsx](/src/app/page.tsx)                                         | Server Component that loads snapshots and mounts the UI tree.                                                              |
+| Day selector    | [/src/components/viewer-app.tsx](/src/components/viewer-app.tsx)               | Buttons for each league day with a cached snapshot.                                                                        |
+| Team search     | [/src/components/viewer-app.tsx](/src/components/viewer-app.tsx)               | Lookup by team number or captain name.                                                                                     |
+| Team detail     | [/src/components/team-detail.tsx](/src/components/team-detail.tsx)             | Record/rank header, next-match card, chronological schedule.                                                               |
+| Standings view  | [/src/components/standings-view.tsx](/src/components/standings-view.tsx)       | League/division pill picker plus a per-division standings table; ties at the same `(setsWon, setsLost)` are labeled `T-N`. |
+| Calendar export | [/src/shared/domain/calendar-export.ts](/src/shared/domain/calendar-export.ts) | Pure `buildTeamIcs` helper that renders a team's schedule as an RFC 5545 iCalendar string for one-off `.ics` download.     |
