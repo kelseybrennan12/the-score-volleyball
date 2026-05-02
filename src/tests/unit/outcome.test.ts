@@ -1,4 +1,4 @@
-import { COLOR_BLUE_2_1, COLOR_MAGENTA_3_0, deriveOutcome } from "@/backend/logic/core/outcome";
+import { COLOR_BLUE_2_1, COLOR_BLUE_2_1_LEGEND, COLOR_MAGENTA_3_0, deriveOutcome } from "@/backend/logic/core/outcome";
 import { describe, expect, it } from "vitest";
 
 describe("deriveOutcome", () => {
@@ -9,6 +9,11 @@ describe("deriveOutcome", () => {
 
   it("maps blue to a 2-1 win for the first-listed team", () => {
     const result = deriveOutcome({ teamNumbers: [3, 7], fillArgb: COLOR_BLUE_2_1 });
+    expect(result.outcome).toEqual({ status: "played", winnerTeamNumber: 3, setsWinner: 2, setsLoser: 1 });
+  });
+
+  it("also accepts the legend's darker blue as a 2-1 win", () => {
+    const result = deriveOutcome({ teamNumbers: [3, 7], fillArgb: COLOR_BLUE_2_1_LEGEND });
     expect(result.outcome).toEqual({ status: "played", winnerTeamNumber: 3, setsWinner: 2, setsLoser: 1 });
   });
 

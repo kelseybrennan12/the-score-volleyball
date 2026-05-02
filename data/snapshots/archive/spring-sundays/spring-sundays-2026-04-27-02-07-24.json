@@ -8,7 +8,7 @@
     "year": 2026,
     "sourceSheetId": "1WEAya6DXP78Md-FxvfE-Ripk0lo_BWjNY9TY4Tw31v4"
   },
-  "ingestedAt": "2026-05-02T13:05:17.094Z",
+  "ingestedAt": "2026-04-27T02:07:24.007Z",
   "teams": [
     {
       "number": 1,
@@ -226,12 +226,9 @@
       "date": "2026-04-26",
       "time": "11:20",
       "court": "Blue Ct (playground)",
-      "teamNumbers": [22, 23],
+      "teamNumbers": [23, 22],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 22,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -294,10 +291,7 @@
       "court": "Black Ct (McDs)",
       "teamNumbers": [24, 20],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 24,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -360,10 +354,7 @@
       "court": "Red Ct (red/white/blue)",
       "teamNumbers": [19, 21],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 19,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -426,10 +417,7 @@
       "court": "Blue Ct",
       "teamNumbers": [19, 20],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 19,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -492,10 +480,7 @@
       "court": "Black Ct",
       "teamNumbers": [22, 21],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 22,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -558,10 +543,7 @@
       "court": "Red Ct",
       "teamNumbers": [24, 23],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 24,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -624,10 +606,7 @@
       "court": "Blue Ct",
       "teamNumbers": [4, 13],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 4,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -690,10 +669,7 @@
       "court": "Black Ct",
       "teamNumbers": [11, 6],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 11,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -756,10 +732,7 @@
       "court": "Red Ct",
       "teamNumbers": [3, 15],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 3,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -822,10 +795,7 @@
       "court": "Blue Ct",
       "teamNumbers": [6, 15],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 6,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -888,10 +858,7 @@
       "court": "Black Ct",
       "teamNumbers": [4, 3],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 4,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -954,10 +921,7 @@
       "court": "Red Ct",
       "teamNumbers": [11, 13],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 11,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -1018,12 +982,9 @@
       "date": "2026-04-26",
       "time": "14:40",
       "court": "Blue Ct",
-      "teamNumbers": [14, 2],
+      "teamNumbers": [2, 14],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 14,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -1084,12 +1045,9 @@
       "date": "2026-04-26",
       "time": "14:40",
       "court": "Black Ct",
-      "teamNumbers": [5, 10],
+      "teamNumbers": [10, 5],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 5,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -1152,10 +1110,7 @@
       "court": "Red Ct",
       "teamNumbers": [9, 12],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 9,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -1216,12 +1171,9 @@
       "date": "2026-04-26",
       "time": "15:30",
       "court": "Blue Ct",
-      "teamNumbers": [5, 12],
+      "teamNumbers": [12, 5],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 5,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -1282,12 +1234,9 @@
       "date": "2026-04-26",
       "time": "15:30",
       "court": "Black Ct",
-      "teamNumbers": [14, 9],
+      "teamNumbers": [9, 14],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 14,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -1350,10 +1299,7 @@
       "court": "Red Ct",
       "teamNumbers": [2, 10],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 2,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -1414,12 +1360,9 @@
       "date": "2026-04-26",
       "time": "16:20",
       "court": "Blue Ct",
-      "teamNumbers": [38, 37],
+      "teamNumbers": [37, 38],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 38,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -1482,10 +1425,7 @@
       "court": "Black Ct",
       "teamNumbers": [39, 40],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 39,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -1546,12 +1486,9 @@
       "date": "2026-04-26",
       "time": "16:20",
       "court": "Red Ct",
-      "teamNumbers": [41, 42],
+      "teamNumbers": [42, 41],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 41,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -1612,12 +1549,9 @@
       "date": "2026-04-26",
       "time": "17:10",
       "court": "Blue Ct",
-      "teamNumbers": [41, 40],
+      "teamNumbers": [40, 41],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 41,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -1678,12 +1612,9 @@
       "date": "2026-04-26",
       "time": "17:10",
       "court": "Black Ct",
-      "teamNumbers": [38, 42],
+      "teamNumbers": [42, 38],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 38,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -1744,12 +1675,9 @@
       "date": "2026-04-26",
       "time": "17:10",
       "court": "Red Ct",
-      "teamNumbers": [39, 37],
+      "teamNumbers": [37, 39],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 39,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -1812,10 +1740,7 @@
       "court": "Blue Ct",
       "teamNumbers": [31, 32],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 31,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -1876,12 +1801,9 @@
       "date": "2026-04-26",
       "time": "18:00",
       "court": "Black Ct",
-      "teamNumbers": [33, 34],
+      "teamNumbers": [34, 33],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 33,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -1944,10 +1866,7 @@
       "court": "Red Ct",
       "teamNumbers": [36, 35],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 36,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -2010,10 +1929,7 @@
       "court": "Blue Ct",
       "teamNumbers": [34, 35],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 34,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -2074,12 +1990,9 @@
       "date": "2026-04-26",
       "time": "18:50",
       "court": "Black Ct",
-      "teamNumbers": [32, 36],
+      "teamNumbers": [36, 32],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 32,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -2140,12 +2053,9 @@
       "date": "2026-04-26",
       "time": "18:50",
       "court": "Red Ct",
-      "teamNumbers": [33, 31],
+      "teamNumbers": [31, 33],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 33,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -2208,10 +2118,7 @@
       "court": "Blue Ct",
       "teamNumbers": [8, 1],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 8,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -2272,12 +2179,9 @@
       "date": "2026-04-26",
       "time": "19:40",
       "court": "Black Ct",
-      "teamNumbers": [16, 7],
+      "teamNumbers": [7, 16],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 16,
-        "setsWinner": 3,
-        "setsLoser": 0
+        "status": "unplayed"
       }
     },
     {
@@ -2338,12 +2242,9 @@
       "date": "2026-04-26",
       "time": "19:40",
       "court": "Red Ct",
-      "teamNumbers": [17, 18],
+      "teamNumbers": [18, 17],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 17,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -2406,10 +2307,7 @@
       "court": "Blue Ct",
       "teamNumbers": [17, 16],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 17,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -2472,10 +2370,7 @@
       "court": "Black Ct",
       "teamNumbers": [18, 8],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 18,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -2536,12 +2431,9 @@
       "date": "2026-04-26",
       "time": "20:30",
       "court": "Red Ct",
-      "teamNumbers": [1, 7],
+      "teamNumbers": [7, 1],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 1,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -2602,12 +2494,9 @@
       "date": "2026-04-26",
       "time": "21:20",
       "court": "Blue Ct",
-      "teamNumbers": [25, 26],
+      "teamNumbers": [26, 25],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 25,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -2668,12 +2557,9 @@
       "date": "2026-04-26",
       "time": "21:20",
       "court": "Black Ct",
-      "teamNumbers": [28, 27],
+      "teamNumbers": [27, 28],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 28,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -2734,12 +2620,9 @@
       "date": "2026-04-26",
       "time": "21:20",
       "court": "Red Ct",
-      "teamNumbers": [29, 30],
+      "teamNumbers": [30, 29],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 29,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -2800,12 +2683,9 @@
       "date": "2026-04-26",
       "time": "22:10",
       "court": "Blue Ct",
-      "teamNumbers": [29, 28],
+      "teamNumbers": [28, 29],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 29,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -2866,12 +2746,9 @@
       "date": "2026-04-26",
       "time": "22:10",
       "court": "Black Ct",
-      "teamNumbers": [26, 30],
+      "teamNumbers": [30, 26],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 26,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
@@ -2932,12 +2809,9 @@
       "date": "2026-04-26",
       "time": "22:10",
       "court": "Red Ct",
-      "teamNumbers": [25, 27],
+      "teamNumbers": [27, 25],
       "outcome": {
-        "status": "played",
-        "winnerTeamNumber": 25,
-        "setsWinner": 2,
-        "setsLoser": 1
+        "status": "unplayed"
       }
     },
     {
