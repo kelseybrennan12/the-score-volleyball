@@ -10,8 +10,8 @@ description: How snapshot age and season identity are surfaced to users of the S
 - ID: P0002
 - Type: Product
 - Status: active
-- Version: v2
-- Last Updated: 2026-04-19
+- Version: v3
+- Last Updated: 2026-05-02
 
 ## Summary
 
@@ -27,12 +27,12 @@ Define what the app tells users about the age, origin, and season identity of th
 
 The league admins do not update the underlying spreadsheets frequently, so most of the time the snapshot will
 legitimately be several days old. The app's role is to make the snapshot age discoverable, not to raise an alarm about
-it.
+it. A daily Vercel Cron run refreshes the snapshots overnight (see
+[/docs/specs/technical/runtime-ingestion.md](/docs/specs/technical/runtime-ingestion.md)); the operator-triggered admin
+ingest path remains as a manual "force refresh now" escape hatch.
 
 ## Non-Goals
 
-- Automatic background refresh. Ingestion is explicitly operator-triggered per
-  [/docs/specs/technical/spreadsheet-ingestion.md](/docs/specs/technical/spreadsheet-ingestion.md).
 - Surfacing per-cell provenance or change history.
 
 ## Requirements

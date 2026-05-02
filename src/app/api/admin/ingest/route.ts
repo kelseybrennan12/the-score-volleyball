@@ -1,6 +1,7 @@
 import { LEAGUE_SOURCES } from "@/backend/logic/core/league-sources";
 import { requireAdminRequest } from "@/backend/logic/services/admin-session";
 import { runIngestion } from "@/backend/logic/services/run-ingestion";
+import { INGEST_COOLDOWN_MS } from "@/backend/logic/services/runtime-ingestion-config";
 import { createSheetsFetcher } from "@/backend/runtime/adapters/integrations/google-sheets";
 import { resolveSnapshotRepo } from "@/backend/runtime/adapters/snapshots";
 import { NextResponse } from "next/server";
@@ -8,8 +9,6 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 export const maxDuration = 60;
-
-const INGEST_COOLDOWN_MS = 5 * 60 * 1000;
 
 export async function POST(): Promise<NextResponse> {
   const guard = await requireAdminRequest();

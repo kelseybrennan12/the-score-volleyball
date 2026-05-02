@@ -10,8 +10,8 @@ description: Target runtime, hosting model, and how ingestion snapshots reach pr
 - ID: T0003
 - Type: Technical
 - Status: active
-- Version: v2
-- Last Updated: 2026-04-20
+- Version: v3
+- Last Updated: 2026-05-02
 
 ## Summary
 
@@ -25,6 +25,8 @@ topology.
 - Run on Vercel's Hobby tier with minimal configuration.
 - Keep data access trivial and free of runtime I/O against Google Sheets on the viewer request path.
 - Support operator-triggered runtime ingestion from the deployed app so refreshes don't require a local checkout.
+- Refresh snapshots automatically once a day via Vercel Cron, so most users see same-day data without an operator
+  manually triggering an ingest.
 
 ## Non-Goals
 
@@ -55,8 +57,12 @@ topology.
 - The deployment exposes a hidden admin tool (see
   [/docs/specs/product/admin-tool.md](/docs/specs/product/admin-tool.md)) as the primary refresh path in production. The
   tool is gated by a shared passphrase and a signed session cookie.
-- Environment variables required for the admin tool and Blob storage are documented in `.env.example`:
-  `ADMIN_PASSPHRASE`, `ADMIN_COOKIE_SECRET`, and (auto-injected on Vercel) `BLOB_READ_WRITE_TOKEN`.
+- Environment variables required for the admin tool, Blob storage, and the cron ingest are documented in `.env.example`:
+  `ADMIN_PASSPHRASE`, `ADMIN_COOKIE_SECRET`, `CRON_SECRET`, and (auto-injected on Vercel) `BLOB_READ_WRITE_TOKEN`.
+- The deployment includes a Vercel Cron entry in [/vercel.json](/vercel.json) that hits `/api/cron/ingest` on
+  `0 8 * * *` UTC (daily, 04:00 ET in EDT / 03:00 ET in EST). Vercel Cron auto-attaches
+  `Authorization: Bearer ${CRON_SECRET}` to the outbound request; the route validates the bearer before running
+  ingestion.
 - The ingestion CLI remains independent of Vercel. It runs anywhere the repo is checked out with the project's Node
   toolchain and writes to the local filesystem, unaffected by the Blob adapter.
 
@@ -70,7 +76,7 @@ topology.
 
 ### May:
 
-- Add a Vercel cron-triggered route handler in a future iteration so scheduled refreshes land without manual triggering.
+- Add per-day-of-week scheduling once Vercel plan tiers (or another scheduler) make it free.
 
 ## Open Questions
 
@@ -79,4 +85,4 @@ topology.
 ## Completion
 
 - Status: Implemented
-- Remaining: None for v2.
+- Remaining: None for v3.

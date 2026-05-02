@@ -10,8 +10,8 @@ description: HTTP route handler that runs the ingestion pipeline from the deploy
 - ID: T0004
 - Type: Technical
 - Status: active
-- Version: v1
-- Last Updated: 2026-04-20
+- Version: v2
+- Last Updated: 2026-05-02
 
 ## Summary
 
@@ -29,10 +29,11 @@ session that gates it, and the rate limit that protects it from abuse. Related s
 
 ## Non-Goals
 
-- Automatic scheduled ingestion (e.g. Vercel cron).
 - Per-league endpoints or a streaming progress API. The route handler returns a single JSON result when the run
   finishes.
 - External auth providers. A single shared passphrase is sufficient for the current operator model.
+- Per-day-of-week or sub-hourly cron schedules. One daily fire is sufficient on Vercel Hobby and matches the operator
+  cadence; the manual admin route is still available for ad-hoc refreshes.
 
 ## Core Concepts
 
@@ -70,6 +71,22 @@ session that gates it, and the rate limit that protects it from abuse. Related s
 - All admin route handlers set `runtime = "nodejs"` and `dynamic = "force-dynamic"` to prevent caching or Edge-runtime
   mismatch. The ingest handler additionally exports `maxDuration = 60` to accommodate a full multi-league run within
   Vercel's function timeout.
+- A second Next.js route handler `GET /api/cron/ingest` exists for Vercel Cron. Its request path is:
+  - Reject with 503 if `CRON_SECRET` is not configured.
+  - Verify the request's `Authorization` header equals `Bearer ${CRON_SECRET}` using a constant-time comparison; reject
+    with 401 otherwise.
+  - Read `repo.getLastIngestedAt()`; if elapsed is less than the same `INGEST_COOLDOWN_MS` window the admin route uses,
+    respond `200 { ok: true, skipped: true, reason: "cooldown", lastIngestedAt }`. Cron skips do not return non-2xx
+    because Vercel surfaces non-2xx as cron failures and a benign cooldown collision should not alert the operator.
+  - Otherwise call the same `runIngestion` core and respond `200 { ok: true, lastIngestedAt, results }`. Per-league
+    failures stay inside the result array (parity with the admin route); only an unexpected pipeline exception returns
+    `500`.
+- The cron route uses the same `runtime = "nodejs"`, `dynamic = "force-dynamic"`, and `maxDuration = 60` exports as the
+  admin route. The shared `INGEST_COOLDOWN_MS` constant lives in
+  [/src/backend/logic/services/runtime-ingestion-config.ts](/src/backend/logic/services/runtime-ingestion-config.ts) so
+  both routes stay in lockstep.
+- The cron schedule itself lives in [/vercel.json](/vercel.json) at `/api/cron/ingest` on `0 8 * * *` UTC (04:00 ET in
+  EDT, 03:00 ET in EST).
 
 ### Should:
 
