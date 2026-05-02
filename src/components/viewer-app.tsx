@@ -9,11 +9,13 @@ import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } fr
 import { useEffect, useMemo, useRef, useState } from "react";
 import { DevTimePanel } from "./dev-time-panel";
 import { NowView } from "./now-view";
+import { StandingsView } from "./standings-view";
 import { TeamDetail } from "./team-detail";
 import { DivisionPill } from "./theme-tokens";
 
 const STORAGE_KEY = "volleyball-viewer:selection";
-const VIEW_MODES = ["team", "now"] as const;
+const VIEW_MODES = ["team", "now", "standings"] as const;
+type ViewMode = (typeof VIEW_MODES)[number];
 
 interface StoredSelection {
   day?: LeagueDay;
@@ -43,6 +45,10 @@ export function ViewerApp({ snapshots, mockNowIso }: { snapshots: Snapshot[]; mo
   const [selectedTeamNumber, setSelectedTeamNumber] = useQueryState(
     "team",
     parseAsInteger.withOptions({ history: "replace" }),
+  );
+  const [selectedDivision, setSelectedDivision] = useQueryState(
+    "division",
+    parseAsString.withOptions({ history: "replace" }),
   );
 
   const [query, setQuery] = useState("");
@@ -130,6 +136,24 @@ export function ViewerApp({ snapshots, mockNowIso }: { snapshots: Snapshot[]; mo
         <DevTimePanel mockNowIso={mockNowIso} />
         <ViewToggle view={view} onChange={setView} />
         <NowView snapshots={snapshots} now={now} onSwitchToTeamView={() => void setView("team")} />
+      </div>
+    );
+  }
+
+  if (view === "standings") {
+    return (
+      <div className="space-y-6">
+        <DevTimePanel mockNowIso={mockNowIso} />
+        <ViewToggle view={view} onChange={setView} />
+        <StandingsView
+          snapshots={snapshots}
+          selectedLeagueSlug={selectedLeagueSlug}
+          selectedDivision={selectedDivision}
+          onSelect={(leagueSlug, division) => {
+            void setSelectedLeagueSlug(leagueSlug);
+            void setSelectedDivision(division);
+          }}
+        />
       </div>
     );
   }
@@ -242,7 +266,13 @@ export function ViewerApp({ snapshots, mockNowIso }: { snapshots: Snapshot[]; mo
   );
 }
 
-function ViewToggle({ view, onChange }: { view: "team" | "now"; onChange: (next: "team" | "now") => void }) {
+const VIEW_LABEL: Record<ViewMode, string> = {
+  team: "Find My Team",
+  now: "Now Playing",
+  standings: "Standings",
+};
+
+function ViewToggle({ view, onChange }: { view: ViewMode; onChange: (next: ViewMode) => void }) {
   return (
     <div className="flex flex-wrap gap-2" role="tablist" aria-label="View mode">
       {VIEW_MODES.map((mode) => (
@@ -258,7 +288,7 @@ function ViewToggle({ view, onChange }: { view: "team" | "now"; onChange: (next:
               : "border-neutral-300 bg-white text-neutral-800 hover:border-teal-300 hover:bg-teal-50"
           }`}
         >
-          {mode === "team" ? "Find My Team" : "Now Playing"}
+          {VIEW_LABEL[mode]}
         </button>
       ))}
     </div>
