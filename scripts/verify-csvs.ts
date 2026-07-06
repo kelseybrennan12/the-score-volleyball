@@ -1,6 +1,7 @@
 import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { parseMonthDay, parseTimeLabel } from "../src/backend/logic/core/date-parse";
+import { LEAGUE_SOURCES } from "../src/backend/logic/core/league-sources";
 import type { Snapshot } from "../src/shared/domain/snapshot";
 
 const TMP_DIR = path.resolve(process.cwd(), "tmp");
@@ -31,14 +32,9 @@ interface LeagueResult {
   csvSlotCollisions: { slot: MatchKey; first: string; second: string }[];
 }
 
-const WEEKDAY_TO_SLUG: Record<string, string> = {
-  sunday: "spring-sundays",
-  monday: "spring-mondays",
-  tuesday: "spring-tuesdays",
-  wednesday: "spring-wednesdays",
-  thursday: "spring-thursdays",
-  friday: "spring-fridays",
-};
+// Derived from the live source list so verification always targets the current
+// season's snapshots (e.g. summer-*) without hand-editing this map each rollover.
+const WEEKDAY_TO_SLUG: Record<string, string> = Object.fromEntries(LEAGUE_SOURCES.map((s) => [s.day, s.slug]));
 
 function splitCsvLine(line: string): string[] {
   return line.split(",").map((c) => c.trim());
