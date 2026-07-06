@@ -17,6 +17,11 @@ export interface ParseResult {
 }
 
 const TEAM_ROW_PATTERN = /^\s*(\d+)\.\s*(.+?)\s*$/;
+// Same shape as TEAM_ROW_PATTERN but the "." after the number is optional (the
+// separator may be a period or whitespace). Only used to rescue a team that the
+// schedule references but that the strict pattern missed — never to seed the
+// roster directly — so a stray digit-leading row can't invent a phantom team.
+const RELAXED_TEAM_ROW_PATTERN = /^\s*(\d+)[.\s]\s*(.+?)\s*$/;
 const MATCHUP_PATTERN = /^\s*(\d+)\s*v\s*(\d+)\s*$/i;
 const DIVISION_PATTERN = /\bDivision\b/i;
 const MATCH_TIME_HEADER = /^match\s*time:?$/i;
@@ -36,9 +41,11 @@ export async function parseLeagueWorkbook(input: ParseInput): Promise<ParseResul
   if (!worksheet) throw new Error("Workbook has no worksheets");
 
   const anomalies: string[] = [];
+  const defaultDivision = input.defaultDivision ?? "A";
   const rangeMap = buildDivisionRangeMap(worksheet, anomalies);
-  const teams = parseTeams(worksheet, input.defaultDivision ?? "A", rangeMap, anomalies);
+  const teams = parseTeams(worksheet, defaultDivision, rangeMap, anomalies);
   const { matches, headerDates } = parseSchedule(worksheet, input.year, anomalies);
+  rescueReferencedTeams(worksheet, teams, matches, defaultDivision, rangeMap, anomalies);
   anomalies.push(...validateSnapshot({ teams, matches, headerDates }));
   return { teams, matches, anomalies };
 }
@@ -66,24 +73,71 @@ function parseTeams(
       );
       continue;
     }
-    const rowLabel = findDivisionInRow(row);
-    const rangeLabel = rangeMap.get(number);
-    let division: string;
-    if (rangeLabel) {
-      division = rangeLabel;
-    } else if (rowLabel) {
-      division = rowLabel;
-    } else {
-      division = defaultDivision;
-      if (rangeMap.size > 0) {
-        anomalies.push(`Team ${number} not covered by any "Teams N-M \\ … League" legend row`);
-      }
-    }
+    const division = divisionForTeam(row, number, rangeMap, defaultDivision, anomalies);
     byNumber.set(number, { number, captain, division });
   }
   const teams = [...byNumber.values()].sort((a, b) => a.number - b.number);
   if (teams.length === 0) anomalies.push("No team rows parsed from standings block");
   return teams;
+}
+
+function divisionForTeam(
+  row: ExcelJS.Row,
+  number: number,
+  rangeMap: Map<number, string>,
+  defaultDivision: string,
+  anomalies: string[],
+): string {
+  const rangeLabel = rangeMap.get(number);
+  if (rangeLabel) return rangeLabel;
+  const rowLabel = findDivisionInRow(row);
+  if (rowLabel) return rowLabel;
+  if (rangeMap.size > 0) {
+    anomalies.push(`Team ${number} not covered by any "Teams N-M \\ … League" legend row`);
+  }
+  return defaultDivision;
+}
+
+// Second pass: a team referenced by the schedule but absent from the strict
+// roster is usually a standings row whose number lost its "." separator (e.g.
+// "8 Kacey Sheldon" instead of "8. Kacey Sheldon"). Scan column A of the
+// standings block with the relaxed pattern and recover only those missing,
+// schedule-referenced numbers — so we can never fabricate a team from an
+// unrelated digit-leading row.
+function rescueReferencedTeams(
+  ws: ExcelJS.Worksheet,
+  teams: Team[],
+  matches: Match[],
+  defaultDivision: string,
+  rangeMap: Map<number, string>,
+  anomalies: string[],
+): void {
+  const present = new Set(teams.map((t) => t.number));
+  const missing = new Set<number>();
+  for (const match of matches) {
+    for (const n of match.teamNumbers) {
+      if (!present.has(n)) missing.add(n);
+    }
+  }
+  if (missing.size === 0) return;
+
+  for (let r = 1; r <= ws.rowCount; r++) {
+    const row = ws.getRow(r);
+    const aText = cellText(row.getCell(1));
+    if (!aText) continue;
+    if (MATCH_TIME_HEADER.test(aText)) break;
+    const teamMatch = aText.match(RELAXED_TEAM_ROW_PATTERN);
+    if (!teamMatch) continue;
+    const number = Number.parseInt(teamMatch[1], 10);
+    if (!Number.isFinite(number) || !missing.has(number) || present.has(number)) continue;
+    const captain = teamMatch[2].replace(/\s+/g, " ").trim();
+    if (captain.length === 0) continue;
+    const division = divisionForTeam(row, number, rangeMap, defaultDivision, anomalies);
+    teams.push({ number, captain, division });
+    present.add(number);
+    anomalies.push(`Recovered team ${number} ("${captain}") from a standings row missing its "." separator`);
+  }
+  teams.sort((a, b) => a.number - b.number);
 }
 
 function buildDivisionRangeMap(ws: ExcelJS.Worksheet, anomalies: string[]): Map<number, string> {

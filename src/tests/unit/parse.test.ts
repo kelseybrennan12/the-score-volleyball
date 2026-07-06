@@ -197,6 +197,52 @@ describe("parseLeagueWorkbook", () => {
     expect(result.anomalies.some((a) => a.includes("Header advertises 2026-05-10"))).toBe(true);
   });
 
+  it("recovers a schedule-referenced team whose standings row is missing its '.' separator", async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Sheet1");
+    ws.getRow(1).getCell(1).value = "1. Alice";
+    ws.getRow(2).getCell(1).value = "2 Bob"; // missing the "." like the Summer Thursday sheet's team 8
+    ws.getRow(3).getCell(1).value = "2026 Summer Coed"; // digit-leading non-team row, never referenced
+    const header = ws.getRow(5);
+    header.getCell(1).value = "Match Time:";
+    header.getCell(2).value = "May 3rd";
+    const matchRow = ws.getRow(6);
+    matchRow.getCell(1).value = "6:00pm Blue Ct";
+    matchRow.getCell(2).value = "1 v 2";
+    const arrayBuffer = await wb.xlsx.writeBuffer();
+    const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
+
+    const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "A" });
+    const byNumber = new Map(result.teams.map((t) => [t.number, t.captain]));
+    // Team 2 is recovered from the period-less row and carries the default division.
+    expect(byNumber.get(2)).toBe("Bob");
+    expect(result.teams.find((t) => t.number === 2)?.division).toBe("A");
+    // The unrelated "2026 Summer Coed" row is never turned into a team.
+    expect(byNumber.has(2026)).toBe(false);
+    // Recovery is announced, and the "unknown team" invariant no longer fires.
+    expect(result.anomalies.some((a) => a.includes('Recovered team 2 ("Bob")'))).toBe(true);
+    expect(result.anomalies.some((a) => a.includes("unknown team 2"))).toBe(false);
+  });
+
+  it("does not recover a period-less row when the schedule never references it", async () => {
+    const wb = new ExcelJS.Workbook();
+    const ws = wb.addWorksheet("Sheet1");
+    ws.getRow(1).getCell(1).value = "1. Alice";
+    ws.getRow(2).getCell(1).value = "2. Bob";
+    ws.getRow(3).getCell(1).value = "3 Cat"; // period-less but not scheduled
+    const header = ws.getRow(5);
+    header.getCell(1).value = "Match Time:";
+    header.getCell(2).value = "May 3rd";
+    const matchRow = ws.getRow(6);
+    matchRow.getCell(1).value = "6:00pm Blue Ct";
+    matchRow.getCell(2).value = "1 v 2";
+    const arrayBuffer = await wb.xlsx.writeBuffer();
+    const buffer = Buffer.from(arrayBuffer as ArrayBuffer);
+
+    const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "A" });
+    expect(result.teams.map((t) => t.number).sort((a, b) => a - b)).toEqual([1, 2]);
+  });
+
   it("accepts forward slash and pipe separators in the legend", async () => {
     const buffer = await buildStubWorkbook({
       teams: [
