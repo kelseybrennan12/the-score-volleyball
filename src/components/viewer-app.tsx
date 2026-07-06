@@ -3,6 +3,7 @@
 import { pickCurrentSnapshot } from "@/shared/domain/current-season";
 import { findTeamCandidates } from "@/shared/domain/lookup";
 import { todayIsoInLeagueTimezone } from "@/shared/domain/next-match";
+import type { SeasonArchive } from "@/shared/domain/seasons";
 import type { LeagueDay, Snapshot, Team } from "@/shared/domain/snapshot";
 import { DAYS, validateUrlSelection } from "@/shared/domain/url-selection";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
@@ -30,7 +31,15 @@ function formatDay(day: LeagueDay): string {
 const dayParser = parseAsStringLiteral(DAYS);
 const viewParser = parseAsStringLiteral(VIEW_MODES).withDefault("team");
 
-export function ViewerApp({ snapshots, mockNowIso }: { snapshots: Snapshot[]; mockNowIso: string | null }) {
+export function ViewerApp({
+  snapshots,
+  seasons,
+  mockNowIso,
+}: {
+  snapshots: Snapshot[];
+  seasons: SeasonArchive[];
+  mockNowIso: string | null;
+}) {
   const snapshotsByDay = useMemo(() => groupByDay(snapshots), [snapshots]);
   const availableDays = DAYS.filter((d) => snapshotsByDay.get(d)?.length);
   const now = useMemo(() => (mockNowIso ? new Date(mockNowIso) : new Date()), [mockNowIso]);
@@ -147,6 +156,7 @@ export function ViewerApp({ snapshots, mockNowIso }: { snapshots: Snapshot[]; mo
         <ViewToggle view={view} onChange={setView} />
         <StandingsView
           snapshots={snapshots}
+          seasons={seasons}
           selectedLeagueSlug={selectedLeagueSlug}
           selectedDivision={selectedDivision}
           onSelect={(leagueSlug, division) => {

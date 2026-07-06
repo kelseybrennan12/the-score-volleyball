@@ -6,7 +6,7 @@ import type { SnapshotRepo } from "./port";
 export { createBlobSnapshotRepo } from "./blob";
 export { createSnapshotRepo } from "./fs";
 export { archiveFileName, DEFAULT_ARCHIVE_LIMIT, toArchiveStamp } from "./port";
-export type { ArchiveEntry, RestoreResult, SnapshotRepo } from "./port";
+export type { ArchiveEntry, PromoteResult, RestoreResult, SnapshotRepo } from "./port";
 
 export interface ResolveRepoOptions {
   cwd?: string;

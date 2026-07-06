@@ -4,12 +4,14 @@ import {
   DEFAULT_ARCHIVE_LIMIT,
   archiveFileName,
   type ArchiveEntry,
+  type PromoteResult,
   type RestoreResult,
   type SnapshotRepo,
 } from "./port";
 
 const ACTIVE_PREFIX = "snapshots/active/";
 const ARCHIVE_PREFIX = "snapshots/archive/";
+const SEASONS_PREFIX = "snapshots/seasons/";
 const META_PATH = "snapshots/meta.json";
 const ACCESS = "private" as const;
 
@@ -114,6 +116,62 @@ export function createBlobSnapshotRepo({ token }: BlobRepoOptions): SnapshotRepo
     return { activePath, archivedPath };
   }
 
+  async function listSeasonKeys(): Promise<string[]> {
+    const keys = new Set<string>();
+    let cursor: string | undefined;
+    do {
+      const page = await list({ prefix: SEASONS_PREFIX, token, cursor, limit: 1000 });
+      for (const blob of page.blobs) {
+        if (!blob.pathname.endsWith(".json")) continue;
+        const rest = blob.pathname.slice(SEASONS_PREFIX.length);
+        const slash = rest.indexOf("/");
+        if (slash > 0) keys.add(rest.slice(0, slash));
+      }
+      cursor = page.hasMore ? page.cursor : undefined;
+    } while (cursor);
+    return [...keys];
+  }
+
+  async function listSeasonSnapshots(seasonKey: string): Promise<Snapshot[]> {
+    const prefix = `${SEASONS_PREFIX}${seasonKey}/`;
+    const snapshots: Snapshot[] = [];
+    let cursor: string | undefined;
+    do {
+      const page = await list({ prefix, token, cursor, limit: 1000 });
+      for (const blob of page.blobs) {
+        if (!blob.pathname.endsWith(".json")) continue;
+        const snapshot = await readJson<Snapshot>(blob.pathname);
+        if (snapshot) snapshots.push(snapshot);
+      }
+      cursor = page.hasMore ? page.cursor : undefined;
+    } while (cursor);
+    return snapshots;
+  }
+
+  async function writeSeasonSnapshot(seasonKey: string, snapshot: Snapshot): Promise<string> {
+    return writeJson(`${SEASONS_PREFIX}${seasonKey}/${snapshot.league.slug}.json`, snapshot);
+  }
+
+  async function promoteActiveToSeason(seasonKey: string, slug: string): Promise<PromoteResult> {
+    const active = await readActive(slug);
+    if (!active) return { seasonPath: null, deletedActive: false, deletedArchiveCount: 0 };
+    const seasonPath = await writeSeasonSnapshot(seasonKey, active);
+    await del(`${ACTIVE_PREFIX}${slug}.json`, { token });
+    let deletedArchiveCount = 0;
+    const archivePrefix = `${ARCHIVE_PREFIX}${slug}/`;
+    let cursor: string | undefined;
+    do {
+      const page = await list({ prefix: archivePrefix, token, cursor, limit: 1000 });
+      const paths = page.blobs.filter((b) => b.pathname.endsWith(".json")).map((b) => b.pathname);
+      if (paths.length > 0) {
+        await del(paths, { token });
+        deletedArchiveCount += paths.length;
+      }
+      cursor = page.hasMore ? page.cursor : undefined;
+    } while (cursor);
+    return { seasonPath, deletedActive: true, deletedArchiveCount };
+  }
+
   async function getLastIngestedAt(): Promise<string | null> {
     const meta = await readJson<{ lastIngestedAt?: string }>(META_PATH);
     return meta?.lastIngestedAt ?? null;
@@ -133,6 +191,10 @@ export function createBlobSnapshotRepo({ token }: BlobRepoOptions): SnapshotRepo
     restoreArchive,
     getLastIngestedAt,
     setLastIngestedAt,
+    listSeasonKeys,
+    listSeasonSnapshots,
+    writeSeasonSnapshot,
+    promoteActiveToSeason,
   };
 }
 

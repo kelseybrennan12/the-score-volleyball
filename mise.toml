@@ -39,6 +39,22 @@ fi
 pnpm run ingest -- "$@"
 '''
 
+[tasks."archive-season"]
+description = "Freeze a past season's active snapshots into the previous-seasons archive and purge its live blob copies"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
+usage = '''
+arg "[archive_args]" var=#true help="Args forwarded to the archive-season CLI (e.g. --season spring-2026, --dry-run)"
+'''
+run = '''
+if [ -n "${usage_archive_args:-}" ]; then
+  eval "set -- ${usage_archive_args}"
+else
+  set --
+fi
+pnpm run archive-season -- "$@"
+'''
+
 [tasks."verify:csvs"]
 description = "Diff every tmp/*.csv against the matching active league snapshot"
 depends = ["deps:install"]

@@ -10,8 +10,8 @@ description: Single-page UX for a player to find their team's schedule, next gam
 - ID: P0001
 - Type: Product
 - Status: active
-- Version: v6
-- Last Updated: 2026-05-02
+- Version: v7
+- Last Updated: 2026-07-06
 
 ## Summary
 
@@ -162,6 +162,14 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
     number, with a rank label of `—` rather than a numeric rank.
   - When the rendered table contains at least one tied row, a footnote below the table explains the `T-N` marker.
   - Does not poll or auto-refresh; the user refreshes by reloading the page.
+  - Below the current-season pill row and table, a collapsible **"Previous Seasons"** section is rendered whenever the
+    app has at least one archived past season (`seasons/<season-key>/…` snapshots). It is collapsed by default. When
+    expanded it shows: a season picker (a pill per archived season, newest-first; omitted and replaced by a static
+    season label when only one season is archived) and, for the selected season, the same league/division pill row and
+    per-division standings table used for the current season. Live views (team, now, current standings) never surface
+    archived seasons. The Previous Seasons selection (season, league, division) is held in local component state and is
+    intentionally **not** reflected in the URL or `localStorage` (unlike the current-season `?league`/`?division`
+    contract); it resets on reload.
 - The page renders a footer link back to the source standings page at
   `https://www.thescoregr.com/volleyball/beach-volleyball-leagues/` so users can cross-reference the authoritative
   spreadsheet.
@@ -200,3 +208,5 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
     (now view + nuqs URL state).
   - [/docs/efforts/2026-05-02-13-19-standings-view.md](/docs/efforts/2026-05-02-13-19-standings-view.md) (standings
     view).
+  - [/docs/efforts/2026-07-06-21-42-summer-season-cutover.md](/docs/efforts/2026-07-06-21-42-summer-season-cutover.md)
+    (Previous Seasons section).

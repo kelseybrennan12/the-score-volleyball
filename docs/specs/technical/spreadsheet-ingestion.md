@@ -11,7 +11,7 @@ description: CLI-driven ingestion of thescoregr.com Google Sheets into per-leagu
 - Type: Technical
 - Status: active
 - Version: v7
-- Last Updated: 2026-05-02
+- Last Updated: 2026-07-06
 
 ## Summary
 
@@ -47,7 +47,7 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   2. Range legend block: a set of rows, typically to the right of the standings, of the form
      `"Teams <start>-<end> <sep> <label> League"` — e.g. `"Teams 1-18 \ B League"`, `"Teams 19-30 \ BB League"`. The
      separator may be `\`, `/`, or `|`, and the range delimiter may be a hyphen or an en-dash. This is the format used
-     by the current Spring Sundays sheet.
+     by the multi-division Sundays sheet (`B`/`BB`/`BBB`).
 - Some sheets (e.g. Spring Sundays) carry a leftover second `"Match Time:"` block further down the sheet with different
   dates — typically a holdover from a prior season or template. Only the first block is authoritative.
 - Date headers are free-form month-plus-day strings (`"April 26th"`, `"June 29"`, `"Jul 27"`, occasionally typo'd as
@@ -175,5 +175,7 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 ## Completion
 
 - Status: Implemented
-- Remaining: None for v3. Summer and Fall 2026 leagues return to `LEAGUE_SOURCES` once those sheets are rostered for the
-  new season.
+- Remaining: None for v3. `LEAGUE_SOURCES` tracks the six Summer 2026 leagues as of the Summer cutover
+  ([/docs/efforts/2026-07-06-21-42-summer-season-cutover.md](/docs/efforts/2026-07-06-21-42-summer-season-cutover.md));
+  Spring 2026 is retired to the `seasons/` archive. Fall 2026 leagues return to the source list once those sheets are
+  rostered.

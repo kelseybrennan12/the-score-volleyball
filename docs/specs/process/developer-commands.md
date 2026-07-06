@@ -6,7 +6,7 @@
 - Type: Process
 - Status: active
 - Version: v1
-- Last Updated: 2026-04-06
+- Last Updated: 2026-07-06
 
 ## Summary
 
@@ -101,6 +101,11 @@ Define the single source of truth for common developer-facing commands using `mi
 - `mise run build`: produce deployable build artifacts and container build context.
 - `mise run report [-- --league <slug>] [-- --team <number>] [-- --format text|md]`: print a per-team schedule report
   from `data/snapshots/active/` for spot-checking parsed data against the league spreadsheets.
+- `mise run archive-season -- --season <session>-<year> [--dry-run]`: freeze each currently-active league belonging to
+  the named past season into the frozen `seasons/<session>-<year>/` store and purge that league's live `active/` and
+  rollback `archive/` copies from the selected storage backend. `--dry-run` reports the matched leagues and the archive
+  counts that would be purged without mutating anything. Target the production Blob store by running with
+  `SNAPSHOT_STORAGE=blob` and `BLOB_READ_WRITE_TOKEN` set.
 - `mise run verify:csvs`: for every `tmp/*.csv` export, infer the league from the weekday in the filename and diff it
   against the matching active snapshot. Exit non-zero if any league has slot or matchup differences (team-order
   differences for played matches are expected and not treated as failures).

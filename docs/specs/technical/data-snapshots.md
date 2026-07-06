@@ -10,8 +10,8 @@ description: On-disk JSON snapshot format, filename convention, and archive layo
 - ID: T0002
 - Type: Technical
 - Status: active
-- Version: v2
-- Last Updated: 2026-04-20
+- Version: v3
+- Last Updated: 2026-07-06
 
 ## Summary
 
@@ -37,12 +37,19 @@ Both use the same logical layout:
 - Root: `data/snapshots/` (filesystem, for local dev) or `snapshots/` (Vercel Blob, for production)
   - Active: `<root>/active/<league-slug>.json`
   - Archive: `<root>/archive/<league-slug>/<league-slug>-<YYYY-MM-DD-HH-MM-SS>.json`
+  - Seasons: `<root>/seasons/<season-key>/<league-slug>.json`
 - `<league-slug>` is a kebab-case identifier combining session and day, e.g. `spring-sundays`, `summer-tuesdays`.
+- `<season-key>` is `<session>-<year>`, e.g. `spring-2026`. It groups one frozen snapshot per league for a past season.
 - The active file for a league is always the single most recent snapshot for that league slot.
 - Archived files retain the ingestion timestamp in the filename.
 - Archive entries are retained across normal ingestion. A rollback moves an archive entry back to the active slot (see
   snapshot-storage); archive entries beyond the 10-entry rollback window may be pruned in a future iteration but are
   otherwise retained.
+- **Seasons vs. archive**: the `archive/` folder is per-league _rollback history_ (many timestamped snapshots per league
+  slot). The `seasons/` folder is the _previous-seasons_ store — exactly one immutable snapshot per league per past
+  season, surfaced read-only in the Standings tab. A season entry is written when a live season is retired (see
+  `promoteActiveToSeason` in [/docs/specs/technical/snapshot-storage.md](/docs/specs/technical/snapshot-storage.md)),
+  which also purges that league's live `active/` and `archive/` copies.
 
 ## Filename Convention
 
@@ -115,9 +122,14 @@ derived):
   does not invent or normalize them beyond trimming whitespace.
 - `outcome.status` is one of `"played"` or `"unplayed"`. When `"played"`, `winnerTeamNumber`, `setsWinner`, and
   `setsLoser` are present and `setsWinner + setsLoser == 3`.
-- The Schedule Viewer reads only from the active path of the selected storage backend at runtime.
-- Writers to the snapshot store are: the ingestion pipeline (via the CLI or the runtime ingest route handler) and the
-  admin rollback route handler. No other process creates, edits, or deletes snapshot files.
+- The Schedule Viewer reads from the active path for all live views; it additionally reads the `seasons/` path to
+  populate the Standings tab's read-only "Previous Seasons" section. Live views (team, now, current standings) never
+  read `seasons/`.
+- A `seasons/<season-key>/<league-slug>.json` entry conforms to the same snapshot shape as an active file and carries
+  that season's `league.session`/`league.year`. There is at most one such file per league per season.
+- Writers to the snapshot store are: the ingestion pipeline (via the CLI or the runtime ingest route handler), the admin
+  rollback route handler, and the `archive-season` promote/purge operation. No other process creates, edits, or deletes
+  snapshot files.
 
 ### Should:
 
@@ -137,4 +149,5 @@ derived):
 ## Completion
 
 - Status: Implemented
-- Remaining: None for v2.
+- Remaining: None for v3. The frozen `seasons/` store was added under
+  [/docs/efforts/2026-07-06-21-42-summer-season-cutover.md](/docs/efforts/2026-07-06-21-42-summer-season-cutover.md).

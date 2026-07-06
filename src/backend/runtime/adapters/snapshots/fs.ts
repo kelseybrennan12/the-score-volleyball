@@ -6,6 +6,7 @@ import {
   DEFAULT_ARCHIVE_LIMIT,
   archiveFileName,
   type ArchiveEntry,
+  type PromoteResult,
   type RestoreResult,
   type SnapshotRepo,
 } from "./port";
@@ -15,6 +16,7 @@ export type { SnapshotRepo } from "./port";
 export function createSnapshotRepo(root: string): SnapshotRepo {
   const activeDir = path.join(root, "active");
   const archiveRoot = path.join(root, "archive");
+  const seasonsRoot = path.join(root, "seasons");
   const metaPath = path.join(root, "meta.json");
 
   async function readActive(slug: string): Promise<Snapshot | null> {
@@ -84,6 +86,48 @@ export function createSnapshotRepo(root: string): SnapshotRepo {
     return { activePath, archivedPath };
   }
 
+  async function listSeasonKeys(): Promise<string[]> {
+    if (!existsSync(seasonsRoot)) return [];
+    const entries = await readdir(seasonsRoot, { withFileTypes: true });
+    return entries.filter((e) => e.isDirectory()).map((e) => e.name);
+  }
+
+  async function listSeasonSnapshots(seasonKey: string): Promise<Snapshot[]> {
+    const seasonDir = path.join(seasonsRoot, seasonKey);
+    if (!existsSync(seasonDir)) return [];
+    const names = await readdir(seasonDir);
+    const snapshots: Snapshot[] = [];
+    for (const name of names) {
+      if (!name.endsWith(".json")) continue;
+      const raw = await readFile(path.join(seasonDir, name), "utf8");
+      snapshots.push(JSON.parse(raw) as Snapshot);
+    }
+    return snapshots;
+  }
+
+  async function writeSeasonSnapshot(seasonKey: string, snapshot: Snapshot): Promise<string> {
+    const seasonDir = path.join(seasonsRoot, seasonKey);
+    await mkdir(seasonDir, { recursive: true });
+    const filePath = path.join(seasonDir, `${snapshot.league.slug}.json`);
+    await writeFile(filePath, JSON.stringify(snapshot, null, 2) + "\n", "utf8");
+    return filePath;
+  }
+
+  async function promoteActiveToSeason(seasonKey: string, slug: string): Promise<PromoteResult> {
+    const active = await readActive(slug);
+    if (!active) return { seasonPath: null, deletedActive: false, deletedArchiveCount: 0 };
+    const seasonPath = await writeSeasonSnapshot(seasonKey, active);
+    await rm(path.join(activeDir, `${slug}.json`), { force: true });
+    const archiveDir = path.join(archiveRoot, slug);
+    let deletedArchiveCount = 0;
+    if (existsSync(archiveDir)) {
+      const names = await readdir(archiveDir);
+      deletedArchiveCount = names.filter((n) => n.endsWith(".json")).length;
+      await rm(archiveDir, { recursive: true, force: true });
+    }
+    return { seasonPath, deletedActive: true, deletedArchiveCount };
+  }
+
   async function getLastIngestedAt(): Promise<string | null> {
     if (!existsSync(metaPath)) return null;
     const raw = await readFile(metaPath, "utf8");
@@ -110,5 +154,9 @@ export function createSnapshotRepo(root: string): SnapshotRepo {
     restoreArchive,
     getLastIngestedAt,
     setLastIngestedAt,
+    listSeasonKeys,
+    listSeasonSnapshots,
+    writeSeasonSnapshot,
+    promoteActiveToSeason,
   };
 }

@@ -10,8 +10,8 @@ description: Storage-backend port for snapshots, with filesystem (local dev) and
 - ID: T0005
 - Type: Technical
 - Status: active
-- Version: v1
-- Last Updated: 2026-04-20
+- Version: v2
+- Last Updated: 2026-07-06
 
 ## Summary
 
@@ -35,8 +35,9 @@ snapshot JSON shape itself; this spec defines _where and how_ those JSON blobs l
 ## Core Concepts
 
 - **Port**: `SnapshotRepo` in `src/backend/runtime/adapters/snapshots/port.ts`, exposing `readActive`, `listActive`,
-  `writeActive`, `archiveExisting`, `listArchive`, `readArchive`, `restoreArchive`, `getLastIngestedAt`, and
-  `setLastIngestedAt`.
+  `writeActive`, `archiveExisting`, `listArchive`, `readArchive`, `restoreArchive`, `getLastIngestedAt`,
+  `setLastIngestedAt`, and the frozen-season methods `listSeasonKeys`, `listSeasonSnapshots`, `writeSeasonSnapshot`, and
+  `promoteActiveToSeason`.
 - **Filesystem adapter**: `createSnapshotRepo(root)` — writes under `data/snapshots/active/`, `data/snapshots/archive/`,
   and `data/snapshots/meta.json`. Used by local development and the ingestion CLI.
 - **Blob adapter**: `createBlobSnapshotRepo({ token })` — backed by `@vercel/blob`. Writes under the same logical layout
@@ -50,6 +51,8 @@ snapshot JSON shape itself; this spec defines _where and how_ those JSON blobs l
 - Active: `<root>/active/<slug>.json` (filesystem) or `snapshots/active/<slug>.json` (Blob).
 - Archive: `<root>/archive/<slug>/<slug>-<YYYY-MM-DD-HH-MM-SS>.json` (filesystem) or
   `snapshots/archive/<slug>/<slug>-<YYYY-MM-DD-HH-MM-SS>.json` (Blob).
+- Seasons: `<root>/seasons/<season-key>/<slug>.json` (filesystem) or `snapshots/seasons/<season-key>/<slug>.json`
+  (Blob), where `<season-key>` is `<session>-<year>`.
 - Meta: `<root>/meta.json` (filesystem) or `snapshots/meta.json` (Blob). Shape:
   `{ "lastIngestedAt": "<ISO-8601 UTC>" }`.
 
@@ -81,6 +84,18 @@ location.
      rollback recovers a clean state.
 - `getLastIngestedAt` / `setLastIngestedAt` is the authoritative rate-limit stamp. The ingestion service writes it once
   per non-dry-run run.
+- The frozen-season methods behave uniformly across both adapters:
+  - `listSeasonKeys()` returns the distinct `<season-key>` directories present under `seasons/` (empty when none).
+  - `listSeasonSnapshots(seasonKey)` returns every snapshot under `seasons/<seasonKey>/` (empty when absent).
+  - `writeSeasonSnapshot(seasonKey, snapshot)` writes `seasons/<seasonKey>/<snapshot.league.slug>.json`, overwriting any
+    existing file for that league (so a re-run is idempotent).
+  - `promoteActiveToSeason(seasonKey, slug)` freezes a retired league: it reads `active/<slug>.json`, writes it to
+    `seasons/<seasonKey>/<slug>.json`, deletes `active/<slug>.json`, and deletes every rollback entry under
+    `archive/<slug>/`, returning `{ seasonPath, deletedActive, deletedArchiveCount }`. When no active snapshot exists it
+    is a no-op returning `{ seasonPath: null, deletedActive: false, deletedArchiveCount: 0 }`. Like `restoreArchive`,
+    the sequence is non-atomic but ordered so the frozen copy is written before any live copy is deleted; a mid-failure
+    never loses data. The operation is exposed operationally through the `archive-season` CLI (see
+    [/docs/specs/process/developer-commands.md](/docs/specs/process/developer-commands.md)).
 - The repo-shipped `data/snapshots/` directory is still used for local development and remains the source of truth for
   the CLI. On the deployed app it is unused; the Blob store is initially empty and populated by the first admin ingest.
 

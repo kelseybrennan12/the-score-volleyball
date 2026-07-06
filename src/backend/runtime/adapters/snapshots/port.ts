@@ -11,6 +11,16 @@ export interface RestoreResult {
   archivedPath: string;
 }
 
+/**
+ * Outcome of freezing a league's active snapshot into a past-season archive and purging its live copies.
+ * `seasonPath` is null when there was no active snapshot to promote.
+ */
+export interface PromoteResult {
+  seasonPath: string | null;
+  deletedActive: boolean;
+  deletedArchiveCount: number;
+}
+
 export const DEFAULT_ARCHIVE_LIMIT = 10;
 
 export interface SnapshotRepo {
@@ -23,6 +33,11 @@ export interface SnapshotRepo {
   restoreArchive(slug: string, archiveKey: string): Promise<RestoreResult>;
   getLastIngestedAt(): Promise<string | null>;
   setLastIngestedAt(iso: string): Promise<void>;
+  // Frozen past-season archive (one immutable snapshot per league per season), distinct from rollback archive.
+  listSeasonKeys(): Promise<string[]>;
+  listSeasonSnapshots(seasonKey: string): Promise<Snapshot[]>;
+  writeSeasonSnapshot(seasonKey: string, snapshot: Snapshot): Promise<string>;
+  promoteActiveToSeason(seasonKey: string, slug: string): Promise<PromoteResult>;
 }
 
 export function toArchiveStamp(ingestedAt: string): string {
