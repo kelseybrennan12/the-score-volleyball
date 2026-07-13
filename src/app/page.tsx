@@ -1,6 +1,5 @@
 import { resolveSnapshotRepo } from "@/backend/runtime/adapters/snapshots";
 import { AdminGate } from "@/components/admin-gate";
-import { AnnouncementBanner } from "@/components/announcement-banner";
 import { ViewerApp } from "@/components/viewer-app";
 import { IS_DEV, MOCK_NOW_COOKIE, parseMockNow } from "@/shared/dev-now";
 import { buildSeasonArchives, type SeasonArchive } from "@/shared/domain/seasons";
@@ -40,7 +39,6 @@ export default async function HomePage() {
         </AdminGate>
         <p className="mt-1 text-sm text-neutral-600">Pick your league day, find your team, and see your next match.</p>
       </header>
-      <AnnouncementBanner />
       <ViewerApp snapshots={snapshots} seasons={seasons} mockNowIso={mockNowIso} />
       <footer className="mt-10 space-y-2 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
         <p>
