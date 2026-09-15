@@ -10,61 +10,46 @@ export interface LeagueSource {
   defaultDivision?: string;
 }
 
-// Only the currently-active Summer 2026 leagues are ingested. Spring 2026 has been frozen into the
-// previous-seasons archive (see docs/specs/technical/snapshot-storage.md); its sheets are no longer polled.
+// Only the currently-active Fall 2026 leagues are ingested. Earlier 2026 seasons are frozen into the
+// previous-seasons archive (see docs/specs/technical/snapshot-storage.md); their sheets are no longer polled.
 // Sheet IDs sourced from https://www.thescoregr.com/volleyball/beach-volleyball-leagues/.
+// Fall Thursday (Women's QOTB 1Gv4HZJ40yDiebUFMf0ODtmupkzb4x0T2ZVo_zR9OCyc) is Queen of the Beach and excluded.
+// Fall Friday (Rec/C 1PUJUOCteg_QNocGSrFhR5iWIm08hy-xUTEQzxAL9kDk) is still an un-rostered 2022 template; add it
+// once the league publishes the 2026 roster.
 export const LEAGUE_SOURCES: LeagueSource[] = [
   {
-    slug: "summer-sundays",
-    displayName: "Summer Sundays",
-    session: "summer",
+    slug: "fall-sundays",
+    displayName: "Fall Sundays",
+    session: "fall",
     year: 2026,
     day: "sunday",
-    sheetId: "1IL4qeqYisQ4SHbbl_rmh05CqAYFJjKh5ZleRVTcOOw0",
+    sheetId: "15tur6KgSRu3kUAqPHmf4sf9TKCOsbo4pvII95Aa7UHA",
   },
   {
-    slug: "summer-mondays",
-    displayName: "Summer Mondays",
-    session: "summer",
+    slug: "fall-mondays",
+    displayName: "Fall Mondays",
+    session: "fall",
     year: 2026,
     day: "monday",
-    sheetId: "14C1Y-viYvpRpBOu90Hw-hJZhWBcCnOnFPKYdbNUE4TU",
+    sheetId: "1G0r-N7PBe5sQENyz5AgNc-4Z1ItuF9aUu63bOeV8QVw",
     defaultDivision: "B",
   },
   {
-    slug: "summer-tuesdays",
-    displayName: "Summer Tuesdays",
-    session: "summer",
+    slug: "fall-tuesdays",
+    displayName: "Fall Tuesdays",
+    session: "fall",
     year: 2026,
     day: "tuesday",
-    sheetId: "1x_gDvpqjBgsudqfKugo524xEOKdq2WDRQnctYfezRPg",
-    defaultDivision: "A",
+    sheetId: "1xikgLuGrFTq0xbusZ-l8xr3R_OBoYIko18oNbLX56F8",
+    defaultDivision: "B/BB",
   },
   {
-    slug: "summer-wednesdays",
-    displayName: "Summer Wednesdays",
-    session: "summer",
+    slug: "fall-wednesdays",
+    displayName: "Fall Wednesdays",
+    session: "fall",
     year: 2026,
     day: "wednesday",
-    sheetId: "1mKil0nE9rx1NIhzKAC0eTgEOm48PHdgteZ6UmIymeEM",
+    sheetId: "14hShtX2msZDB6K3MWh0QTkI7tiIXGE9NSRYcVGF5R1U",
     defaultDivision: "BB",
-  },
-  {
-    slug: "summer-thursdays",
-    displayName: "Summer Thursdays",
-    session: "summer",
-    year: 2026,
-    day: "thursday",
-    sheetId: "1VO0KAPeyxRNzvoqconBpQXgMWTfYwLkdq_3eih6bJCk",
-    defaultDivision: "A",
-  },
-  {
-    slug: "summer-fridays",
-    displayName: "Summer Fridays",
-    session: "summer",
-    year: 2026,
-    day: "friday",
-    sheetId: "1Hsjl4hB3ca5XrpYPWNJy4MBdXDzeKJG9_LXpm4yf5J8",
-    defaultDivision: "B",
   },
 ];

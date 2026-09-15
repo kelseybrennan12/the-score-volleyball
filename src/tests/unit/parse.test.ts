@@ -10,6 +10,7 @@ interface StubTeam {
   number: number;
   captain: string;
   rowLabel?: string;
+  columnBLabel?: string;
 }
 
 interface StubWorkbookOptions {
@@ -23,6 +24,7 @@ async function buildStubWorkbook(opts: StubWorkbookOptions): Promise<Buffer> {
   opts.teams.forEach((t, idx) => {
     const row = ws.getRow(idx + 1);
     row.getCell(1).value = `${t.number}. ${t.captain}`;
+    if (t.columnBLabel) row.getCell(2).value = t.columnBLabel;
     if (t.rowLabel) row.getCell(4).value = t.rowLabel;
   });
   (opts.legendRows ?? []).forEach((text, idx) => {
@@ -102,6 +104,42 @@ describe("parseLeagueWorkbook", () => {
       teams: [
         { number: 1, captain: "Alice", rowLabel: "BB Division" },
         { number: 2, captain: "Bob", rowLabel: "BB Division" },
+      ],
+    });
+    const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "A" });
+    expect(result.teams.map((t) => t.division)).toEqual(["BB", "BB"]);
+  });
+
+  it("reads a bare level label in column B as the team's division (Fall 2026 Sunday layout)", async () => {
+    const buffer = await buildStubWorkbook({
+      teams: [
+        { number: 1, captain: "Alice", columnBLabel: "BB/BBB" },
+        { number: 2, captain: "Bob", columnBLabel: "BB/BBB" },
+        { number: 13, captain: "Cat", columnBLabel: "B" },
+        { number: 14, captain: "Dan", columnBLabel: "Rec/C" },
+      ],
+    });
+    const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "A" });
+    expect(result.teams.map((t) => t.division)).toEqual(["BB/BBB", "BB/BBB", "B", "Rec/C"]);
+    expect(result.anomalies).toEqual([]);
+  });
+
+  it("ignores column-B text that is not a division level", async () => {
+    const buffer = await buildStubWorkbook({
+      teams: [
+        { number: 1, captain: "Jets Pizza", columnBLabel: "1. Jets Pizza (Jessie Gasiorek)" },
+        { number: 2, captain: "Bob", columnBLabel: "Blue" },
+      ],
+    });
+    const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "B" });
+    expect(result.teams.map((t) => t.division)).toEqual(["B", "B"]);
+  });
+
+  it("prefers an explicit '… Division' label over a bare column-B level", async () => {
+    const buffer = await buildStubWorkbook({
+      teams: [
+        { number: 1, captain: "Alice", columnBLabel: "B", rowLabel: "BB Division" },
+        { number: 2, captain: "Bob", columnBLabel: "B", rowLabel: "BB Division" },
       ],
     });
     const result = await parseLeagueWorkbook({ buffer, year: 2026, defaultDivision: "A" });

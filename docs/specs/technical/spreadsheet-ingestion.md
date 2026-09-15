@@ -10,8 +10,8 @@ description: CLI-driven ingestion of thescoregr.com Google Sheets into per-leagu
 - ID: T0001
 - Type: Technical
 - Status: active
-- Version: v7
-- Last Updated: 2026-07-06
+- Version: v8
+- Last Updated: 2026-09-15
 
 ## Summary
 
@@ -103,7 +103,10 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
      `\`, `/`, or `|`), the parser builds a `teamNumber → label` map from those rows and uses it. Overlapping ranges log
      an anomaly; the later legend row wins. Reversed ranges (`start > end`) are ignored with an anomaly.
   2. Per-row inline label: a cell in the team's own row matching `"… Division"`.
-  3. `defaultDivision` from the source list, or `"A"` if none is declared.
+  3. Bare column-B level: the cell immediately right of the captain (column B) contains only one or more level tokens
+     (`AAA`, `AA`, `A`, `BBB`, `BB`, `B`, `C`, `Rec`) joined by `/`, e.g. `"B"`, `"BB/BBB"`, `"Rec/C"`. The text is used
+     verbatim as the division label. Any other column-B text (e.g. a merged captain cell) is ignored.
+  4. `defaultDivision` from the source list, or `"A"` if none is declared.
 
   When a range legend is present but a team number falls outside every range, the parser records an anomaly and uses the
   `defaultDivision`/`"A"` fallback.
@@ -175,7 +178,8 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 ## Completion
 
 - Status: Implemented
-- Remaining: None for v3. `LEAGUE_SOURCES` tracks the six Summer 2026 leagues as of the Summer cutover
-  ([/docs/efforts/2026-07-06-21-42-summer-season-cutover.md](/docs/efforts/2026-07-06-21-42-summer-season-cutover.md));
-  Spring 2026 is retired to the `seasons/` archive. Fall 2026 leagues return to the source list once those sheets are
-  rostered.
+- Remaining: None for v3. `LEAGUE_SOURCES` tracks four Fall 2026 leagues (Sunday, Monday, Tuesday, Wednesday) as of the
+  Fall cutover
+  ([/docs/efforts/2026-09-15-13-39-fall-season-cutover.md](/docs/efforts/2026-09-15-13-39-fall-season-cutover.md));
+  Spring and Summer 2026 are retired to the `seasons/` archive. Fall Thursday is a Queen of the Beach league and stays
+  excluded. Fall Friday returns to the source list once its sheet is rostered for 2026.

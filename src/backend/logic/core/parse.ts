@@ -24,6 +24,9 @@ const TEAM_ROW_PATTERN = /^\s*(\d+)\.\s*(.+?)\s*$/;
 const RELAXED_TEAM_ROW_PATTERN = /^\s*(\d+)[.\s]\s*(.+?)\s*$/;
 const MATCHUP_PATTERN = /^\s*(\d+)\s*v\s*(\d+)\s*$/i;
 const DIVISION_PATTERN = /\bDivision\b/i;
+// A bare level label such as "B", "BB/BBB", or "Rec/C" sitting in column B next to the captain.
+const DIVISION_LEVEL = "(?:AAA|AA|A|BBB|BB|B|C|Rec)";
+const BARE_DIVISION_LABEL = new RegExp(`^${DIVISION_LEVEL}(?:\\s*/\\s*${DIVISION_LEVEL})*$`, "i");
 const MATCH_TIME_HEADER = /^match\s*time:?$/i;
 // Matches legend rows such as "Teams 1-18 \ B League" that live in the block
 // to the right of the standings. Accepts `\`, `/`, or `|` between the range
@@ -184,6 +187,8 @@ function findDivisionInRow(row: ExcelJS.Row): string | null {
       return text.replace(/\s*Division\s*$/i, "").trim();
     }
   }
+  const columnB = cellText(row.getCell(2));
+  if (columnB && BARE_DIVISION_LABEL.test(columnB)) return columnB;
   return null;
 }
 
