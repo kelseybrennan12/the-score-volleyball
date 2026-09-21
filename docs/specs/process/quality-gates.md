@@ -6,7 +6,7 @@
 - Type: Process
 - Status: active
 - Version: v1
-- Last Updated: 2026-03-12
+- Last Updated: 2026-09-21
 
 ## Summary
 
@@ -41,13 +41,14 @@ Define the automated quality gates required before changes can land.
 - Seed checks verify seed command behavior is stable and does not introduce unintended data mutation.
 - Dependency-currency checks generate deterministic advisory output for update planning.
 - Common developer workflows are invokable through the canonical command surface once command catalog is defined.
-- Required CI quality gates run through GitHub Actions before merge and before production deployment.
-- CI includes advisory dependency-currency checks once CI workflows are implemented.
-- End-to-end smoke tests are required CI checks on pull requests and on `main`.
-- Baseline end-to-end CI coverage requires Chromium browser execution.
-- Baseline end-to-end CI coverage runs through the containerized Playwright/Chromium path against the isolated
-  compose-managed `e2e` stack.
-- End-to-end failures publish diagnostic artifacts including screenshot, trace, and browser console logs.
+- Required CI quality gates run through GitHub Actions on pull requests targeting `main` and on pushes to `main`
+  ([`.github/workflows/ci.yml`](/.github/workflows/ci.yml)).
+- The CI gate set is: formatting check, lint, typecheck, unit tests, and production build, each invoked through the
+  canonical `mise` task surface so local and CI behavior cannot drift.
+- The full CI gate set is runnable locally with `mise run ci`.
+- CI includes advisory dependency-currency checks once a `deps:check` task exists.
+- End-to-end browser smoke tests become a required CI check once an e2e suite exists under `src/tests/e2e/`; until then
+  CI does not run Playwright.
 
 ### Should:
 

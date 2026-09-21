@@ -17,7 +17,8 @@ This folder owns the repository's orchestration-heavy command surface.
 - `deps:*` — dependency inspection and update workflows
 - `deps:install` is the canonical lockfile install step for tasks that require `node_modules`
 - `test:*` — canonical containerized unit, integration, and e2e flows
-- `ci`, `ci:check` — local CI checks
+- `ci` — run every GitHub Actions gate locally, sequentially and in the same order as CI (format check, lint, typecheck,
+  tests, build)
 - `pre-commit`, `setup` — top-level developer workflow tasks
 
 ## Notes
