@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { AnnouncementSection } from "./announcement-section";
 
 interface ArchiveEntry {
   slug: string;
@@ -145,6 +146,8 @@ export function AdminApp() {
 
   return (
     <div className="space-y-6">
+      <AnnouncementSection />
+
       <section className="rounded border border-neutral-200 p-4">
         <div className="flex items-center justify-between gap-3">
           <div>
