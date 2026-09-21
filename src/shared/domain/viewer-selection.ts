@@ -96,11 +96,11 @@ export function resolveStandingsSelection(
   if (slug == null) return { standingsLeague: null, division: null };
 
   const snapshot = snapshots.find((s) => s.league.slug === slug) ?? null;
+  if (snapshot == null) return { standingsLeague: null, division: null };
+
   const division =
-    snapshot != null && params.division != null && snapshot.teams.some((t) => t.division === params.division)
-      ? params.division
-      : null;
-  if (snapshot == null || division == null) return { standingsLeague: null, division: null };
+    params.division != null && snapshot.teams.some((t) => t.division === params.division) ? params.division : null;
+  if (division == null) return { standingsLeague: null, division: null };
 
   return { standingsLeague: slug, division };
 }
