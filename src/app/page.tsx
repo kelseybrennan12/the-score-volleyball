@@ -1,3 +1,5 @@
+import { readAnnouncement } from "@/backend/logic/services/announcement";
+import { resolveAnnouncementRepo } from "@/backend/runtime/adapters/announcements";
 import { resolveSnapshotRepo } from "@/backend/runtime/adapters/snapshots";
 import { AdminGate } from "@/components/admin-gate";
 import { AnnouncementBanner } from "@/components/announcement-banner";
@@ -24,6 +26,7 @@ async function loadData(): Promise<{ snapshots: Snapshot[]; seasons: SeasonArchi
 
 export default async function HomePage() {
   const { snapshots, seasons } = await loadData();
+  const announcement = await readAnnouncement(resolveAnnouncementRepo());
   const mockNowIso = IS_DEV
     ? (parseMockNow((await cookies()).get(MOCK_NOW_COOKIE)?.value)?.toISOString() ?? null)
     : null;
@@ -40,7 +43,9 @@ export default async function HomePage() {
         </AdminGate>
         <p className="mt-1 text-sm text-neutral-600">Pick your league day, find your team, and see your next match.</p>
       </header>
-      <AnnouncementBanner />
+      {announcement?.enabled ? (
+        <AnnouncementBanner message={announcement.message} version={announcement.version} />
+      ) : null}
       <ViewerApp snapshots={snapshots} seasons={seasons} mockNowIso={mockNowIso} />
       <footer className="mt-10 space-y-2 border-t border-neutral-200 pt-4 text-xs text-neutral-500">
         <p>

@@ -3,27 +3,25 @@
 import { useEffect, useState } from "react";
 
 const STORAGE_KEY = "volleyball-viewer:dismissed-announcement";
-// Bump this id to re-surface the banner for a new announcement even to users who
-// dismissed a previous one.
-const ANNOUNCEMENT_ID = "fall-2026-live";
 
-export function AnnouncementBanner() {
+export function AnnouncementBanner({ message, version }: { message: string; version: number }) {
   const [visible, setVisible] = useState(false);
+  const dismissalId = String(version);
 
   useEffect(() => {
     try {
-      setVisible(window.localStorage.getItem(STORAGE_KEY) !== ANNOUNCEMENT_ID);
+      setVisible(window.localStorage.getItem(STORAGE_KEY) !== dismissalId);
     } catch {
       setVisible(true);
     }
-  }, []);
+  }, [dismissalId]);
 
   if (!visible) return null;
 
   const dismiss = () => {
     setVisible(false);
     try {
-      window.localStorage.setItem(STORAGE_KEY, ANNOUNCEMENT_ID);
+      window.localStorage.setItem(STORAGE_KEY, dismissalId);
     } catch {
       // Ignore storage errors (e.g. quota, private mode); the banner just reappears next visit.
     }
@@ -37,7 +35,7 @@ export function AnnouncementBanner() {
       <span aria-hidden className="text-2xl">
         🏐
       </span>
-      <p className="flex-1 text-lg font-semibold sm:text-xl">Fall 2026 schedules are here!</p>
+      <p className="flex-1 text-lg font-semibold sm:text-xl">{message}</p>
       <button
         type="button"
         onClick={dismiss}
