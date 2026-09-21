@@ -23,9 +23,9 @@ export function requireBlobToken(): string {
 }
 
 /**
- * A missing Blob surfaces either as a typed BlobNotFoundError or, in some code
- * paths, as a plain error whose message mentions the object does not exist.
- * Every Blob repository treats both as "nothing stored".
+ * True when a Blob read failed because the object does not exist. The SDK throws
+ * BlobNotFoundError in most cases but a bare Error whose message includes "does
+ * not exist" in others, so both are treated as "not found".
  */
 export function isBlobNotFound(err: unknown): boolean {
   if (err instanceof BlobNotFoundError) return true;
