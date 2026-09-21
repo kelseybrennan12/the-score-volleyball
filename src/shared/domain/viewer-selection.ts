@@ -86,7 +86,8 @@ function validateView(value: string | null): ViewMode {
   return value != null && (VIEW_MODES as readonly string[]).includes(value) ? (value as ViewMode) : "team";
 }
 
-function toStorageWrite(sel: ValidatedSelection): StoredSelection | null {
+/** Shape a validated selection into the persisted `StoredSelection`; `null` when nothing is worth remembering. */
+export function toStorageWrite(sel: ValidatedSelection): StoredSelection | null {
   const stored: StoredSelection = {};
   if (sel.day) stored.day = sel.day;
   if (sel.league) stored.leagueSlug = sel.league;
@@ -114,19 +115,10 @@ export function resolveViewerSelection(args: {
   // day-scoped Team-search league, so it is passed through untouched this ticket. #9 gives Standings its own
   // parameters and removes this branch.
   if (view === "standings") {
+    const day = isLeagueDay(params.day) ? params.day : null;
     return {
-      selection: {
-        view,
-        day: isLeagueDay(params.day) ? params.day : null,
-        league: params.league,
-        team: params.team,
-        division: params.division,
-      },
-      storageWrite: toStorageWrite({
-        day: isLeagueDay(params.day) ? params.day : null,
-        league: params.league,
-        team: params.team,
-      }),
+      selection: { view, day, league: params.league, team: params.team, division: params.division },
+      storageWrite: toStorageWrite({ day, league: params.league, team: params.team }),
     };
   }
 

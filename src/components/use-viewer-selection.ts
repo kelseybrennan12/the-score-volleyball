@@ -7,6 +7,7 @@ import {
   planSelectLeague,
   planSelectStandings,
   resolveViewerSelection,
+  toStorageWrite,
   VIEW_MODES,
   type RawParams,
   type StoredSelection,
@@ -89,13 +90,10 @@ export function useViewerSelection(
 
   const persist = useCallback(
     (next: { day: LeagueDay | null; league: string | null; team: number | null }) => {
-      const stored: StoredSelection = {};
-      if (next.day) stored.day = next.day;
-      if (next.league) stored.leagueSlug = next.league;
-      if (next.team != null) stored.teamNumber = next.team;
+      const write = toStorageWrite(next);
       try {
-        if (Object.keys(stored).length === 0) storage.remove(STORAGE_KEY);
-        else storage.set(STORAGE_KEY, JSON.stringify(stored));
+        if (write == null) storage.remove(STORAGE_KEY);
+        else storage.set(STORAGE_KEY, JSON.stringify(write));
       } catch {
         // Swallow storage failures (quota, private mode).
       }
