@@ -9,12 +9,12 @@ import { DivisionPill } from "./theme-tokens";
 interface Props {
   snapshots: Snapshot[];
   seasons: SeasonArchive[];
-  selectedLeagueSlug: string | null;
+  selectedStandingsSlug: string | null;
   selectedDivision: string | null;
   onSelect: (leagueSlug: string, division: string) => void;
 }
 
-export function StandingsView({ snapshots, seasons, selectedLeagueSlug, selectedDivision, onSelect }: Props) {
+export function StandingsView({ snapshots, seasons, selectedStandingsSlug, selectedDivision, onSelect }: Props) {
   const hasCurrent = listStandingsOptions(snapshots).length > 0;
 
   if (!hasCurrent && seasons.length === 0) {
@@ -26,7 +26,7 @@ export function StandingsView({ snapshots, seasons, selectedLeagueSlug, selected
       {hasCurrent && (
         <StandingsBrowser
           snapshots={snapshots}
-          selectedLeagueSlug={selectedLeagueSlug}
+          selectedLeagueSlug={selectedStandingsSlug}
           selectedDivision={selectedDivision}
           onSelect={onSelect}
         />

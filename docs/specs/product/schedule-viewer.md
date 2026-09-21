@@ -10,8 +10,8 @@ description: Single-page UX for a player to find their team's schedule, next gam
 - ID: P0001
 - Type: Product
 - Status: active
-- Version: v7
-- Last Updated: 2026-07-06
+- Version: v8
+- Last Updated: 2026-09-21
 
 ## Summary
 
@@ -106,34 +106,49 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
   Sheets at request time.
 - If no snapshot exists for the selected league, the page shows an empty state explaining that no data has been ingested
   yet.
-- The page persists `{ day, leagueSlug, teamNumber }` in the browser's `localStorage` under the key
-  `volleyball-viewer:selection` whenever any of those change. On mount it restores any stored entries that still resolve
-  against the currently-shipped snapshots (stale entries — a league slug we no longer ingest or a team number that no
-  longer exists — are dropped silently and the app falls back to the auto-selected current session).
-- The page also reflects `{ view, day, leagueSlug, teamNumber, division }` in the URL as query parameters, using a typed
-  query-state library (`nuqs`). Parameter shapes:
+- The page remembers `{ day, leagueSlug, teamNumber }` in the browser's `localStorage` under the key
+  `volleyball-viewer:selection` whenever a user action changes any of them. On mount, when the URL names none of them,
+  the remembered selection is validated against the currently-shipped snapshots (stale entries — a league slug we no
+  longer ingest or a team number that no longer exists — are dropped silently and the app falls back to the league that
+  is live today). A non-empty selection resolved at mount is remembered; mount never clears the remembered selection.
+- The page reflects the Viewer selection and Standings selection in the URL as query parameters, using a typed
+  query-state library (`nuqs`). The Viewer selection covers day, league, and team; the Standings selection is
+  independent and covers the Standings league and division. Parameter shapes:
   - `view`: `team` | `now` | `standings` (omitted when default `team`).
-  - `day`: lowercase weekday name (`sunday`..`friday`), only meaningful in `team` view.
-  - `league`: league slug. In `team` view scopes the team picker; in `standings` view scopes the table.
-  - `team`: integer team number, only meaningful in `team` view.
-  - `division`: division name (e.g. `B`, `BB`, `BBB`), only meaningful in `standings` view.
-- Query-parameter and `localStorage` hydration rules:
-  - On mount, if a query parameter is present, it wins over the corresponding `localStorage` value.
-  - On mount, if a query parameter is absent, the corresponding value is hydrated from `localStorage` and pushed back
-    into the URL so the displayed URL is shareable.
+  - `day`: lowercase weekday name (`sunday`..`friday`), Team search only.
+  - `league`: league slug scoping the Team search only. It no longer scopes the Standings table.
+  - `team`: integer team number, Team search only.
+  - `standings`: league slug naming the snapshot for the Standings table, `standings` view only.
+  - `division`: division name (e.g. `B`, `BB`, `BBB`) within the Standings league, `standings` view only.
+- Query-parameter and `localStorage` hydration rules. The stored shape is unchanged: `{ day, leagueSlug, teamNumber }`
+  under `volleyball-viewer:selection`. Standings selection (`standings`, `division`) and `view` are URL-only and are
+  never persisted.
+  - The remembered selection is consulted only when the URL names none of `day`, `league`, or `team` (all-or-nothing). A
+    partial URL — even just a `day` — is a deliberate link and is taken as-is; it is never merged with the remembered
+    selection.
+  - When the remembered selection is consulted, its values are hydrated and pushed back into the URL so the displayed
+    URL is shareable.
   - On every change to `day`, `leagueSlug`, or `teamNumber`, both `localStorage` and the URL are updated.
-  - The `view` parameter is URL-only; it is not persisted in `localStorage`. The default view on first load (no URL
-    parameter, no prior visit) is `team`.
-  - Invalid or stale URL values are silently dropped and the URL is rewritten without them, using `history: "replace"`
-    so the cleanup does not pollute the back-stack. The same rules apply to invalid `localStorage` entries.
-    Specifically:
-    - `view` not in `{team, now, standings}` is treated as the default `team`.
-    - `day` not in `{sunday..friday}` is treated as null; dependent `league` and `team` are also cleared.
-    - `league` whose slug is not present in the current snapshot set for the resolved `day` is treated as null;
-      dependent `team` is also cleared.
-    - `team` that is not an integer, or whose number does not exist on the resolved league snapshot, is treated as null.
-    - Orphan children (e.g. `team` without `league`, or `league` without `day`) are cleared.
-    - Cleanup is silent; no error UI is rendered.
+  - The default view on first load (no URL parameter, no prior visit) is `team`.
+- Validation is continuous: the displayed selection is derived from the raw parameters on every render, so a value that
+  becomes stale after load (for example when the snapshot set changes) is dropped on the next render rather than
+  surviving until reload. Stale values are rewritten out of the URL at mount and whenever a user action writes the URL,
+  always with `history: "replace"` so the cleanup does not pollute the back-stack; a value that goes stale on a later
+  render disappears from the displayed selection immediately and from the URL on the next write. The same rules apply to
+  stale `localStorage` entries. Specifically:
+  - `view` not in `{team, now, standings}` is treated as the default `team`.
+  - `day` not in `{sunday..friday}` is treated as null; dependent `league` and `team` are also cleared.
+  - `league` whose slug is not present in the current snapshot set for the resolved `day` is treated as null; dependent
+    `team` is also cleared.
+  - `team` that is not an integer, or whose number does not exist on the resolved league snapshot, is treated as null.
+  - `standings` that does not name an active snapshot is dropped, and `division` that does not name a division present
+    in that snapshot's teams is dropped; when either is invalid both are dropped so the pill row shows nothing selected.
+  - Orphan children (e.g. `team` without `league`, or `league` without `day`) are cleared.
+  - Cleanup is silent; no error UI is rendered.
+- Transitional old-link fallback (to be removed in a later release): on mount, when `view=standings`, `standings` is
+  absent, and `league` plus `division` name a valid pair, they are read as the Standings selection and the URL is
+  rewritten to the new `?standings=<slug>&division=<name>` shape with `history: "replace"`. After the rewrite, `league`
+  is validated as part of the Viewer selection like any other parameter.
 - The search query text is not persisted in either `localStorage` or the URL.
 - The `now` view:
   - Renders independently of the user's selected day, league, or team. It always reflects the current real-world moment.
@@ -153,8 +168,9 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
   - Renders a flat row of pills, one per `(league snapshot, division)` pair, labeled `"<Day> <Division>"` (e.g.
     `Sunday B`, `Sunday BB`, `Monday B`). Pills are ordered by canonical day-of-week (Sunday first, then Monday, …),
     with divisions sorted alphabetically inside each day.
-  - Selecting a pill writes `?league=<slug>&division=<name>` (history-replace) and renders a per-division standings
-    table for that snapshot. The table has three columns: rank, team (number + captain), and sets won–lost.
+  - Selecting a pill writes `?standings=<slug>&division=<name>` (history-replace) and renders a per-division standings
+    table for that snapshot. The write never touches `day`, `league`, or `team`, so browsing standings never disturbs a
+    chosen team. The table has three columns: rank, team (number + captain), and sets won–lost.
   - Ranking rule: teams are ordered by sets won descending, then sets lost ascending. Two teams sharing the same
     `(setsWon, setsLost)` share a rank using skip-method numbering and are labeled `T-N` (e.g. tied for third → both
     show `T-3`, the next team shows `5`). Tie-breakers beyond `(setsWon, setsLost)` are intentionally not modeled.
@@ -168,7 +184,7 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
     season label when only one season is archived) and, for the selected season, the same league/division pill row and
     per-division standings table used for the current season. Live views (team, now, current standings) never surface
     archived seasons. The Previous Seasons selection (season, league, division) is held in local component state and is
-    intentionally **not** reflected in the URL or `localStorage` (unlike the current-season `?league`/`?division`
+    intentionally **not** reflected in the URL or `localStorage` (unlike the current-season `?standings`/`?division`
     contract); it resets on reload.
 - The page renders a footer link back to the source standings page at
   `https://www.thescoregr.com/volleyball/beach-volleyball-leagues/` so users can cross-reference the authoritative
@@ -210,3 +226,7 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
     view).
   - [/docs/efforts/2026-07-06-21-42-summer-season-cutover.md](/docs/efforts/2026-07-06-21-42-summer-season-cutover.md)
     (Previous Seasons section).
+  - [/docs/efforts/2026-09-21-17-55-viewer-selection-module.md](/docs/efforts/2026-09-21-17-55-viewer-selection-module.md)
+    (Viewer selection as one deep module).
+  - [/docs/efforts/2026-09-21-18-10-standings-selection-parameters.md](/docs/efforts/2026-09-21-18-10-standings-selection-parameters.md)
+    (Standings selection's own `standings`/`division` parameters, independent of Team search).

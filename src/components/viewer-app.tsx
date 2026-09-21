@@ -1,35 +1,21 @@
 "use client";
 
-import { pickCurrentSnapshot } from "@/shared/domain/current-season";
 import { findTeamCandidates } from "@/shared/domain/lookup";
 import { todayIsoInLeagueTimezone } from "@/shared/domain/next-match";
 import type { SeasonArchive } from "@/shared/domain/seasons";
 import type { LeagueDay, Snapshot, Team } from "@/shared/domain/snapshot";
-import { DAYS, validateUrlSelection } from "@/shared/domain/url-selection";
-import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { DAYS, VIEW_MODES, type ViewMode } from "@/shared/domain/viewer-selection";
+import { useMemo, useState } from "react";
 import { DevTimePanel } from "./dev-time-panel";
 import { NowView } from "./now-view";
 import { StandingsView } from "./standings-view";
 import { TeamDetail } from "./team-detail";
 import { DivisionPill } from "./theme-tokens";
-
-const STORAGE_KEY = "volleyball-viewer:selection";
-const VIEW_MODES = ["team", "now", "standings"] as const;
-type ViewMode = (typeof VIEW_MODES)[number];
-
-interface StoredSelection {
-  day?: LeagueDay;
-  leagueSlug?: string;
-  teamNumber?: number;
-}
+import { useViewerSelection } from "./use-viewer-selection";
 
 function formatDay(day: LeagueDay): string {
   return day.charAt(0).toUpperCase() + day.slice(1);
 }
-
-const dayParser = parseAsStringLiteral(DAYS);
-const viewParser = parseAsStringLiteral(VIEW_MODES).withDefault("team");
 
 export function ViewerApp({
   snapshots,
@@ -40,91 +26,25 @@ export function ViewerApp({
   seasons: SeasonArchive[];
   mockNowIso: string | null;
 }) {
-  const snapshotsByDay = useMemo(() => groupByDay(snapshots), [snapshots]);
-  const availableDays = DAYS.filter((d) => snapshotsByDay.get(d)?.length);
+  const availableDays = useMemo(() => DAYS.filter((d) => snapshots.some((s) => s.league.day === d)), [snapshots]);
   const now = useMemo(() => (mockNowIso ? new Date(mockNowIso) : new Date()), [mockNowIso]);
   const today = useMemo(() => todayIsoInLeagueTimezone(now), [now]);
 
-  const [view, setView] = useQueryState("view", viewParser.withOptions({ history: "replace", clearOnDefault: true }));
-  const [selectedDay, setSelectedDay] = useQueryState("day", dayParser.withOptions({ history: "replace" }));
-  const [selectedLeagueSlug, setSelectedLeagueSlug] = useQueryState(
-    "league",
-    parseAsString.withOptions({ history: "replace" }),
-  );
-  const [selectedTeamNumber, setSelectedTeamNumber] = useQueryState(
-    "team",
-    parseAsInteger.withOptions({ history: "replace" }),
-  );
-  const [selectedDivision, setSelectedDivision] = useQueryState(
-    "division",
-    parseAsString.withOptions({ history: "replace" }),
-  );
+  const {
+    view,
+    day: selectedDay,
+    league: selectedLeagueSlug,
+    standingsLeague,
+    division: selectedDivision,
+    daySnapshots: leagueOptions,
+    selectedSnapshot,
+    selectedTeam,
+    team: selectedTeamNumber,
+    actions,
+  } = useViewerSelection(snapshots, today);
+  const setView = actions.setView;
 
   const [query, setQuery] = useState("");
-  const hydratedRef = useRef(false);
-
-  useEffect(() => {
-    if (hydratedRef.current) return;
-    hydratedRef.current = true;
-
-    const validatedFromUrl = validateUrlSelection(snapshots, {
-      day: selectedDay,
-      league: selectedLeagueSlug,
-      team: selectedTeamNumber,
-    });
-
-    let nextDay: LeagueDay | null = validatedFromUrl.day;
-    let nextLeague: string | null = validatedFromUrl.league;
-    let nextTeam: number | null = validatedFromUrl.team;
-
-    if (nextDay == null && nextLeague == null && nextTeam == null) {
-      try {
-        const raw = window.localStorage.getItem(STORAGE_KEY);
-        if (raw) {
-          const stored = JSON.parse(raw) as StoredSelection;
-          const validatedFromStorage = validateUrlSelection(snapshots, {
-            day: stored.day ?? null,
-            league: stored.leagueSlug ?? null,
-            team: stored.teamNumber ?? null,
-          });
-          nextDay = validatedFromStorage.day;
-          nextLeague = validatedFromStorage.league;
-          nextTeam = validatedFromStorage.team;
-        }
-      } catch {
-        // Ignore storage or parse errors; fall back to defaults.
-      }
-    }
-
-    if (nextDay && nextLeague == null) {
-      const daySnapshots = snapshotsByDay.get(nextDay) ?? [];
-      nextLeague = pickCurrentSnapshot(daySnapshots, today)?.league.slug ?? null;
-    }
-
-    if (nextDay !== selectedDay) void setSelectedDay(nextDay);
-    if (nextLeague !== selectedLeagueSlug) void setSelectedLeagueSlug(nextLeague);
-    if (nextTeam !== selectedTeamNumber) void setSelectedTeamNumber(nextTeam);
-  }, []);
-
-  useEffect(() => {
-    if (!hydratedRef.current) return;
-    const selection: StoredSelection = {};
-    if (selectedDay) selection.day = selectedDay;
-    if (selectedLeagueSlug) selection.leagueSlug = selectedLeagueSlug;
-    if (selectedTeamNumber != null) selection.teamNumber = selectedTeamNumber;
-    try {
-      if (Object.keys(selection).length === 0) {
-        window.localStorage.removeItem(STORAGE_KEY);
-      } else {
-        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(selection));
-      }
-    } catch {
-      // Ignore storage errors (e.g. quota, private mode).
-    }
-  }, [selectedDay, selectedLeagueSlug, selectedTeamNumber]);
-
-  const leagueOptions = selectedDay ? (snapshotsByDay.get(selectedDay) ?? []) : [];
-  const selectedSnapshot = leagueOptions.find((s) => s.league.slug === selectedLeagueSlug) ?? null;
 
   const candidates = useMemo<Team[]>(() => {
     if (!selectedSnapshot) return [];
@@ -133,11 +53,6 @@ export function ViewerApp({
     }
     return findTeamCandidates(selectedSnapshot, query);
   }, [selectedSnapshot, query]);
-
-  const selectedTeam = useMemo(() => {
-    if (!selectedSnapshot || selectedTeamNumber == null) return null;
-    return selectedSnapshot.teams.find((t) => t.number === selectedTeamNumber) ?? null;
-  }, [selectedSnapshot, selectedTeamNumber]);
 
   if (view === "now") {
     return (
@@ -157,12 +72,9 @@ export function ViewerApp({
         <StandingsView
           snapshots={snapshots}
           seasons={seasons}
-          selectedLeagueSlug={selectedLeagueSlug}
+          selectedStandingsSlug={standingsLeague}
           selectedDivision={selectedDivision}
-          onSelect={(leagueSlug, division) => {
-            void setSelectedLeagueSlug(leagueSlug);
-            void setSelectedDivision(division);
-          }}
+          onSelect={(leagueSlug, division) => actions.selectStandings(leagueSlug, division)}
         />
       </div>
     );
@@ -191,11 +103,8 @@ export function ViewerApp({
               key={day}
               type="button"
               onClick={() => {
-                void setSelectedDay(day);
-                const currentLeague = pickCurrentSnapshot(snapshotsByDay.get(day) ?? [], today);
-                void setSelectedLeagueSlug(currentLeague?.league.slug ?? null);
+                actions.selectDay(day);
                 setQuery("");
-                void setSelectedTeamNumber(null);
               }}
               className={`rounded-md border px-3 py-1 text-sm transition-colors ${
                 selectedDay === day
@@ -214,10 +123,7 @@ export function ViewerApp({
           <label className="block text-sm font-medium text-neutral-700">League</label>
           <select
             value={selectedLeagueSlug ?? ""}
-            onChange={(e) => {
-              void setSelectedLeagueSlug(e.target.value || null);
-              void setSelectedTeamNumber(null);
-            }}
+            onChange={(e) => actions.selectLeague(e.target.value || null)}
             className="mt-2 block w-full rounded-md border border-neutral-300 px-3 py-2 text-base sm:text-sm"
           >
             {leagueOptions.map((snap) => (
@@ -253,7 +159,7 @@ export function ViewerApp({
             value={query}
             onChange={(e) => {
               setQuery(e.target.value);
-              void setSelectedTeamNumber(null);
+              actions.selectTeam(null);
             }}
             placeholder="e.g. 7 or ryan"
             autoComplete="off"
@@ -264,7 +170,7 @@ export function ViewerApp({
               {candidates.length === 0 ? (
                 <p className="text-sm text-neutral-500">No teams match.</p>
               ) : (
-                <TeamCandidateList candidates={candidates} onSelect={(n) => void setSelectedTeamNumber(n)} />
+                <TeamCandidateList candidates={candidates} onSelect={(n) => actions.selectTeam(n)} />
               )}
             </div>
           )}
@@ -343,14 +249,4 @@ function TeamCandidateList({ candidates, onSelect }: { candidates: Team[]; onSel
       ))}
     </div>
   );
-}
-
-function groupByDay(snapshots: Snapshot[]): Map<LeagueDay, Snapshot[]> {
-  const grouped = new Map<LeagueDay, Snapshot[]>();
-  for (const snap of snapshots) {
-    const list = grouped.get(snap.league.day) ?? [];
-    list.push(snap);
-    grouped.set(snap.league.day, list);
-  }
-  return grouped;
 }
