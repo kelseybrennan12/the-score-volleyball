@@ -27,6 +27,13 @@ function formatTimestamp(iso: string | null): string {
 // The read view when nothing is stored yet: off, blank, version 0.
 const EMPTY: Announcement = { message: "", enabled: false, version: 0, updatedAt: "" };
 
+function statusLine(loaded: boolean, view: Announcement): string {
+  if (!loaded) return "Loading…";
+  if (view.enabled) return `Live — last saved ${formatTimestamp(view.updatedAt || null)}`;
+  if (view.updatedAt) return `Off — last saved ${formatTimestamp(view.updatedAt)}`;
+  return "Off — nothing published yet";
+}
+
 function BannerReadView({ message }: { message: string }) {
   return (
     <div
@@ -137,15 +144,7 @@ export function AnnouncementSection() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h2 className="text-lg font-medium">Announcement</h2>
-          <p className="mt-1 text-sm text-neutral-600">
-            {!loaded
-              ? "Loading…"
-              : view.enabled
-                ? `Live — last saved ${formatTimestamp(view.updatedAt || null)}`
-                : view.updatedAt
-                  ? `Off — last saved ${formatTimestamp(view.updatedAt)}`
-                  : "Off — nothing published yet"}
-          </p>
+          <p className="mt-1 text-sm text-neutral-600">{statusLine(loaded, view)}</p>
         </div>
         <button
           type="button"

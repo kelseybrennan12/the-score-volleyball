@@ -1,3 +1,5 @@
+import { BlobNotFoundError } from "@vercel/blob";
+
 export type StorageBackend = "fs" | "blob";
 
 /**
@@ -18,4 +20,16 @@ export function requireBlobToken(): string {
     throw new Error("BLOB_READ_WRITE_TOKEN is required when SNAPSHOT_STORAGE=blob (or running on Vercel).");
   }
   return token;
+}
+
+/**
+ * True when a Blob read failed because the object does not exist. The SDK throws
+ * BlobNotFoundError in most cases but a bare Error whose message includes "does
+ * not exist" in others, so both are treated as "not found".
+ */
+export function isBlobNotFound(err: unknown): boolean {
+  if (err instanceof BlobNotFoundError) return true;
+  if (!err || typeof err !== "object") return false;
+  const message = (err as { message?: unknown }).message;
+  return typeof message === "string" && message.includes("does not exist");
 }
