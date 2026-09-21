@@ -65,7 +65,7 @@ Every lens follows this approval workflow when producing findings:
 
 - Goal: Extract terms, definitions, naming conventions, and business logic into the glossary.
 - Typical Output: Glossary candidate cards.
-- Output Target: [`/docs/specs/process/domain-glossary.md`](/docs/specs/process/domain-glossary.md)
+- Output Target: [`/CONTEXT.md`](/CONTEXT.md)
 
 ## Shared Templates
 
