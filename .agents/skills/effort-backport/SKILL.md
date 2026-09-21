@@ -19,8 +19,8 @@ description: Backport implementation reality into specs and docs, recording devi
 - requirements text
 - completion status and remaining gaps
 - links/paths if moved
-- domain glossary ([`docs/specs/process/domain-glossary.md`](/docs/specs/process/domain-glossary.md)): add or update
-  entries for any new domain concepts, record types, UI labels, or term clarifications that emerged during execution
+- domain glossary ([`/CONTEXT.md`](/CONTEXT.md)): add or update terms for any new domain concepts, UI labels, or term
+  clarifications that emerged during execution
 
 4. Update effort:
 

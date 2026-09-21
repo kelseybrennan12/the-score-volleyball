@@ -6,7 +6,7 @@
 - [docs/README.md](/docs/README.md)
 - [docs/specs/README.md](/docs/specs/README.md)
 - [docs/specs/process/specs-organization.md](/docs/specs/process/specs-organization.md)
-- [docs/specs/process/domain-glossary.md](/docs/specs/process/domain-glossary.md) — term ↔ code/UI mapping
+- [CONTEXT.md](/CONTEXT.md) — domain glossary: the canonical vocabulary for this project
 
 ## Process
 
@@ -78,3 +78,20 @@
 - `diff-specs`: [`.agents/skills/diff-specs/SKILL.md`](/.agents/skills/diff-specs/SKILL.md)
 - `stand-up`: [`.agents/skills/stand-up/SKILL.md`](/.agents/skills/stand-up/SKILL.md)
 - `remaining-items`: [`.agents/skills/remaining-items/SKILL.md`](/.agents/skills/remaining-items/SKILL.md)
+
+## Agent skills
+
+### Issue tracker
+
+Issues live in this repo's GitHub Issues, driven by the `gh` CLI. See
+[`docs/agents/issue-tracker.md`](/docs/agents/issue-tracker.md).
+
+### Triage labels
+
+The five default triage labels, each named after its role. See
+[`docs/agents/triage-labels.md`](/docs/agents/triage-labels.md).
+
+### Domain docs
+
+Single-context: the glossary is [`/CONTEXT.md`](/CONTEXT.md) and ADRs live in `docs/adr/`. See
+[`docs/agents/domain.md`](/docs/agents/domain.md).

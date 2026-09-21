@@ -37,8 +37,7 @@ reason about and side effects clearly isolated.
 
 ## Domain Terminology
 
-For domain terminology, naming conventions, and UI-to-model mappings, see
-[domain-glossary.md](/docs/specs/process/domain-glossary.md).
+For domain terminology and naming conventions, see [CONTEXT.md](/CONTEXT.md).
 
 ## Canonical Source Taxonomy
 

@@ -54,7 +54,7 @@ description:
    - If a lens produces more than ten cards/entries, also produce or update a narrative sidecar
      (`<domain>-<lens-output-type>-narrative.md`).
    - **Domain/Glossary Analysis — additional steps**:
-     1. Read the current glossary at [`/docs/specs/process/domain-glossary.md`](/docs/specs/process/domain-glossary.md).
+     1. Read the current glossary at [`/CONTEXT.md`](/CONTEXT.md).
      2. Scan the transcript for domain terms, definitions, naming conventions, abbreviations, business logic, state
         lifecycles, and policy clarifications.
      3. For each candidate, classify against the existing glossary:
@@ -63,17 +63,17 @@ description:
         - **Equivalent match** → skip (do not propose)
      4. Use the Glossary Candidate Card template with all fields populated. For updates, include a diff showing existing
         vs proposed content.
-     5. Write accepted candidates to the glossary. Maintain the glossary's existing table/section structure — append to
-        the correct section or create a new section if the term doesn't fit existing categories.
-     6. After all candidates are processed, update the glossary's `Last Updated` date.
+     5. Write accepted candidates to the glossary in its existing format: `**Term**:` on one line, a one- or
+        two-sentence definition, and an `_Avoid_:` line for rejected synonyms. Append to the correct subheading or add a
+        new one if the term doesn't fit existing groups.
+     6. Keep the glossary free of implementation details such as file paths or type names.
 
 4. **Update indexes**:
    - Add new reference documents to [`/docs/reference/README.md`](/docs/reference/README.md).
    - Add the transcript to the Sources section of
      [`/docs/reference/analysis-lenses.md`](/docs/reference/analysis-lenses.md) if not already listed.
    - If the Domain/Glossary Analysis lens was applied, no `/docs/reference/` document is created — output goes to
-     [`/docs/specs/process/domain-glossary.md`](/docs/specs/process/domain-glossary.md) instead. No README update is
-     needed for glossary-only runs.
+     [`/CONTEXT.md`](/CONTEXT.md) instead. No README update is needed for glossary-only runs.
 
 5. **Report**:
    - List all files created or updated.
