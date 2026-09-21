@@ -3,8 +3,8 @@
 - Name: Standings selection gets its own URL parameters
 - Date: 2026-09-21
 - Time: 18:10
-- Plan Approved By:
-- Plan Approved At:
+- Plan Approved By: Kelsey Brennan
+- Plan Approved At: 2026-09-21 18:44
 
 ## Scope
 
@@ -69,9 +69,9 @@ Out of scope:
 
 ## Deviations
 
-- No plan approval was given or recorded: the ticket ran unattended via Sandcastle at Kelsey Brennan's direction, with
-  the effort-file and approval criteria deliberately dropped from the ticket. The approver fields above are
-  intentionally blank.
+- The ticket ran unattended via Sandcastle at Kelsey Brennan's direction with the effort-file and approval criteria
+  deliberately dropped, so implementation began before any plan approval existed. Kelsey Brennan approved the plan in
+  chat after the run and the post-review fixes, on 2026-09-21 18:44 UTC; the header records that approval.
 - This effort file was first written without the template's checklist, plan, execution-notes, deviations, and status
   sections; they were added during the post-review fix pass.
 
