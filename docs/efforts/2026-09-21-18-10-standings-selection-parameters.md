@@ -3,8 +3,8 @@
 - Name: Standings selection gets its own URL parameters
 - Date: 2026-09-21
 - Time: 18:10
-- Plan Approved By: Kelsey Brennan
-- Plan Approved At: 2026-09-21 18:10
+- Plan Approved By:
+- Plan Approved At:
 
 ## Scope
 
