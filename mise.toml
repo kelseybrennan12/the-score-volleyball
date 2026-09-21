@@ -11,6 +11,12 @@ description = "Install repository Node dependencies from the lockfile"
 tools = { node = "latest", pnpm = "latest" }
 run = "pnpm install --frozen-lockfile"
 
+[tasks."deps:check"]
+description = "Advisory report of outdated Node dependencies (exit 0 even when updates exist)"
+depends = ["deps:install"]
+tools = { node = "latest", pnpm = "latest" }
+run = "pnpm outdated --long || [ $? -eq 1 ]"
+
 [tasks.dev]
 description = "Start the Next.js dev server"
 depends = ["deps:install"]
@@ -125,6 +131,27 @@ run = "pnpm run test:e2e"
 description = "Show GitHub CLI authentication status"
 tools = { gh = "latest" }
 run = "gh auth status"
+
+[tasks."gh:runs"]
+description = "List recent GitHub Actions runs for this repository"
+tools = { gh = "latest" }
+run = "gh run list --limit 20"
+
+[tasks."gh:logs"]
+description = "Print the log for a GitHub Actions run; forward --job <job-id> to narrow to one job"
+tools = { gh = "latest" }
+usage = '''
+arg "<run_id>" help="GitHub Actions run id (see gh:runs)"
+arg "[view_args]" var=#true help="Optional flags forwarded to `gh run view` (e.g. --job <job-id>)"
+'''
+run = '''
+if [ -n "${usage_view_args:-}" ]; then
+  eval "set -- ${usage_view_args}"
+else
+  set --
+fi
+gh run view "${usage_run_id:?}" --log "$@"
+'''
 
 [tasks.hooks-install]
 description = "Install git pre-commit hook"

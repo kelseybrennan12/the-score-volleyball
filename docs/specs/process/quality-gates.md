@@ -34,19 +34,19 @@ Define the automated quality gates required before changes can land.
 - Editor configuration points to repo formatter tooling so format-on-save matches CLI behavior.
 - Import organization checks run for relevant languages used by the project.
 - Repository formatting commands organize TypeScript imports automatically.
-- Repository formatting commands apply and verify formatting for `.bicep` and `.bicepparam` files.
-- Lint checks enforce environment-boundary rules (for example backend `process.env` access restrictions).
-- Migration checks verify schema-update smoke tests pass for the current workflow.
-- Migration revision-integrity checks are required once checked-in SQL revision files are adopted.
-- Seed checks verify seed command behavior is stable and does not introduce unintended data mutation.
-- Dependency-currency checks generate deterministic advisory output for update planning.
-- Common developer workflows are invokable through the canonical command surface once command catalog is defined.
+- Lint checks run ESLint over all TypeScript source via the canonical command surface (`mise run lint`).
+  Project-specific rules live in [`/eslint.config.mjs`](/eslint.config.mjs); today that is import-block spacing only.
+  There is no environment-boundary rule: `process.env` is read directly where needed.
+- Dependency-currency checks are advisory: `mise run deps:check` reports outdated packages via `pnpm outdated` and never
+  blocks a commit.
+- Common developer workflows are invokable through the canonical command surface defined in
+  [`/docs/specs/process/developer-commands.md`](/docs/specs/process/developer-commands.md).
 - Required CI quality gates run through GitHub Actions on pull requests targeting `main` and on pushes to `main`
   ([`.github/workflows/ci.yml`](/.github/workflows/ci.yml)).
 - The CI gate set is: formatting check, lint, typecheck, unit tests, and production build, each invoked through the
   canonical `mise` task surface so local and CI behavior cannot drift.
 - The full CI gate set is runnable locally with `mise run ci`.
-- CI includes advisory dependency-currency checks once a `deps:check` task exists.
+- CI does not run dependency-currency checks; `deps:check` is a local advisory task.
 - End-to-end browser smoke tests become a required CI check once an e2e suite exists under `src/tests/e2e/`; until then
   CI does not run Playwright.
 
@@ -69,6 +69,5 @@ Define the automated quality gates required before changes can land.
 
 - Status: Partial
 - Remaining:
-  - Implement migration revision-integrity checks in GitHub Actions once checked-in SQL revision integrity rules are
-    finalized.
-  - Implement seed stability checks in GitHub Actions.
+  - Add a Playwright e2e suite under `src/tests/e2e/` and promote it to a required CI check. Playwright is installed and
+    `mise run test:e2e` is wired, but there is no config or spec yet.
