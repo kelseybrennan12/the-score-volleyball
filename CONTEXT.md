@@ -77,6 +77,12 @@ _Avoid_: app, site, dashboard
 
 **Favorite team**: A friends-of-the-house team whose detail page gets a highlighted header.
 
+**Viewer selection**: The league day, league, and team a visitor has chosen in the viewer. Reflected in the URL and
+remembered per browser. _Avoid_: state, filters
+
+**Standings selection**: The league and division a visitor is viewing in Standings. Reflected in the URL and independent
+of the viewer selection. _Avoid_: state, standings filter
+
 ### Announcements
 
 **Announcement**: The admin-authored plain-text message shown to visitors, together with whether it is enabled. At most
