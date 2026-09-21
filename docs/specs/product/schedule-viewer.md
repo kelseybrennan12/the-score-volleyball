@@ -106,10 +106,11 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
   Sheets at request time.
 - If no snapshot exists for the selected league, the page shows an empty state explaining that no data has been ingested
   yet.
-- The page persists `{ day, leagueSlug, teamNumber }` in the browser's `localStorage` under the key
-  `volleyball-viewer:selection` whenever any of those change. On mount it restores any stored entries that still resolve
-  against the currently-shipped snapshots (stale entries — a league slug we no longer ingest or a team number that no
-  longer exists — are dropped silently and the app falls back to the auto-selected current session).
+- The page remembers `{ day, leagueSlug, teamNumber }` in the browser's `localStorage` under the key
+  `volleyball-viewer:selection` whenever a user action changes any of them. On mount, when the URL names none of them,
+  the remembered selection is validated against the currently-shipped snapshots (stale entries — a league slug we no
+  longer ingest or a team number that no longer exists — are dropped silently and the app falls back to the league that
+  is live today). A non-empty selection resolved at mount is remembered; mount never clears the remembered selection.
 - The page reflects the Viewer selection and Standings selection in the URL as query parameters, using a typed
   query-state library (`nuqs`). The Viewer selection covers day, league, and team; the Standings selection is
   independent and covers the Standings league and division. Parameter shapes:
@@ -131,8 +132,10 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
   - The default view on first load (no URL parameter, no prior visit) is `team`.
 - Validation is continuous: the displayed selection is derived from the raw parameters on every render, so a value that
   becomes stale after load (for example when the snapshot set changes) is dropped on the next render rather than
-  surviving until reload. Whenever a value is dropped the URL is rewritten without it using `history: "replace"` so the
-  cleanup does not pollute the back-stack. The same rules apply to stale `localStorage` entries. Specifically:
+  surviving until reload. Stale values are rewritten out of the URL at mount and whenever a user action writes the URL,
+  always with `history: "replace"` so the cleanup does not pollute the back-stack; a value that goes stale on a later
+  render disappears from the displayed selection immediately and from the URL on the next write. The same rules apply to
+  stale `localStorage` entries. Specifically:
   - `view` not in `{team, now, standings}` is treated as the default `team`.
   - `day` not in `{sunday..friday}` is treated as null; dependent `league` and `team` are also cleared.
   - `league` whose slug is not present in the current snapshot set for the resolved `day` is treated as null; dependent

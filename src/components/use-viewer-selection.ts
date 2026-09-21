@@ -4,32 +4,23 @@ import type { LeagueDay, Snapshot, Team } from "@/shared/domain/snapshot";
 import {
   DAYS,
   planSelectDay,
-  planSelectLeague,
-  planSelectStandings,
   resolveViewerSelection,
+  snapshotsForDay,
   toStorageWrite,
   VIEW_MODES,
   type RawParams,
-  type StoredSelection,
+  type ResolvedSelection,
+  type UrlWrites,
   type ViewMode,
 } from "@/shared/domain/viewer-selection";
 import { parseAsInteger, parseAsString, parseAsStringLiteral, useQueryState } from "nuqs";
 import { useCallback, useEffect, useMemo, useRef } from "react";
-
-const STORAGE_KEY = "volleyball-viewer:selection";
-
-/** Storage seam: browser local storage by default; tests pass an in-memory adapter. */
-export interface StorageAdapter {
-  get(key: string): string | null;
-  set(key: string, value: string): void;
-  remove(key: string): void;
-}
-
-const localStorageAdapter: StorageAdapter = {
-  get: (key) => window.localStorage.getItem(key),
-  set: (key, value) => window.localStorage.setItem(key, value),
-  remove: (key) => window.localStorage.removeItem(key),
-};
+import {
+  localStorageAdapter,
+  readStoredSelection,
+  writeStoredSelection,
+  type StorageAdapter,
+} from "./selection-storage";
 
 const dayParser = parseAsStringLiteral(DAYS).withOptions({ history: "replace" });
 const viewParser = parseAsStringLiteral(VIEW_MODES).withDefault("team").withOptions({
@@ -39,13 +30,7 @@ const viewParser = parseAsStringLiteral(VIEW_MODES).withDefault("team").withOpti
 const stringParser = parseAsString.withOptions({ history: "replace" });
 const intParser = parseAsInteger.withOptions({ history: "replace" });
 
-export interface ViewerSelection {
-  view: ViewMode;
-  day: LeagueDay | null;
-  league: string | null;
-  team: number | null;
-  standingsLeague: string | null;
-  division: string | null;
+export interface ViewerSelection extends ResolvedSelection {
   daySnapshots: Snapshot[];
   selectedSnapshot: Snapshot | null;
   selectedTeam: Team | null;
@@ -60,9 +45,9 @@ export interface ViewerSelectionActions {
 }
 
 /**
- * The single interface the viewer uses to read and write selection state. It binds the pure
- * {@link resolveViewerSelection} to the query-state library and to a storage adapter, so the viewer never touches
- * `nuqs` or `localStorage` directly.
+ * The single interface the viewer uses to read and write the Viewer selection and the Standings selection. It binds
+ * the pure {@link resolveViewerSelection} to the query-state library and to a storage adapter, so the viewer never
+ * touches `nuqs` or `localStorage` directly.
  */
 export function useViewerSelection(
   snapshots: Snapshot[],
@@ -81,26 +66,15 @@ export function useViewerSelection(
     [view, day, league, team, standings, division],
   );
 
-  const readStored = useCallback((): StoredSelection | null => {
-    try {
-      const raw = storage.get(STORAGE_KEY);
-      return raw ? (JSON.parse(raw) as StoredSelection) : null;
-    } catch {
-      return null;
-    }
-  }, [storage]);
-
-  const persist = useCallback(
-    (next: { day: LeagueDay | null; league: string | null; team: number | null }) => {
-      const write = toStorageWrite(next);
-      try {
-        if (write == null) storage.remove(STORAGE_KEY);
-        else storage.set(STORAGE_KEY, JSON.stringify(write));
-      } catch {
-        // Swallow storage failures (quota, private mode).
-      }
+  const applyUrlWrites = useCallback(
+    (writes: UrlWrites) => {
+      if ("day" in writes) void setDay(writes.day ?? null);
+      if ("league" in writes) void setLeague(writes.league ?? null);
+      if ("team" in writes) void setTeam(writes.team ?? null);
+      if ("standings" in writes) void setStandings(writes.standings ?? null);
+      if ("division" in writes) void setDivision(writes.division ?? null);
     },
-    [storage],
+    [setDay, setLeague, setTeam, setStandings, setDivision],
   );
 
   // Displayed selection: derived from the raw parameters on every render, so a value that becomes stale after load is
@@ -110,24 +84,24 @@ export function useViewerSelection(
     [snapshots, rawParams, todayIso],
   );
 
-  // Mount: hydrate from storage (when the URL names nothing) and clean up stale values, all with history replacement.
+  // Mount: hydrate from storage (when the URL names nothing), migrate old-shape standings links, and clean up stale
+  // values, all with history replacement. A non-empty resolution is remembered; mount never clears storage.
   const hydratedRef = useRef(false);
   useEffect(() => {
     if (hydratedRef.current) return;
     hydratedRef.current = true;
-    const result = resolveViewerSelection({ snapshots, params: rawParams, stored: readStored(), todayIso });
-    const s = result.selection;
-    if (s.day !== day) void setDay(s.day);
-    if (s.league !== league) void setLeague(s.league);
-    if (s.team !== team) void setTeam(s.team);
-    // Standings selection: migrate old-shape links to the `standings` parameter and drop invalid pairs.
-    if (s.standingsLeague !== standings) void setStandings(s.standingsLeague);
-    if (s.division !== division) void setDivision(s.division);
-    persist({ day: s.day, league: s.league, team: s.team });
+    const resolved = resolveViewerSelection({
+      snapshots,
+      params: rawParams,
+      stored: readStoredSelection(storage),
+      todayIso,
+    });
+    applyUrlWrites(resolved.urlWrites);
+    if (resolved.storageWrite) writeStoredSelection(storage, resolved.storageWrite);
   }, []); // Mount-only: hydrate + clean up once against the initial params.
 
   const daySnapshots = useMemo(
-    () => (selection.day ? snapshots.filter((s) => s.league.day === selection.day) : []),
+    () => (selection.day ? snapshotsForDay(snapshots, selection.day) : []),
     [snapshots, selection.day],
   );
   const selectedSnapshot = useMemo(
@@ -142,46 +116,29 @@ export function useViewerSelection(
   const actions = useMemo<ViewerSelectionActions>(
     () => ({
       selectDay(nextDay) {
-        const plan = planSelectDay(snapshots, todayIso, nextDay);
-        void setDay(plan.day);
-        void setLeague(plan.league);
-        void setTeam(plan.team);
-        persist(plan);
+        const next = planSelectDay(snapshots, todayIso, nextDay);
+        applyUrlWrites(next);
+        writeStoredSelection(storage, toStorageWrite(next));
       },
       selectLeague(slug) {
-        const plan = planSelectLeague(slug);
-        void setLeague(plan.league);
-        void setTeam(plan.team);
-        persist({ day: selection.day, league: plan.league, team: plan.team });
+        const next = { day: selection.day, league: slug, team: null };
+        applyUrlWrites({ league: slug, team: null });
+        writeStoredSelection(storage, toStorageWrite(next));
       },
       selectTeam(nextTeam) {
-        void setTeam(nextTeam);
-        persist({ day: selection.day, league: selection.league, team: nextTeam });
+        const next = { day: selection.day, league: selection.league, team: nextTeam };
+        applyUrlWrites({ team: nextTeam });
+        writeStoredSelection(storage, toStorageWrite(next));
       },
       selectStandings(slug, nextDivision) {
         // Standings selection is URL-only and never touches day, league, or team, so a chosen team survives browsing.
-        const plan = planSelectStandings(slug, nextDivision);
-        void setStandings(plan.standings);
-        void setDivision(plan.division);
+        applyUrlWrites({ standings: slug, division: nextDivision });
       },
       setView(nextView) {
         void setViewParam(nextView);
       },
     }),
-    [
-      snapshots,
-      todayIso,
-      selection.day,
-      selection.league,
-      selection.team,
-      setDay,
-      setLeague,
-      setTeam,
-      setStandings,
-      setDivision,
-      setViewParam,
-      persist,
-    ],
+    [snapshots, todayIso, selection.day, selection.league, applyUrlWrites, setViewParam, storage],
   );
 
   return { ...selection, daySnapshots, selectedSnapshot, selectedTeam, actions };

@@ -2,12 +2,10 @@ import type { LeagueDay, Match, Snapshot } from "@/shared/domain/snapshot";
 import {
   pickDefaultLeagueSlug,
   planSelectDay,
-  planSelectLeague,
-  planSelectStandings,
-  planSelectTeam,
   resolveStandingsSelection,
   resolveViewerSelection,
-  validateUrlSelection,
+  toStorageWrite,
+  validateSelection,
   type RawParams,
   type StoredSelection,
 } from "@/shared/domain/viewer-selection";
@@ -37,6 +35,7 @@ const snapshots: Snapshot[] = [
 
 const EMPTY_PARAMS: RawParams = { view: null, day: null, league: null, team: null, standings: null, division: null };
 const TODAY = "2026-04-15";
+const STORED_MONDAY: StoredSelection = { day: "monday", leagueSlug: "spring-mondays", teamNumber: 10 };
 
 function resolve(params: Partial<RawParams>, stored: StoredSelection | null = null, snaps = snapshots) {
   return resolveViewerSelection({
@@ -47,9 +46,9 @@ function resolve(params: Partial<RawParams>, stored: StoredSelection | null = nu
   });
 }
 
-describe("validateUrlSelection (migrated)", () => {
+describe("validateSelection (day → league → team cascade)", () => {
   it("passes through fully valid input", () => {
-    expect(validateUrlSelection(snapshots, { day: "sunday", league: "spring-sundays", team: 2 })).toEqual({
+    expect(validateSelection(snapshots, { day: "sunday", league: "spring-sundays", team: 2 })).toEqual({
       day: "sunday",
       league: "spring-sundays",
       team: 2,
@@ -57,7 +56,7 @@ describe("validateUrlSelection (migrated)", () => {
   });
 
   it("drops invalid day and cascades", () => {
-    expect(validateUrlSelection(snapshots, { day: "funday", league: "spring-sundays", team: 2 })).toEqual({
+    expect(validateSelection(snapshots, { day: "funday", league: "spring-sundays", team: 2 })).toEqual({
       day: null,
       league: null,
       team: null,
@@ -65,7 +64,7 @@ describe("validateUrlSelection (migrated)", () => {
   });
 
   it("drops uppercase / typo'd day", () => {
-    expect(validateUrlSelection(snapshots, { day: "SUNDAY", league: null, team: null })).toEqual({
+    expect(validateSelection(snapshots, { day: "SUNDAY", league: null, team: null })).toEqual({
       day: null,
       league: null,
       team: null,
@@ -73,7 +72,7 @@ describe("validateUrlSelection (migrated)", () => {
   });
 
   it("drops league not present for the resolved day, cascading team", () => {
-    expect(validateUrlSelection(snapshots, { day: "sunday", league: "does-not-exist", team: 2 })).toEqual({
+    expect(validateSelection(snapshots, { day: "sunday", league: "does-not-exist", team: 2 })).toEqual({
       day: "sunday",
       league: null,
       team: null,
@@ -81,7 +80,7 @@ describe("validateUrlSelection (migrated)", () => {
   });
 
   it("drops team that does not exist on the resolved snapshot", () => {
-    expect(validateUrlSelection(snapshots, { day: "sunday", league: "spring-sundays", team: 99 })).toEqual({
+    expect(validateSelection(snapshots, { day: "sunday", league: "spring-sundays", team: 99 })).toEqual({
       day: "sunday",
       league: "spring-sundays",
       team: null,
@@ -89,7 +88,7 @@ describe("validateUrlSelection (migrated)", () => {
   });
 
   it("drops league that belongs to a different day", () => {
-    expect(validateUrlSelection(snapshots, { day: "sunday", league: "spring-mondays", team: 10 })).toEqual({
+    expect(validateSelection(snapshots, { day: "sunday", league: "spring-mondays", team: 10 })).toEqual({
       day: "sunday",
       league: null,
       team: null,
@@ -97,7 +96,7 @@ describe("validateUrlSelection (migrated)", () => {
   });
 
   it("drops orphan team without league", () => {
-    expect(validateUrlSelection(snapshots, { day: "sunday", league: null, team: 2 })).toEqual({
+    expect(validateSelection(snapshots, { day: "sunday", league: null, team: 2 })).toEqual({
       day: "sunday",
       league: null,
       team: null,
@@ -105,7 +104,7 @@ describe("validateUrlSelection (migrated)", () => {
   });
 
   it("drops orphan league without day", () => {
-    expect(validateUrlSelection(snapshots, { day: null, league: "spring-sundays", team: 2 })).toEqual({
+    expect(validateSelection(snapshots, { day: null, league: "spring-sundays", team: 2 })).toEqual({
       day: null,
       league: null,
       team: null,
@@ -113,7 +112,7 @@ describe("validateUrlSelection (migrated)", () => {
   });
 
   it("returns all-null when input is all-null", () => {
-    expect(validateUrlSelection(snapshots, { day: null, league: null, team: null })).toEqual({
+    expect(validateSelection(snapshots, { day: null, league: null, team: null })).toEqual({
       day: null,
       league: null,
       team: null,
@@ -122,22 +121,24 @@ describe("validateUrlSelection (migrated)", () => {
 });
 
 describe("resolveViewerSelection", () => {
-  it("passes through a fully valid team-view URL", () => {
-    const { selection } = resolve({ day: "sunday", league: "spring-sundays", team: 2 });
+  it("passes through a fully valid team-view URL with no writes", () => {
+    const { selection, urlWrites, storageWrite } = resolve({ day: "sunday", league: "spring-sundays", team: 2 });
     expect(selection).toMatchObject({ view: "team", day: "sunday", league: "spring-sundays", team: 2 });
+    expect(urlWrites).toEqual({});
+    expect(storageWrite).toEqual({ day: "sunday", leagueSlug: "spring-sundays", teamNumber: 2 });
   });
 
-  it("defaults view to team when the parameter is absent or invalid", () => {
+  it("defaults view to team when the parameter is absent or invalid, without rewriting it", () => {
     expect(resolve({}).selection.view).toBe("team");
     expect(resolve({ view: "bogus" }).selection.view).toBe("team");
+    expect(resolve({ view: "bogus" }).urlWrites).toEqual({});
     expect(resolve({ view: "now" }).selection.view).toBe("now");
     expect(resolve({ view: "standings" }).selection.view).toBe("standings");
   });
 
   describe("URL beats storage", () => {
     it("ignores storage when the URL names a day", () => {
-      const stored: StoredSelection = { day: "monday", leagueSlug: "spring-mondays", teamNumber: 10 };
-      const { selection } = resolve({ day: "sunday" }, stored);
+      const { selection } = resolve({ day: "sunday" }, STORED_MONDAY);
       expect(selection.day).toBe("sunday");
       // partial URL is taken as-is, storage is not merged in
       expect(selection.league).toBe("spring-sundays"); // default league for today, not the stored monday league
@@ -147,42 +148,46 @@ describe("resolveViewerSelection", () => {
 
   describe("all-or-nothing storage fallback", () => {
     it("hydrates from storage only when the URL names none of day/league/team", () => {
-      const stored: StoredSelection = { day: "monday", leagueSlug: "spring-mondays", teamNumber: 10 };
-      const { selection } = resolve({}, stored);
+      const { selection } = resolve({}, STORED_MONDAY);
       expect(selection).toMatchObject({ day: "monday", league: "spring-mondays", team: 10 });
     });
 
     it("does not consult storage when the URL names any of day/league/team", () => {
-      const stored: StoredSelection = { day: "monday", leagueSlug: "spring-mondays", teamNumber: 10 };
       // a lone (orphan) team in the URL still counts as the URL naming a param → storage ignored
-      const { selection } = resolve({ team: 2 }, stored);
-      expect(selection.day).toBeNull();
-      expect(selection.league).toBeNull();
-      expect(selection.team).toBeNull();
+      const { selection, storageWrite } = resolve({ team: 2 }, STORED_MONDAY);
+      expect(selection).toMatchObject({ day: null, league: null, team: null });
+      // nothing worth remembering, and never a request to clear what is remembered
+      expect(storageWrite).toBeNull();
     });
 
     it("drops stale stored values via the cascade", () => {
       const stored: StoredSelection = { day: "monday", leagueSlug: "no-longer-ingested", teamNumber: 10 };
       const { selection } = resolve({}, stored);
       // stale league dropped, default league for monday filled in, team cascaded away
-      expect(selection.day).toBe("monday");
-      expect(selection.league).toBe("spring-mondays");
-      expect(selection.team).toBeNull();
+      expect(selection).toMatchObject({ day: "monday", league: "spring-mondays", team: null });
     });
   });
 
   describe("storage hydration writes", () => {
-    it("produces a storageWrite reflecting the resolved selection", () => {
-      const stored: StoredSelection = { day: "sunday", leagueSlug: "spring-sundays", teamNumber: 2 };
-      const { storageWrite } = resolve({}, stored);
-      expect(storageWrite).toEqual({ day: "sunday", leagueSlug: "spring-sundays", teamNumber: 2 });
+    it("pushes the remembered selection into the URL and re-remembers it", () => {
+      const { urlWrites, storageWrite } = resolve({}, STORED_MONDAY);
+      expect(urlWrites).toEqual({ day: "monday", league: "spring-mondays", team: 10 });
+      expect(storageWrite).toEqual(STORED_MONDAY);
+    });
+
+    it("pushes only the surviving values when part of the remembered selection is stale", () => {
+      const stored: StoredSelection = { day: "monday", leagueSlug: "no-longer-ingested", teamNumber: 10 };
+      const { urlWrites, storageWrite } = resolve({}, stored);
+      expect(urlWrites).toEqual({ day: "monday", league: "spring-mondays" });
+      expect(storageWrite).toEqual({ day: "monday", leagueSlug: "spring-mondays" });
     });
   });
 
   describe("cascade including orphans", () => {
-    it("drops league on a different day and cascades team", () => {
-      const { selection } = resolve({ day: "sunday", league: "spring-mondays", team: 10 });
+    it("drops league on a different day, cascades team, and rewrites the URL", () => {
+      const { selection, urlWrites } = resolve({ day: "sunday", league: "spring-mondays", team: 10 });
       expect(selection).toMatchObject({ day: "sunday", league: "spring-sundays", team: null });
+      expect(urlWrites).toEqual({ league: "spring-sundays", team: null });
     });
 
     it("clears an orphan team with no league", () => {
@@ -198,8 +203,9 @@ describe("resolveViewerSelection", () => {
         mkSnapshot("old-sundays", "sunday", [1], ["2026-01-04", "2026-02-01"]),
         mkSnapshot("current-sundays", "sunday", [7], ["2026-04-05", "2026-05-31"]),
       ];
-      const { selection } = resolve({ day: "sunday" }, null, seasoned);
+      const { selection, urlWrites } = resolve({ day: "sunday" }, null, seasoned);
       expect(selection.league).toBe("current-sundays");
+      expect(urlWrites).toEqual({ league: "current-sundays" });
     });
   });
 
@@ -209,16 +215,10 @@ describe("resolveViewerSelection", () => {
       const first = resolve({ day: "monday", league: "spring-mondays", team: 10 });
       expect(first.selection.league).toBe("spring-mondays");
       // Later render with a snapshot set that no longer has monday.
-      const later = resolveViewerSelection({
-        snapshots: [snapshots[0]],
-        params: { ...EMPTY_PARAMS, day: "monday", league: "spring-mondays", team: 10 },
-        stored: null,
-        todayIso: TODAY,
-      });
+      const later = resolve({ day: "monday", league: "spring-mondays", team: 10 }, null, [snapshots[0]]);
       // `monday` is still a valid weekday, but its league (and the team under it) are now stale and dropped.
-      expect(later.selection.day).toBe("monday");
-      expect(later.selection.league).toBeNull();
-      expect(later.selection.team).toBeNull();
+      expect(later.selection).toMatchObject({ day: "monday", league: null, team: null });
+      expect(later.urlWrites).toEqual({ league: null, team: null });
     });
   });
 
@@ -248,8 +248,9 @@ describe("resolveViewerSelection", () => {
     });
 
     it("drops both when the standings league is not an active snapshot", () => {
-      const { selection } = resolve({ view: "standings", standings: "no-such-league", division: "B" });
+      const { selection, urlWrites } = resolve({ view: "standings", standings: "no-such-league", division: "B" });
       expect(selection).toMatchObject({ standingsLeague: null, division: null });
+      expect(urlWrites).toEqual({ standings: null, division: null });
     });
 
     it("drops both when the division is not present in that snapshot's teams", () => {
@@ -264,36 +265,60 @@ describe("resolveViewerSelection", () => {
       expect(selection.standingsLeague).toBe("spring-mondays");
     });
 
-    it("survives a view toggle: the same params resolve identically under view=now and view=team", () => {
+    it("survives a view toggle: the same params resolve identically under every view", () => {
       const params = { standings: "spring-mondays", division: "B" };
-      expect(resolve({ ...params, view: "standings" }).selection).toMatchObject({
-        standingsLeague: "spring-mondays",
-        division: "B",
-      });
-      expect(resolve({ ...params, view: "now" }).selection).toMatchObject({
-        standingsLeague: "spring-mondays",
-        division: "B",
-      });
-      expect(resolve({ ...params, view: "team" }).selection).toMatchObject({
-        standingsLeague: "spring-mondays",
-        division: "B",
-      });
+      for (const view of ["standings", "now", "team"]) {
+        expect(resolve({ ...params, view }).selection).toMatchObject({
+          standingsLeague: "spring-mondays",
+          division: "B",
+        });
+      }
     });
   });
 
   describe("transitional old-shape standings link", () => {
+    const OLD_LINK = { view: "standings", league: "spring-mondays", division: "B" };
+
     it("reads a bare league+division in the standings view as the standings selection", () => {
-      const { selection } = resolve({ view: "standings", league: "spring-mondays", division: "B" });
+      const { selection } = resolve(OLD_LINK);
       expect(selection.standingsLeague).toBe("spring-mondays");
       expect(selection.division).toBe("B");
     });
 
-    it("re-validates the old-link league as Team search (an orphan league is dropped)", () => {
-      const { selection } = resolve({ view: "standings", league: "spring-mondays", division: "B" });
-      // The same `league` value, seen as a Team-search parameter, is an orphan (no day) and is dropped.
-      expect(selection.day).toBeNull();
-      expect(selection.league).toBeNull();
-      expect(selection.team).toBeNull();
+    it("rewrites the URL to the new shape: `league` moves into `standings`", () => {
+      const { urlWrites } = resolve(OLD_LINK);
+      expect(urlWrites).toEqual({ league: null, standings: "spring-mondays" });
+    });
+
+    it("treats the folded league as consumed, so Team search resolves from nothing", () => {
+      const { selection, storageWrite } = resolve(OLD_LINK);
+      expect(selection).toMatchObject({ day: null, league: null, team: null });
+      expect(storageWrite).toBeNull();
+    });
+
+    it("keeps the remembered team: the folded league does not count as the URL naming a league", () => {
+      const { selection, urlWrites, storageWrite } = resolve(OLD_LINK, STORED_MONDAY);
+      expect(selection).toMatchObject({
+        day: "monday",
+        league: "spring-mondays",
+        team: 10,
+        standingsLeague: "spring-mondays",
+        division: "B",
+      });
+      // The old `league` value is rewritten as the Team-search league that storage hydrated, and the standings
+      // parameter is added; the remembered selection is re-remembered rather than cleared.
+      expect(urlWrites).toEqual({ day: "monday", team: 10, standings: "spring-mondays" });
+      expect(storageWrite).toEqual(STORED_MONDAY);
+    });
+
+    it("does not fold when the old pair is invalid, so `league` stays a Team-search parameter", () => {
+      const { selection, storageWrite } = resolve(
+        { view: "standings", league: "spring-mondays", division: "ZZ" },
+        STORED_MONDAY,
+      );
+      // Not folded: the URL names an (orphan) league, storage is not consulted, and nothing is remembered or cleared.
+      expect(selection).toMatchObject({ day: null, league: null, team: null, standingsLeague: null, division: null });
+      expect(storageWrite).toBeNull();
     });
 
     it("does not fold a bare league into standings outside the standings view", () => {
@@ -320,33 +345,30 @@ describe("resolveStandingsSelection", () => {
   it("validates the new `standings` parameter against the active snapshots", () => {
     expect(
       resolveStandingsSelection(snapshots, "standings", { standings: "spring-sundays", league: null, division: "B" }),
-    ).toEqual({
-      standingsLeague: "spring-sundays",
-      division: "B",
-    });
+    ).toEqual({ standingsLeague: "spring-sundays", division: "B", foldedLeague: false });
   });
 
   it("returns nothing selected when no standings league is named", () => {
     expect(resolveStandingsSelection(snapshots, "standings", { standings: null, league: null, division: "B" })).toEqual(
-      {
-        standingsLeague: null,
-        division: null,
-      },
+      { standingsLeague: null, division: null, foldedLeague: false },
     );
+  });
+
+  it("reports when a bare league was folded in", () => {
+    expect(
+      resolveStandingsSelection(snapshots, "standings", { standings: null, league: "spring-mondays", division: "B" }),
+    ).toEqual({ standingsLeague: "spring-mondays", division: "B", foldedLeague: true });
   });
 
   it("ignores a bare league outside the standings view", () => {
     expect(
       resolveStandingsSelection(snapshots, "team", { standings: null, league: "spring-mondays", division: "B" }),
-    ).toEqual({
-      standingsLeague: null,
-      division: null,
-    });
+    ).toEqual({ standingsLeague: null, division: null, foldedLeague: false });
   });
 });
 
-describe("action planners", () => {
-  it("planSelectDay sets the live league for today and clears the team", () => {
+describe("planSelectDay", () => {
+  it("sets the live league for today and clears the team", () => {
     expect(planSelectDay(snapshots, TODAY, "sunday")).toEqual({
       day: "sunday",
       league: "spring-sundays",
@@ -354,21 +376,23 @@ describe("action planners", () => {
     });
   });
 
-  it("planSelectDay yields a null league when the day has no snapshot", () => {
+  it("yields a null league when the day has no snapshot", () => {
     expect(planSelectDay(snapshots, TODAY, "friday")).toEqual({ day: "friday", league: null, team: null });
   });
+});
 
-  it("planSelectLeague sets the league and clears the team", () => {
-    expect(planSelectLeague("spring-sundays")).toEqual({ league: "spring-sundays", team: null });
+describe("toStorageWrite", () => {
+  it("keeps only the present values and uses the stored field names", () => {
+    expect(toStorageWrite({ day: "sunday", league: "spring-sundays", team: 2 })).toEqual({
+      day: "sunday",
+      leagueSlug: "spring-sundays",
+      teamNumber: 2,
+    });
+    expect(toStorageWrite({ day: "sunday", league: null, team: null })).toEqual({ day: "sunday" });
   });
 
-  it("planSelectTeam sets the team", () => {
-    expect(planSelectTeam(2)).toEqual({ team: 2 });
-    expect(planSelectTeam(null)).toEqual({ team: null });
-  });
-
-  it("planSelectStandings writes the standings league and division only", () => {
-    expect(planSelectStandings("spring-mondays", "B")).toEqual({ standings: "spring-mondays", division: "B" });
+  it("returns null when there is nothing to remember", () => {
+    expect(toStorageWrite({ day: null, league: null, team: null })).toBeNull();
   });
 });
 

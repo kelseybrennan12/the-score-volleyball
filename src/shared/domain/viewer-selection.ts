@@ -34,13 +34,27 @@ export interface ResolvedSelection {
   division: string | null;
 }
 
+/**
+ * URL parameters whose value must change to match the resolved selection. A key is present only when the raw
+ * parameter and the resolved value differ; `null` means "remove the parameter". `view` is never rewritten.
+ */
+export interface UrlWrites {
+  day?: LeagueDay | null;
+  league?: string | null;
+  team?: number | null;
+  standings?: string | null;
+  division?: string | null;
+}
+
 export interface ResolveResult {
   selection: ResolvedSelection;
-  /** Desired persisted value; `null` means remove the stored entry. */
+  /** URL rewrites needed to make the displayed URL match the resolved selection (empty when it already does). */
+  urlWrites: UrlWrites;
+  /** The selection worth remembering, or `null` when there is nothing to remember. Never a request to clear storage. */
   storageWrite: StoredSelection | null;
 }
 
-// --- URL-validation helper (folded in from the former url-selection module) ---
+// --- Day → league → team validation (folded in from the former url-selection module) ---
 
 export interface RawSelection {
   day: string | null;
@@ -58,15 +72,18 @@ export function isLeagueDay(value: string | null): value is LeagueDay {
   return value != null && (DAYS as readonly string[]).includes(value);
 }
 
-/** Day → league → team cascade: an invalid parent drops all of its children. */
-export function validateUrlSelection(snapshots: Snapshot[], raw: RawSelection): ValidatedSelection {
+/**
+ * Day → league → team cascade: an invalid parent drops all of its children. Applied to both the URL and the
+ * remembered selection.
+ */
+export function validateSelection(snapshots: Snapshot[], raw: RawSelection): ValidatedSelection {
   const day = isLeagueDay(raw.day) ? raw.day : null;
 
   if (day == null) {
     return { day: null, league: null, team: null };
   }
 
-  const daySnapshots = snapshots.filter((s) => s.league.day === day);
+  const daySnapshots = snapshotsForDay(snapshots, day);
   const league = raw.league != null && daySnapshots.some((s) => s.league.slug === raw.league) ? raw.league : null;
 
   if (league == null) {
@@ -79,36 +96,41 @@ export function validateUrlSelection(snapshots: Snapshot[], raw: RawSelection): 
   return { day, league, team };
 }
 
+export function snapshotsForDay(snapshots: Snapshot[], day: LeagueDay): Snapshot[] {
+  return snapshots.filter((s) => s.league.day === day);
+}
+
 /**
  * Validate the Standings selection. `standings` names the table's league snapshot and `division` a division present in
  * that snapshot's teams; if either is invalid both are dropped so the pill row shows nothing selected.
  *
  * Transitional: in the standings view a bare `league` (with no `standings`) is read as the table's league — the shape
- * the app used to write. The hook rewrites such URLs to the new shape on mount; remove with the fallback in a later
- * release.
+ * the app used to write. `foldedLeague` reports when that happened so the caller can treat `league` as consumed rather
+ * than as a Team-search parameter. Remove with the fallback in a later release.
  */
 export function resolveStandingsSelection(
   snapshots: Snapshot[],
   view: ViewMode,
   params: Pick<RawParams, "standings" | "league" | "division">,
-): { standingsLeague: string | null; division: string | null } {
-  const slug = params.standings ?? (view === "standings" ? params.league : null);
-  if (slug == null) return { standingsLeague: null, division: null };
+): { standingsLeague: string | null; division: string | null; foldedLeague: boolean } {
+  const none = { standingsLeague: null, division: null, foldedLeague: false };
+  const folding = params.standings == null && view === "standings" && params.league != null;
+  const slug = params.standings ?? (folding ? params.league : null);
+  if (slug == null) return none;
 
   const snapshot = snapshots.find((s) => s.league.slug === slug) ?? null;
-  if (snapshot == null) return { standingsLeague: null, division: null };
+  if (snapshot == null) return none;
 
   const division =
     params.division != null && snapshot.teams.some((t) => t.division === params.division) ? params.division : null;
-  if (division == null) return { standingsLeague: null, division: null };
+  if (division == null) return none;
 
-  return { standingsLeague: slug, division };
+  return { standingsLeague: slug, division, foldedLeague: folding };
 }
 
 /** The league that is live today for a given day, used when a day has no explicit league. */
 export function pickDefaultLeagueSlug(snapshots: Snapshot[], day: LeagueDay, todayIso: string): string | null {
-  const daySnapshots = snapshots.filter((s) => s.league.day === day);
-  return pickCurrentSnapshot(daySnapshots, todayIso)?.league.slug ?? null;
+  return pickCurrentSnapshot(snapshotsForDay(snapshots, day), todayIso)?.league.slug ?? null;
 }
 
 function validateView(value: string | null): ViewMode {
@@ -127,8 +149,8 @@ export function toStorageWrite(sel: ValidatedSelection): StoredSelection | null 
 /**
  * Resolve the Viewer selection from the raw URL parameters, the remembered selection, and today's date.
  *
- * Pure: given the same inputs it returns the same validated selection plus the value to persist. The hook binds it to
- * the query-state library and to a storage adapter.
+ * Pure: given the same inputs it returns the same validated selection plus the writes to make (URL rewrites and the
+ * value to remember). The hook binds it to the query-state library and to a storage adapter.
  */
 export function resolveViewerSelection(args: {
   snapshots: Snapshot[];
@@ -141,52 +163,54 @@ export function resolveViewerSelection(args: {
   const view = validateView(params.view);
 
   // Standings selection lives in its own parameters (`standings`, `division`) and is validated independently of the
-  // Team-search day/league/team below.
+  // Team-search day/league/team below. When an old-shape link's `league` is folded into it, that `league` is consumed
+  // and no longer counts as the URL naming a Team-search league.
   const standings = resolveStandingsSelection(snapshots, view, params);
+  const urlLeague = standings.foldedLeague ? null : params.league;
 
   // The remembered selection is consulted only when the URL names none of day/league/team (all-or-nothing). A partial
   // URL is a deliberate link and is taken as-is.
-  const urlNamesNone = params.day == null && params.league == null && params.team == null;
+  const urlNamesNone = params.day == null && urlLeague == null && params.team == null;
   const base: RawSelection =
     urlNamesNone && stored != null
       ? { day: stored.day ?? null, league: stored.leagueSlug ?? null, team: stored.teamNumber ?? null }
-      : { day: params.day, league: params.league, team: params.team };
+      : { day: params.day, league: urlLeague, team: params.team };
 
-  let validated = validateUrlSelection(snapshots, base);
+  let validated = validateSelection(snapshots, base);
 
   if (validated.day != null && validated.league == null) {
     validated = { ...validated, league: pickDefaultLeagueSlug(snapshots, validated.day, todayIso) };
   }
 
+  const selection: ResolvedSelection = {
+    view,
+    ...validated,
+    standingsLeague: standings.standingsLeague,
+    division: standings.division,
+  };
+
   return {
-    selection: {
-      view,
-      ...validated,
-      standingsLeague: standings.standingsLeague,
-      division: standings.division,
-    },
+    selection,
+    urlWrites: diffUrl(params, selection),
     storageWrite: toStorageWrite(validated),
   };
 }
 
-// --- Action planners: the observable effect of each user action on the selection. ---
+function diffUrl(params: RawParams, selection: ResolvedSelection): UrlWrites {
+  const writes: UrlWrites = {};
+  if (params.day !== selection.day) writes.day = selection.day;
+  if (params.league !== selection.league) writes.league = selection.league;
+  if (params.team !== selection.team) writes.team = selection.team;
+  if (params.standings !== selection.standingsLeague) writes.standings = selection.standingsLeague;
+  if (params.division !== selection.division) writes.division = selection.division;
+  return writes;
+}
 
+/** Selecting a day lands on the league that is live today for that day and clears the team. */
 export function planSelectDay(
   snapshots: Snapshot[],
   todayIso: string,
   day: LeagueDay,
 ): { day: LeagueDay; league: string | null; team: null } {
   return { day, league: pickDefaultLeagueSlug(snapshots, day, todayIso), team: null };
-}
-
-export function planSelectLeague(slug: string | null): { league: string | null; team: null } {
-  return { league: slug, team: null };
-}
-
-export function planSelectTeam(team: number | null): { team: number | null } {
-  return { team };
-}
-
-export function planSelectStandings(slug: string, division: string): { standings: string; division: string } {
-  return { standings: slug, division };
 }
