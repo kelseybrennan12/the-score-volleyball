@@ -1,5 +1,6 @@
 import type { Announcement } from "@/shared/domain/announcement";
-import { BlobNotFoundError, get, put } from "@vercel/blob";
+import { get, put } from "@vercel/blob";
+import { isBlobNotFound } from "../storage-backend";
 import type { AnnouncementRepo } from "./port";
 
 // Beside the snapshots in the existing private store.
@@ -16,7 +17,7 @@ export function createAnnouncementBlobRepo({ token }: BlobRepoOptions): Announce
     try {
       result = await get(ANNOUNCEMENT_PATH, { access: ACCESS, token, useCache: false });
     } catch (err) {
-      if (isNotFound(err)) return null;
+      if (isBlobNotFound(err)) return null;
       throw err;
     }
     if (!result || result.statusCode !== 200 || !result.stream) return null;
@@ -36,11 +37,4 @@ export function createAnnouncementBlobRepo({ token }: BlobRepoOptions): Announce
   }
 
   return { read, write };
-}
-
-function isNotFound(err: unknown): boolean {
-  if (err instanceof BlobNotFoundError) return true;
-  if (!err || typeof err !== "object") return false;
-  const message = (err as { message?: unknown }).message;
-  return typeof message === "string" && message.includes("does not exist");
 }

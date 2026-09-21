@@ -1,5 +1,6 @@
 import type { Snapshot } from "@/shared/domain/snapshot";
-import { BlobNotFoundError, del, get, list, put } from "@vercel/blob";
+import { del, get, list, put } from "@vercel/blob";
+import { isBlobNotFound } from "../storage-backend";
 import {
   DEFAULT_ARCHIVE_LIMIT,
   archiveFileName,
@@ -34,7 +35,7 @@ export function createBlobSnapshotRepo({ token }: BlobRepoOptions): SnapshotRepo
     try {
       result = await get(pathname, { access: ACCESS, token, useCache: false });
     } catch (err) {
-      if (isNotFound(err)) return null;
+      if (isBlobNotFound(err)) return null;
       throw err;
     }
     if (!result || result.statusCode !== 200 || !result.stream) return null;
@@ -196,13 +197,6 @@ export function createBlobSnapshotRepo({ token }: BlobRepoOptions): SnapshotRepo
     writeSeasonSnapshot,
     promoteActiveToSeason,
   };
-}
-
-function isNotFound(err: unknown): boolean {
-  if (err instanceof BlobNotFoundError) return true;
-  if (!err || typeof err !== "object") return false;
-  const message = (err as { message?: unknown }).message;
-  return typeof message === "string" && message.includes("does not exist");
 }
 
 function ingestedAtFromArchiveKey(slug: string, archiveKey: string): string | null {
