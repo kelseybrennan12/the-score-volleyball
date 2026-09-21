@@ -223,3 +223,7 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
     view).
   - [/docs/efforts/2026-07-06-21-42-summer-season-cutover.md](/docs/efforts/2026-07-06-21-42-summer-season-cutover.md)
     (Previous Seasons section).
+  - [/docs/efforts/2026-09-21-17-55-viewer-selection-module.md](/docs/efforts/2026-09-21-17-55-viewer-selection-module.md)
+    (Viewer selection as one deep module).
+  - [/docs/efforts/2026-09-21-18-10-standings-selection-parameters.md](/docs/efforts/2026-09-21-18-10-standings-selection-parameters.md)
+    (Standings selection's own `standings`/`division` parameters, independent of Team search).

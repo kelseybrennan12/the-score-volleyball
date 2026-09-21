@@ -35,6 +35,7 @@ export function ViewerApp({
     view,
     day: selectedDay,
     league: selectedLeagueSlug,
+    standingsLeague,
     division: selectedDivision,
     daySnapshots: leagueOptions,
     selectedSnapshot,
@@ -72,7 +73,7 @@ export function ViewerApp({
         <StandingsView
           snapshots={snapshots}
           seasons={seasons}
-          selectedLeagueSlug={selectedLeagueSlug}
+          selectedStandingsSlug={standingsLeague}
           selectedDivision={selectedDivision}
           onSelect={(leagueSlug, division) => actions.selectStandings(leagueSlug, division)}
         />

@@ -44,6 +44,7 @@ export interface ViewerSelection {
   day: LeagueDay | null;
   league: string | null;
   team: number | null;
+  standingsLeague: string | null;
   division: string | null;
   daySnapshots: Snapshot[];
   selectedSnapshot: Snapshot | null;
@@ -72,11 +73,12 @@ export function useViewerSelection(
   const [day, setDay] = useQueryState("day", dayParser);
   const [league, setLeague] = useQueryState("league", stringParser);
   const [team, setTeam] = useQueryState("team", intParser);
+  const [standings, setStandings] = useQueryState("standings", stringParser);
   const [division, setDivision] = useQueryState("division", stringParser);
 
   const rawParams = useMemo<RawParams>(
-    () => ({ view, day, league, team, division }),
-    [view, day, league, team, division],
+    () => ({ view, day, league, team, standings, division }),
+    [view, day, league, team, standings, division],
   );
 
   const readStored = useCallback((): StoredSelection | null => {
@@ -118,6 +120,9 @@ export function useViewerSelection(
     if (s.day !== day) void setDay(s.day);
     if (s.league !== league) void setLeague(s.league);
     if (s.team !== team) void setTeam(s.team);
+    // Standings selection: migrate old-shape links to the `standings` parameter and drop invalid pairs.
+    if (s.standingsLeague !== standings) void setStandings(s.standingsLeague);
+    if (s.division !== division) void setDivision(s.division);
     persist({ day: s.day, league: s.league, team: s.team });
   }, []); // Mount-only: hydrate + clean up once against the initial params.
 
@@ -154,10 +159,10 @@ export function useViewerSelection(
         persist({ day: selection.day, league: selection.league, team: nextTeam });
       },
       selectStandings(slug, nextDivision) {
+        // Standings selection is URL-only and never touches day, league, or team, so a chosen team survives browsing.
         const plan = planSelectStandings(slug, nextDivision);
-        void setLeague(plan.league);
+        void setStandings(plan.standings);
         void setDivision(plan.division);
-        persist({ day: selection.day, league: plan.league, team: selection.team });
       },
       setView(nextView) {
         void setViewParam(nextView);
@@ -172,6 +177,7 @@ export function useViewerSelection(
       setDay,
       setLeague,
       setTeam,
+      setStandings,
       setDivision,
       setViewParam,
       persist,

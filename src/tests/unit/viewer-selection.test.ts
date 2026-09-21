@@ -5,6 +5,7 @@ import {
   planSelectLeague,
   planSelectStandings,
   planSelectTeam,
+  resolveStandingsSelection,
   resolveViewerSelection,
   validateUrlSelection,
   type RawParams,
@@ -34,7 +35,7 @@ const snapshots: Snapshot[] = [
   mkSnapshot("spring-mondays", "monday", [10, 11]),
 ];
 
-const EMPTY_PARAMS: RawParams = { view: null, day: null, league: null, team: null, division: null };
+const EMPTY_PARAMS: RawParams = { view: null, day: null, league: null, team: null, standings: null, division: null };
 const TODAY = "2026-04-15";
 
 function resolve(params: Partial<RawParams>, stored: StoredSelection | null = null, snaps = snapshots) {
@@ -221,10 +222,125 @@ describe("resolveViewerSelection", () => {
     });
   });
 
-  describe("standings view (shared league, this ticket)", () => {
-    it("passes the standings league through without day-validation", () => {
+  describe("standings selection (own parameters)", () => {
+    it("resolves a valid standings/division pair", () => {
+      const { selection } = resolve({ view: "standings", standings: "spring-mondays", division: "B" });
+      expect(selection).toMatchObject({ standingsLeague: "spring-mondays", division: "B" });
+    });
+
+    it("is independent of day, league, and team", () => {
+      const { selection } = resolve({
+        view: "standings",
+        day: "sunday",
+        league: "spring-sundays",
+        team: 2,
+        standings: "spring-mondays",
+        division: "B",
+      });
+      // Team-search selection is preserved untouched alongside the standings selection.
+      expect(selection).toMatchObject({
+        day: "sunday",
+        league: "spring-sundays",
+        team: 2,
+        standingsLeague: "spring-mondays",
+        division: "B",
+      });
+    });
+
+    it("drops both when the standings league is not an active snapshot", () => {
+      const { selection } = resolve({ view: "standings", standings: "no-such-league", division: "B" });
+      expect(selection).toMatchObject({ standingsLeague: null, division: null });
+    });
+
+    it("drops both when the division is not present in that snapshot's teams", () => {
+      const { selection } = resolve({ view: "standings", standings: "spring-mondays", division: "ZZ" });
+      expect(selection).toMatchObject({ standingsLeague: null, division: null });
+    });
+
+    it("resolves the standings selection regardless of the day validated for Team search", () => {
+      // `standings` names a monday snapshot while the Team search sits on sunday; neither disturbs the other.
+      const { selection } = resolve({ view: "standings", day: "sunday", standings: "spring-mondays", division: "B" });
+      expect(selection.day).toBe("sunday");
+      expect(selection.standingsLeague).toBe("spring-mondays");
+    });
+
+    it("survives a view toggle: the same params resolve identically under view=now and view=team", () => {
+      const params = { standings: "spring-mondays", division: "B" };
+      expect(resolve({ ...params, view: "standings" }).selection).toMatchObject({
+        standingsLeague: "spring-mondays",
+        division: "B",
+      });
+      expect(resolve({ ...params, view: "now" }).selection).toMatchObject({
+        standingsLeague: "spring-mondays",
+        division: "B",
+      });
+      expect(resolve({ ...params, view: "team" }).selection).toMatchObject({
+        standingsLeague: "spring-mondays",
+        division: "B",
+      });
+    });
+  });
+
+  describe("transitional old-shape standings link", () => {
+    it("reads a bare league+division in the standings view as the standings selection", () => {
       const { selection } = resolve({ view: "standings", league: "spring-mondays", division: "B" });
-      expect(selection).toMatchObject({ view: "standings", league: "spring-mondays", division: "B" });
+      expect(selection.standingsLeague).toBe("spring-mondays");
+      expect(selection.division).toBe("B");
+    });
+
+    it("re-validates the old-link league as Team search (an orphan league is dropped)", () => {
+      const { selection } = resolve({ view: "standings", league: "spring-mondays", division: "B" });
+      // The same `league` value, seen as a Team-search parameter, is an orphan (no day) and is dropped.
+      expect(selection.day).toBeNull();
+      expect(selection.league).toBeNull();
+      expect(selection.team).toBeNull();
+    });
+
+    it("does not fold a bare league into standings outside the standings view", () => {
+      const { selection } = resolve({ view: "team", day: "monday", league: "spring-mondays", division: "B" });
+      expect(selection.standingsLeague).toBeNull();
+      expect(selection.division).toBeNull();
+      // league remains the Team-search league.
+      expect(selection.league).toBe("spring-mondays");
+    });
+
+    it("prefers the new `standings` parameter over the old-link fold", () => {
+      const { selection } = resolve({
+        view: "standings",
+        standings: "spring-sundays",
+        league: "spring-mondays",
+        division: "B",
+      });
+      expect(selection.standingsLeague).toBe("spring-sundays");
+    });
+  });
+});
+
+describe("resolveStandingsSelection", () => {
+  it("validates the new `standings` parameter against the active snapshots", () => {
+    expect(
+      resolveStandingsSelection(snapshots, "standings", { standings: "spring-sundays", league: null, division: "B" }),
+    ).toEqual({
+      standingsLeague: "spring-sundays",
+      division: "B",
+    });
+  });
+
+  it("returns nothing selected when no standings league is named", () => {
+    expect(resolveStandingsSelection(snapshots, "standings", { standings: null, league: null, division: "B" })).toEqual(
+      {
+        standingsLeague: null,
+        division: null,
+      },
+    );
+  });
+
+  it("ignores a bare league outside the standings view", () => {
+    expect(
+      resolveStandingsSelection(snapshots, "team", { standings: null, league: "spring-mondays", division: "B" }),
+    ).toEqual({
+      standingsLeague: null,
+      division: null,
     });
   });
 });
@@ -251,8 +367,8 @@ describe("action planners", () => {
     expect(planSelectTeam(null)).toEqual({ team: null });
   });
 
-  it("planSelectStandings writes league and division only", () => {
-    expect(planSelectStandings("spring-mondays", "B")).toEqual({ league: "spring-mondays", division: "B" });
+  it("planSelectStandings writes the standings league and division only", () => {
+    expect(planSelectStandings("spring-mondays", "B")).toEqual({ standings: "spring-mondays", division: "B" });
   });
 });
 
