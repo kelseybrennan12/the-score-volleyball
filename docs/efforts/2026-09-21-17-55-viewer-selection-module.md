@@ -8,8 +8,8 @@
 
 ## Scope
 
-Implement GitHub issue #8 (part of PRD #6): move all Viewer selection state (URL + per-browser memory + validation +
-default-league inference) behind a single deep module. The viewer reads and writes selection state only through a
+Implement GitHub issue #8 (part of PRD #6): move all Viewer Viewer selection (URL + per-browser memory + validation +
+default-league inference) behind a single deep module. The viewer reads and writes Viewer selection only through a
 `useViewerSelection` hook backed by a pure `resolveViewerSelection` function that the node-only test rig drives
 directly.
 
@@ -39,7 +39,7 @@ Out of scope (deferred to #9):
 
 ## Spec Coverage Checklist
 
-- [x] The viewer has no direct query-state or local-storage access; all selection state comes from the hook.
+- [x] The viewer has no direct query-state or local-storage access; all Viewer selection comes from the hook.
 - [x] The resolve function is pure and returns both the validated selection and the writes to make.
 - [x] Storage is consulted only when the URL names none of day, league, team; hydration from storage produces URL
       writes.
@@ -76,6 +76,10 @@ Out of scope (deferred to #9):
 
 ## Execution Notes
 
+- Post-review fixes (code review of `main...HEAD`): `resolveViewerSelection` now returns `urlWrites` which the hook
+  applies; the storage seam moved to `selection-storage.ts` with an in-memory adapter and tests; the mount effect
+  remembers a non-empty resolution and never clears storage; identity planners removed; `validateUrlSelection` renamed
+  `validateSelection`; the leftover `groupByDay` in the viewer app removed.
 - The frozen spec delta (v8) from ticket #7 lived on a sibling branch; cherry-picked it (`git cherry-pick -x 8282f2e`)
   onto this branch so the module builds on the approved contract.
 - Pure module [/src/shared/domain/viewer-selection.ts](/src/shared/domain/viewer-selection.ts) folds in

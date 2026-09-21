@@ -26,8 +26,7 @@ export function ViewerApp({
   seasons: SeasonArchive[];
   mockNowIso: string | null;
 }) {
-  const snapshotsByDay = useMemo(() => groupByDay(snapshots), [snapshots]);
-  const availableDays = DAYS.filter((d) => snapshotsByDay.get(d)?.length);
+  const availableDays = useMemo(() => DAYS.filter((d) => snapshots.some((s) => s.league.day === d)), [snapshots]);
   const now = useMemo(() => (mockNowIso ? new Date(mockNowIso) : new Date()), [mockNowIso]);
   const today = useMemo(() => todayIsoInLeagueTimezone(now), [now]);
 
@@ -250,14 +249,4 @@ function TeamCandidateList({ candidates, onSelect }: { candidates: Team[]; onSel
       ))}
     </div>
   );
-}
-
-function groupByDay(snapshots: Snapshot[]): Map<LeagueDay, Snapshot[]> {
-  const grouped = new Map<LeagueDay, Snapshot[]>();
-  for (const snap of snapshots) {
-    const list = grouped.get(snap.league.day) ?? [];
-    list.push(snap);
-    grouped.set(snap.league.day, list);
-  }
-  return grouped;
 }
