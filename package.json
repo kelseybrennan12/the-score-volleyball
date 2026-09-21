@@ -18,7 +18,8 @@
     "test": "vitest run src/tests/unit src/tests/integration",
     "test:unit": "vitest run src/tests/unit",
     "test:integration": "vitest run src/tests/integration",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "sandcastle": "npx tsx .sandcastle/main.ts"
   },
   "dependencies": {
     "@vercel/analytics": "^2.0.1",
