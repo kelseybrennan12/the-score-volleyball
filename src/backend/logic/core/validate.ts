@@ -52,7 +52,7 @@ function checkMatchIntegrity(matches: Match[], knownNumbers: Set<number>): strin
   return out;
 }
 
-// Teams only ever play within their division (a combined tier such as BB/BBB is one division), so a cross-division
+// Teams only ever play within their division (a combined label such as BB/BBB is one division), so a cross-division
 // pairing means a mislabeled team or a misread schedule cell, and would silently skew both teams' records.
 function checkWithinDivision(teams: Team[], matches: Match[]): string[] {
   const divisionOf = new Map(teams.map((t) => [t.number, t.division]));

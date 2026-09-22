@@ -111,9 +111,9 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   When a range legend is present but a team number falls outside every range, the parser records an anomaly and uses the
   `defaultDivision`/`"A"` fallback.
 
-- Record and rank are computed **per division**. Teams are only compared to other teams with the same division label
-  when ranking. Inter-division matches are included in both teams' schedules but each team's sets-won/sets-lost total
-  for record purposes counts every played match regardless of opponent division.
+- Record and rank are computed **per division**. Teams only ever play within their division (a combined label such as
+  `BB/BBB` is one division), so each team's record counts every played match and its rank compares it only to teams with
+  the same division label.
 - Match outcome derivation — only two played states exist:
   - Unplayed: cell color is default/white/other; no winner, no set score.
   - Played 3-0: cell color is magenta (`FFFF00FF`); winner is the first team listed; set score is 3-0.
@@ -121,8 +121,9 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 - Each team's record is computed by summing sets won and sets lost across all played matches in that snapshot. The
   parser does not trust any pre-tallied Wins/Losses cell in the standings block for the record shown in the app, but may
   read it for cross-check logging.
-- Each team's rank is computed per division by ordering on sets-won descending, then sets-lost ascending, then team
-  number ascending as a deterministic tiebreaker.
+- Each team's rank is computed per division by ordering on sets-won descending, then sets-lost ascending. Teams with the
+  same record share a rank (skip-rank, labeled `T-N`); team number only orders rows within a tie. Teams that have not
+  played a set are unranked.
 - **New-season detection**: before writing a new snapshot for a league, the command compares the newly-parsed team list
   (team number + captain name for all teams) to the team list in the most recent existing snapshot for that league slot
   (session + day). If the team lists differ in membership, the new snapshot is treated as a new season, recorded with a
@@ -143,7 +144,7 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   - Played matches obey the winner-first convention (`outcome.winnerTeamNumber === teamNumbers[0]`) and carry a coherent
     set score (`setsWinner ∈ {2, 3}`, `setsLoser < setsWinner`).
   - Each team's total match count is within ±1 of the modal count for its division (tolerates a single bye week).
-  - Matchups only pair teams from the same division. Teams never play across divisions (a combined tier such as `BB/BBB`
+  - Matches only pair teams from the same division. Teams never play across divisions (a combined label such as `BB/BBB`
     is one division), so a cross-division pairing indicates a mislabeled team or a misread schedule cell and would skew
     both teams' records.
   - Every date advertised in the schedule header row whose body carries at least one matchup-shaped cell (`\d+ v \d+`)

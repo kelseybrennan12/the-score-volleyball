@@ -18,7 +18,7 @@ interface Props {
 
 export function TeamDetail({ snapshot, team, now }: Props) {
   const standings = useMemo(() => computeStandings(snapshot), [snapshot]);
-  const standing = standings.byTeam.get(team.number);
+  const teamRow = standings.byTeam.get(team.number);
   const teamMatches = useMemo(() => {
     return snapshot.matches.filter((m) => m.teamNumbers.includes(team.number)).sort(compareMatches);
   }, [snapshot, team.number]);
@@ -69,15 +69,15 @@ export function TeamDetail({ snapshot, team, now }: Props) {
               <DivisionPill division={team.division} />
             </p>
           </div>
-          {standing && (
+          {teamRow && (
             <div className="text-right text-sm">
               <div className="font-medium">
-                Record: {standing.setsWon}–{standing.setsLost} <span className="text-neutral-500">(sets)</span>
+                Record: {teamRow.setsWon}–{teamRow.setsLost} <span className="text-neutral-500">(sets)</span>
               </div>
               <div className="text-neutral-600">
-                {standing.rank != null
-                  ? `Rank ${standing.rankLabel} of ${standing.divisionSize} in ${standing.division}`
-                  : `Unranked in ${standing.division}`}
+                {teamRow.rank != null
+                  ? `Rank ${teamRow.rankLabel} of ${teamRow.divisionSize} in ${teamRow.division}`
+                  : `Unranked in ${teamRow.division}`}
               </div>
             </div>
           )}
@@ -157,7 +157,7 @@ function MatchRow({
 }) {
   const opponentNumber = match.teamNumbers[0] === team.number ? match.teamNumbers[1] : match.teamNumbers[0];
   const opponent = snapshot.teams.find((t) => t.number === opponentNumber);
-  const opponentStats = byTeam.get(opponentNumber);
+  const opponentRow = byTeam.get(opponentNumber);
   const outcomeText = match.outcome.status === "played" ? outcomeLabel(match, team.number) : null;
   return (
     <div className={`flex items-baseline justify-between gap-3 ${featured ? "pt-2" : ""}`}>
@@ -174,9 +174,9 @@ function MatchRow({
             vs #{opponentNumber} {opponent?.captain ?? "(unknown captain)"}
           </span>
           {opponent && <DivisionPill division={opponent.division} />}
-          {opponentStats && (
+          {opponentRow && (
             <span className="text-neutral-500">
-              {opponentStats.setsWon}–{opponentStats.setsLost}
+              {opponentRow.setsWon}–{opponentRow.setsLost}
             </span>
           )}
         </div>

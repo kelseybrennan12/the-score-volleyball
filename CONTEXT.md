@@ -18,7 +18,7 @@ are frozen. _Avoid_: session, year
 **Team**: A numbered roster led by a captain. Identified within a league by its number and captain name. _Avoid_:
 roster, squad
 
-**Division**: A skill tier within a league, e.g. B, BB, BBB. A combined tier such as BB/BBB is one division with no
+**Division**: A skill tier within a league, e.g. B, BB, BBB. A combined label such as BB/BBB is one division with no
 distinction inside it. Teams only ever play within their division, so record and rank are scoped to it. _Avoid_: level,
 tier, bracket
 

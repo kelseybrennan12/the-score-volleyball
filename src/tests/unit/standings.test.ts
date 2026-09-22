@@ -43,7 +43,7 @@ function played(
 
 /** Rows of one division's table, or `[]` when the snapshot has no such division. */
 function divisionRows(snap: Snapshot, division: string): StandingsRow[] {
-  return computeStandings(snap).divisions.find((g) => g.division === division)?.rows ?? [];
+  return computeStandings(snap).byDivision.get(division)?.rows ?? [];
 }
 
 describe("computeStandings: per-division tables", () => {

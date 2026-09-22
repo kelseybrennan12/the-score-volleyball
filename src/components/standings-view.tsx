@@ -149,8 +149,7 @@ function PreviousSeasons({ seasons }: { seasons: SeasonArchive[] }) {
 function StandingsTable({ snapshots, option }: { snapshots: Snapshot[]; option: StandingsOption }) {
   const snapshot = snapshots.find((s) => s.league.slug === option.leagueSlug);
   const standings = useMemo(
-    () =>
-      snapshot ? (computeStandings(snapshot).divisions.find((g) => g.division === option.division) ?? null) : null,
+    () => (snapshot ? (computeStandings(snapshot).byDivision.get(option.division) ?? null) : null),
     [snapshot, option],
   );
   if (!snapshot || !standings) return null;

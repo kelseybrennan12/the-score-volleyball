@@ -93,7 +93,7 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
   - For each match: opponent's number, captain name, division, opponent's record (scoped to the opponent's division),
     time, and court.
 - When a league has a single division, the division label is still shown but ranking text may omit the label.
-- Teams are never ranked or compared across divisions. Teams only ever play within their division (a combined tier such
+- Teams are never ranked or compared across divisions. Teams only ever play within their division (a combined label such
   as BB/BBB is one division with no distinction inside it), so a team's record counts every played match and its rank is
   computed against its division only. Record and rank for every team come from one Standings computation shared by Team
   detail, the Standings table, and the per-team report; ingestion records an anomaly if a schedule ever pairs teams from

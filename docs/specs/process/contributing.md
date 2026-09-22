@@ -76,7 +76,9 @@ src/
 - Jobs/services should prefer bulk write-repo methods over per-row `writeRepo` map loops.
 - Integration adapters used by jobs should return typed read outcomes (including retryability metadata) instead of
   requiring handler-local exception parsing for expected provider failures.
-- `src/shared/` contains cross-runtime contracts/utilities only, not backend domain core.
+- `src/shared/` contains cross-runtime contracts/utilities only, not backend domain core. `src/shared/domain/` holds
+  pure domain rules that both the UI and the ingestion pipeline consume (snapshot types, Record and Rank, Viewer
+  selection); anything that touches a runtime adapter stays under `src/backend/`.
 - `src/backend/runtime/adapters/infra/env.ts` is the single env access boundary and exports typed config for runtime
   entrypoints.
 

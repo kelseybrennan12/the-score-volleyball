@@ -30,6 +30,7 @@ export interface StandingsGroup {
 export interface Standings {
   /** One group per division, divisions sorted alphabetically, rows in rank order. */
   divisions: StandingsGroup[];
+  byDivision: Map<string, StandingsGroup>;
   byTeam: Map<number, StandingsRow>;
 }
 
@@ -68,18 +69,16 @@ export function computeStandings(snapshot: Snapshot): Standings {
   const records = computeRecords(snapshot.teams, snapshot.matches);
   const byDivision = groupByDivision(snapshot.teams);
   const divisions: StandingsGroup[] = [];
+  const groups = new Map<string, StandingsGroup>();
   const byTeam = new Map<number, StandingsRow>();
   for (const [division, teams] of byDivision) {
     const rows = rankDivision(division, teams, records);
     for (const row of rows) byTeam.set(row.teamNumber, row);
-    divisions.push({
-      leagueSlug: snapshot.league.slug,
-      leagueDisplayName: snapshot.league.displayName,
-      division,
-      rows,
-    });
+    const group = { leagueSlug: snapshot.league.slug, leagueDisplayName: snapshot.league.displayName, division, rows };
+    divisions.push(group);
+    groups.set(division, group);
   }
-  return { divisions, byTeam };
+  return { divisions, byDivision: groups, byTeam };
 }
 
 export function listStandingsOptions(snapshots: Snapshot[]): StandingsOption[] {
@@ -91,12 +90,8 @@ export function listStandingsOptions(snapshots: Snapshot[]): StandingsOption[] {
   const options: StandingsOption[] = [];
   for (const snapshot of sortedSnapshots) {
     const dayLabel = DAY_LABEL[snapshot.league.day] ?? snapshot.league.day;
-    for (const group of computeStandings(snapshot).divisions) {
-      options.push({
-        leagueSlug: snapshot.league.slug,
-        division: group.division,
-        label: `${dayLabel} ${group.division}`,
-      });
+    for (const division of groupByDivision(snapshot.teams).keys()) {
+      options.push({ leagueSlug: snapshot.league.slug, division, label: `${dayLabel} ${division}` });
     }
   }
   return options;
@@ -139,68 +134,48 @@ function groupByDivision(teams: Team[]): Map<string, Team[]> {
   return new Map([...byDivision.entries()].sort(([a], [b]) => a.localeCompare(b)));
 }
 
+interface Entry {
+  team: Team;
+  record: SetRecord;
+}
+
 function rankDivision(division: string, teams: Team[], records: Map<number, SetRecord>): StandingsRow[] {
   const divisionSize = teams.length;
-  const ranked: Team[] = [];
-  const unranked: Team[] = [];
-  for (const team of teams) {
-    const r = records.get(team.number)!;
-    if (r.setsWon === 0 && r.setsLost === 0) unranked.push(team);
-    else ranked.push(team);
-  }
+  const entries: Entry[] = teams.map((team) => ({ team, record: records.get(team.number)! }));
+  const ranked = entries.filter((e) => e.record.setsWon > 0 || e.record.setsLost > 0);
+  const unranked = entries.filter((e) => e.record.setsWon === 0 && e.record.setsLost === 0);
   ranked.sort((a, b) => {
-    const ra = records.get(a.number)!;
-    const rb = records.get(b.number)!;
-    if (rb.setsWon !== ra.setsWon) return rb.setsWon - ra.setsWon;
-    if (ra.setsLost !== rb.setsLost) return ra.setsLost - rb.setsLost;
-    return a.number - b.number;
+    if (b.record.setsWon !== a.record.setsWon) return b.record.setsWon - a.record.setsWon;
+    if (a.record.setsLost !== b.record.setsLost) return a.record.setsLost - b.record.setsLost;
+    return a.team.number - b.team.number;
+  });
+  unranked.sort((a, b) => a.team.number - b.team.number);
+
+  const toRow = (e: Entry, rank: number | null, tied: boolean): StandingsRow => ({
+    teamNumber: e.team.number,
+    captain: e.team.captain,
+    division,
+    setsWon: e.record.setsWon,
+    setsLost: e.record.setsLost,
+    rank,
+    rankLabel: rank == null ? "—" : tied ? `T-${rank}` : String(rank),
+    isTied: tied,
+    divisionSize,
   });
 
   const rows: StandingsRow[] = [];
-  // Skip-rank with tie detection: walk sorted array; same (setsWon, setsLost) -> shared rank.
+  // Skip-rank with tie detection: walk the sorted list; the same (setsWon, setsLost) shares a rank.
   let i = 0;
   while (i < ranked.length) {
-    const ri = records.get(ranked[i].number)!;
+    const ri = ranked[i].record;
     let j = i + 1;
-    while (j < ranked.length) {
-      const rj = records.get(ranked[j].number)!;
-      if (rj.setsWon !== ri.setsWon || rj.setsLost !== ri.setsLost) break;
+    while (j < ranked.length && ranked[j].record.setsWon === ri.setsWon && ranked[j].record.setsLost === ri.setsLost) {
       j++;
     }
-    const rank = i + 1;
     const tied = j - i > 1;
-    for (let k = i; k < j; k++) {
-      const team = ranked[k];
-      const r = records.get(team.number)!;
-      rows.push({
-        teamNumber: team.number,
-        captain: team.captain,
-        division,
-        setsWon: r.setsWon,
-        setsLost: r.setsLost,
-        rank,
-        rankLabel: tied ? `T-${rank}` : String(rank),
-        isTied: tied,
-        divisionSize,
-      });
-    }
+    for (let k = i; k < j; k++) rows.push(toRow(ranked[k], i + 1, tied));
     i = j;
   }
-
-  unranked.sort((a, b) => a.number - b.number);
-  for (const team of unranked) {
-    const r = records.get(team.number)!;
-    rows.push({
-      teamNumber: team.number,
-      captain: team.captain,
-      division,
-      setsWon: r.setsWon,
-      setsLost: r.setsLost,
-      rank: null,
-      rankLabel: "—",
-      isTied: false,
-      divisionSize,
-    });
-  }
+  for (const e of unranked) rows.push(toRow(e, null, false));
   return rows;
 }

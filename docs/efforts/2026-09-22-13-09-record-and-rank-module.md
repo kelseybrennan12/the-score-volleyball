@@ -42,9 +42,9 @@ Team-detail view model, Admin read seam).
 - [x] Record counts every played match; rank is computed within the division only.
 - [x] One computation per snapshot serves Team detail (own row + every opponent's record), the Standings table, and the
       pill list.
-- [x] A cross-division matchup is recorded as an anomaly by `validateSnapshot`, with a test.
+- [x] A cross-division match is recorded as an anomaly by `validateSnapshot`, with a test.
 - [x] `stats.ts`, `record.ts`, `rank.ts` and their tests are gone; no production code imports them.
-- [x] CONTEXT.md: a combined tier is one division; teams only play within their division; Record counts all played
+- [x] CONTEXT.md: a combined label is one division; teams only play within their division; Record counts all played
       matches.
 - [x] Typecheck, lint, format check, and the full unit suite pass.
 
@@ -67,7 +67,7 @@ Team-detail view model, Admin read seam).
 - Plan approved in chat during the grilling session that followed the architecture review; the user chose the
   `implement` skill over the effort-plan loop, so this file was written alongside the implementation.
 - Every checked-in snapshot (9,042 matches) was scanned before deciding Q3: zero cross-division matches exist, and
-  combined tiers already arrive as one label.
+  combined divisions already arrive as one label.
 - Team detail now memoizes one standings computation per snapshot and looks up every opponent from it, instead of
   recomputing all stats once per match row.
 - Gates: `pnpm run typecheck`, `pnpm run lint`, `pnpm run fmt-check`, `pnpm run test` (188 tests) pass.
@@ -75,7 +75,7 @@ Team-detail view model, Admin read seam).
 ## Deviations
 
 - The product spec said a team's record is computed "from BB teams only, even if they are scheduled to play a BBB team
-  inter-division". Kelsey Brennan clarified that teams never play across divisions and that a combined tier such as
+  inter-division". Kelsey Brennan clarified that teams never play across divisions and that a combined label such as
   BB/BBB is one division, so the sentence described a non-case. Record keeps counting every played match (unchanged
   behaviour), the spec now says so, and the new ingestion invariant guards the assumption.
 - The old `rank.ts` test asserted that ties are broken by team number; that contradicted the glossary and was dropped

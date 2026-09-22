@@ -39,15 +39,15 @@ export function buildReport(input: BuildReportInput): string {
 function renderTeamBlock(
   snapshot: Snapshot,
   team: Team,
-  standing: StandingsRow | undefined,
+  teamRow: StandingsRow | undefined,
   format: ReportFormat,
 ): string {
   const teamMatches = snapshot.matches.filter((m) => m.teamNumbers.includes(team.number)).sort(compareMatches);
   const leagueLabel = `${snapshot.league.displayName} ${snapshot.league.year}`;
-  const statsLine = standing
-    ? `Record: ${standing.setsWon}–${standing.setsLost} (sets) · ${
-        standing.rank != null ? `Rank ${standing.rankLabel} of ${standing.divisionSize}` : "Unranked"
-      } in ${standing.division}`
+  const statsLine = teamRow
+    ? `Record: ${teamRow.setsWon}–${teamRow.setsLost} (sets) · ${
+        teamRow.rank != null ? `Rank ${teamRow.rankLabel} of ${teamRow.divisionSize}` : "Unranked"
+      } in ${teamRow.division}`
     : "Record: unavailable";
   if (format === "md") {
     const rows = teamMatches.map((m) => renderMarkdownRow(snapshot, team, m));
