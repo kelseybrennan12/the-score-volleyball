@@ -1,8 +1,7 @@
-import { LEAGUE_SOURCES } from "./logic/core/league-sources";
-import { runIngestion, type LeagueResult } from "./logic/services/run-ingestion";
-import { createSnapshotStore } from "./logic/services/snapshot-store";
-import { createSheetsFetcher } from "./runtime/adapters/integrations/google-sheets";
-import { resolveObjectStore } from "./runtime/adapters/object-store";
+import { LEAGUE_SOURCES } from "@/backend/logic/core/league-sources";
+import { runIngestion } from "@/backend/logic/services/ingestion";
+import { createIngestionDeps } from "@/backend/runtime/bootstrap/ingestion";
+import type { IngestionOutcome } from "@/shared/domain/ingestion";
 
 interface CliArgs {
   league: string | null;
@@ -11,17 +10,16 @@ interface CliArgs {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
+  // Reject an unknown --league before wiring the environment, so it exits 2 even where the store cannot be built.
   const sources = args.league ? LEAGUE_SOURCES.filter((s) => s.slug === args.league) : LEAGUE_SOURCES;
   if (sources.length === 0) {
     console.error(`No leagues match --league=${args.league}`);
     process.exit(2);
   }
-  const fetcher = createSheetsFetcher();
-  const store = createSnapshotStore(resolveObjectStore());
 
-  const { results } = await runIngestion({ sources, fetcher, store, dryRun: args.dryRun });
-  printSummary(results, args.dryRun);
-  const anyFailed = results.some((r) => !r.ok);
+  const outcome = await runIngestion({ ...createIngestionDeps(), trigger: "cli", sources, dryRun: args.dryRun });
+  printSummary(outcome);
+  const anyFailed = outcome.status === "ran" && outcome.leagues.some((l) => !l.ok);
   process.exit(anyFailed ? 1 : 0);
 }
 
@@ -38,20 +36,21 @@ function parseArgs(argv: string[]): CliArgs {
   return out;
 }
 
-function printSummary(results: LeagueResult[], dryRun: boolean): void {
-  console.log(`\nIngest summary${dryRun ? " (dry-run)" : ""}:`);
-  for (const r of results) {
-    if (r.ok) {
-      const archived = r.archivedPath ? ` archived=${r.archivedPath}` : "";
-      const active = r.activePath ? ` active=${r.activePath}` : "";
+function printSummary(outcome: IngestionOutcome): void {
+  // The CLI trigger is exempt from the cooldown, so a skip is not expected here; report it rather than print nothing.
+  if (outcome.status === "skipped") {
+    console.log(`\nIngest skipped (${outcome.reason}); last ingested ${outcome.lastIngestedAt}.`);
+    return;
+  }
+  console.log(`\nIngest summary${outcome.dryRun ? " (dry-run)" : ""}:`);
+  for (const league of outcome.leagues) {
+    if (league.ok) {
       console.log(
-        `  [ok] ${r.slug} teams=${r.teamCount} matches=${r.matchCount} rosterDiff=${r.rosterDiff}${active}${archived}`,
+        `  [ok] ${league.slug} teams=${league.teamCount} matches=${league.matchCount} rosterDiff=${league.rosterDiff}`,
       );
-      if (r.anomalies?.length) {
-        for (const note of r.anomalies) console.log(`       anomaly: ${note}`);
-      }
+      for (const note of league.anomalies) console.log(`       anomaly: ${note}`);
     } else {
-      console.log(`  [failed] ${r.slug}: ${r.error}`);
+      console.log(`  [failed] ${league.slug}: ${league.error}`);
     }
   }
 }

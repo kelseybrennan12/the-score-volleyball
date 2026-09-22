@@ -10,8 +10,8 @@ description: HTTP route handler that runs the ingestion pipeline from the deploy
 - ID: T0004
 - Type: Technical
 - Status: active
-- Version: v2
-- Last Updated: 2026-05-02
+- Version: v3
+- Last Updated: 2026-09-22
 
 ## Summary
 
@@ -37,8 +37,17 @@ session that gates it, and the rate limit that protects it from abuse. Related s
 
 ## Core Concepts
 
-- **Shared ingestion service**: `runIngestion({ sources, fetcher, repo, dryRun, now })` in
-  `src/backend/logic/services/run-ingestion.ts`. Used by both the CLI entrypoint and the route handler.
+- **Ingestion module**: `runIngestion({ trigger, sources, fetcher, store, dryRun?, now? })` in
+  `src/backend/logic/services/ingestion.ts`. The one place that decides whether a run may start (the cooldown, by
+  trigger), runs it, and reports a domain outcome: `ran` with `ranAt` and one outcome per league, or `skipped` with the
+  reason and the remaining wait. The outcome carries no storage keys. Used by the CLI entrypoint and both route
+  handlers. The outcome and trigger types, and the cooldown constant, are the cross-runtime contract in
+  `src/shared/domain/ingestion.ts`, imported by the admin UI as well.
+- **HTTP shaping**: `src/backend/logic/services/ingestion-http.ts` holds the pure helpers the two routes compose:
+  `authorizeCronRequest` (bearer check), `toAdminIngestResponse` and `toCronIngestResponse` (outcome to status and
+  body).
+- **Composition root**: `createIngestionDeps()` in `src/backend/runtime/bootstrap/ingestion.ts` wires the source list,
+  the Sheets fetcher, and the Snapshot store for the running environment; the CLI and both routes call it.
 - **Admin session**: an HMAC-signed cookie (`admin_session`) of the form `<issuedAtMs>.<hex-hmac>`, signed with
   `ADMIN_COOKIE_SECRET`. See [/docs/specs/product/admin-tool.md](/docs/specs/product/admin-tool.md) for the UX-facing
   lifecycle.
@@ -52,10 +61,9 @@ session that gates it, and the rate limit that protects it from abuse. Related s
 - A Next.js route handler `POST /api/admin/ingest` exists and runs in the Node runtime. Its request path is:
   - Verify a valid admin session cookie (reject with 401 otherwise).
   - Verify environment configuration is present (`ADMIN_PASSPHRASE`, `ADMIN_COOKIE_SECRET`; reject with 503 otherwise).
-  - Read `repo.getLastIngestedAt()`; if the elapsed time is less than the cooldown window, respond 429 with a
-    `retryAfterSeconds` field and the `Retry-After` header.
-  - Otherwise call `runIngestion({ sources: LEAGUE_SOURCES, fetcher, repo })` and respond with the per-league result
-    array and the new `lastIngestedAt`.
+  - Call `runIngestion({ trigger: "admin", ...createIngestionDeps() })`. A `skipped` outcome becomes 429 with
+    `{ error, retryAfterSeconds, lastIngestedAt }` and the `Retry-After` header; a `ran` outcome is returned as the 200
+    body (`status`, `ranAt`, `dryRun`, `leagues`).
 - A Next.js route handler `POST /api/admin/session` accepts `{ passphrase: string }`, compares it against
   `ADMIN_PASSPHRASE` via a constant-time comparison, and on success sets the `admin_session` cookie. It rejects with 401
   on mismatch and 503 when configuration is missing.
@@ -66,25 +74,23 @@ session that gates it, and the rate limit that protects it from abuse. Related s
 - A Next.js route handler `POST /api/admin/rollback` accepts `{ slug: string, archiveKey: string }`, validates both
   inputs against a safe character set, and calls `repo.restoreArchive(slug, archiveKey)`. The handler does not invoke
   the ingest path and is not subject to the ingest rate limit.
-- The ingest cooldown window is 5 minutes. `setLastIngestedAt(ranAt)` is called by the service whenever a non-dry-run
-  ingestion completes, even if some leagues failed, so partial successes still extend the cooldown.
+- The ingest cooldown window is 5 minutes (`INGEST_COOLDOWN_MS` in `src/shared/domain/ingestion.ts`). The Ingestion
+  module enforces it for the `cron` and `admin` triggers and not for `cli`; a dry run never stamps.
+  `setLastIngestedAt(ranAt)` is called by the module whenever a non-dry-run ingestion completes, even if some leagues
+  failed, so partial successes still extend the cooldown.
 - All admin route handlers set `runtime = "nodejs"` and `dynamic = "force-dynamic"` to prevent caching or Edge-runtime
   mismatch. The ingest handler additionally exports `maxDuration = 60` to accommodate a full multi-league run within
   Vercel's function timeout.
 - A second Next.js route handler `GET /api/cron/ingest` exists for Vercel Cron. Its request path is:
-  - Reject with 503 if `CRON_SECRET` is not configured.
-  - Verify the request's `Authorization` header equals `Bearer ${CRON_SECRET}` using a constant-time comparison; reject
-    with 401 otherwise.
-  - Read `repo.getLastIngestedAt()`; if elapsed is less than the same `INGEST_COOLDOWN_MS` window the admin route uses,
-    respond `200 { ok: true, skipped: true, reason: "cooldown", lastIngestedAt }`. Cron skips do not return non-2xx
-    because Vercel surfaces non-2xx as cron failures and a benign cooldown collision should not alert the operator.
-  - Otherwise call the same `runIngestion` core and respond `200 { ok: true, lastIngestedAt, results }`. Per-league
-    failures stay inside the result array (parity with the admin route); only an unexpected pipeline exception returns
-    `500`.
+  - `authorizeCronRequest(authorization, CRON_SECRET)`: reject with 503 if `CRON_SECRET` is not configured, and with 401
+    unless the `Authorization` header equals `Bearer ${CRON_SECRET}` under a constant-time comparison.
+  - Call `runIngestion({ trigger: "cron", ...createIngestionDeps() })` and respond 200 with the outcome in both cases:
+    `{ status: "skipped", reason: "cooldown", lastIngestedAt, retryAfterMs }` or
+    `{ status: "ran", ranAt, dryRun, leagues }`. Cron skips do not return non-2xx because Vercel surfaces non-2xx as
+    cron failures and a benign cooldown collision should not alert the operator. Per-league failures stay inside
+    `leagues` (parity with the admin route); only an unexpected pipeline exception returns `500`.
 - The cron route uses the same `runtime = "nodejs"`, `dynamic = "force-dynamic"`, and `maxDuration = 60` exports as the
-  admin route. The shared `INGEST_COOLDOWN_MS` constant lives in
-  [/src/backend/logic/services/runtime-ingestion-config.ts](/src/backend/logic/services/runtime-ingestion-config.ts) so
-  both routes stay in lockstep.
+  admin route. The cooldown is enforced in one place, the Ingestion module, so the two routes cannot drift.
 - The cron schedule itself lives in [/vercel.json](/vercel.json) at `/api/cron/ingest` on `0 8 * * *` UTC (04:00 ET in
   EDT, 03:00 ET in EST).
 
@@ -107,3 +113,6 @@ session that gates it, and the rate limit that protects it from abuse. Related s
 
 - Status: Implemented
 - Remaining: None.
+- Implemented under:
+  - [/docs/efforts/2026-09-22-14-50-ingestion-run-module.md](/docs/efforts/2026-09-22-14-50-ingestion-run-module.md)
+    (one Ingestion module owning the cooldown and a domain outcome; routes and CLI as adapters).

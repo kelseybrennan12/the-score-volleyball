@@ -1,5 +1,6 @@
 "use client";
 
+import type { IngestionOutcome, LeagueOutcome } from "@/shared/domain/ingestion";
 import { formatTimestamp } from "@/shared/format";
 import { useCallback, useEffect, useState } from "react";
 import { AnnouncementSection } from "./announcement-section";
@@ -22,21 +23,8 @@ interface RollbacksResponse {
   leagues: LeagueBlock[];
 }
 
-interface IngestLeagueResult {
-  slug: string;
-  ok: boolean;
-  teamCount?: number;
-  matchCount?: number;
-  rosterDiff?: "same" | "changed";
-  anomalies?: string[];
-  error?: string;
-}
-
-interface IngestResponse {
-  ok: boolean;
-  lastIngestedAt: string;
-  results: IngestLeagueResult[];
-}
+/** The admin ingest route's body: the Ingestion outcome on 200, or `{ error }` (with the wait on a 429). */
+type IngestResponse = IngestionOutcome | { error: string; retryAfterSeconds?: number };
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {
   const text = await response.text();
@@ -53,7 +41,7 @@ export function AdminApp() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
-  const [lastIngestResults, setLastIngestResults] = useState<IngestLeagueResult[] | null>(null);
+  const [lastIngestLeagues, setLastIngestLeagues] = useState<LeagueOutcome[] | null>(null);
 
   const refresh = useCallback(async () => {
     setLoadError(null);
@@ -79,19 +67,20 @@ export function AdminApp() {
     setMessage(null);
     try {
       const response = await fetch("/api/admin/ingest", { method: "POST" });
-      const json = await parseJsonResponse<
-        | (IngestResponse & { error?: string; retryAfterSeconds?: number })
-        | { error: string; retryAfterSeconds?: number }
-      >(response);
-      if (response.status === 429 && "retryAfterSeconds" in json && json.retryAfterSeconds) {
-        setMessage(`Rate-limited — try again in ${json.retryAfterSeconds}s.`);
-      } else if (!response.ok || ("error" in json && json.error)) {
-        setMessage(`Ingest failed: ${"error" in json && json.error ? json.error : response.statusText}`);
-      } else if ("results" in json) {
-        setLastIngestResults(json.results);
-        const failed = json.results.filter((r) => !r.ok);
+      const json = await parseJsonResponse<IngestResponse>(response);
+      if ("error" in json) {
+        setMessage(
+          response.status === 429 && json.retryAfterSeconds
+            ? `Rate-limited — try again in ${json.retryAfterSeconds}s.`
+            : `Ingest failed: ${json.error || response.statusText}`,
+        );
+      } else if (!response.ok) {
+        setMessage(`Ingest failed: ${response.statusText}`);
+      } else if (json.status === "ran") {
+        setLastIngestLeagues(json.leagues);
+        const failed = json.leagues.filter((l) => !l.ok);
         if (failed.length === 0) {
-          setMessage(`Ingested ${json.results.length} league${json.results.length === 1 ? "" : "s"}.`);
+          setMessage(`Ingested ${json.leagues.length} league${json.leagues.length === 1 ? "" : "s"}.`);
         } else {
           setMessage(
             `Ingested with ${failed.length} failure${failed.length === 1 ? "" : "s"}: ${failed.map((f) => f.slug).join(", ")}.`,
@@ -161,10 +150,10 @@ export function AdminApp() {
         </div>
         {message ? <p className="mt-3 text-sm text-neutral-700">{message}</p> : null}
         {loadError ? <p className="mt-3 text-sm text-red-700">{loadError}</p> : null}
-        {lastIngestResults && lastIngestResults.length > 0 ? (
+        {lastIngestLeagues && lastIngestLeagues.length > 0 ? (
           <ul className="mt-4 space-y-2 text-sm">
-            {lastIngestResults.map((result) => (
-              <IngestResultRow key={result.slug} result={result} />
+            {lastIngestLeagues.map((league) => (
+              <LeagueOutcomeRow key={league.slug} league={league} />
             ))}
           </ul>
         ) : null}
@@ -213,17 +202,17 @@ export function AdminApp() {
   );
 }
 
-function IngestResultRow({ result }: { result: IngestLeagueResult }) {
-  const anomalies = result.anomalies ?? [];
-  const statusLabel = result.ok ? "ok" : "failed";
-  const statusClass = result.ok ? (anomalies.length > 0 ? "text-amber-800" : "text-emerald-800") : "text-red-700";
-  const summary = result.ok
-    ? `teams=${result.teamCount ?? 0} matches=${result.matchCount ?? 0} rosterDiff=${result.rosterDiff ?? "?"}`
-    : (result.error ?? "unknown error");
+function LeagueOutcomeRow({ league }: { league: LeagueOutcome }) {
+  const anomalies = league.ok ? league.anomalies : [];
+  const statusLabel = league.ok ? "ok" : "failed";
+  const statusClass = league.ok ? (anomalies.length > 0 ? "text-amber-800" : "text-emerald-800") : "text-red-700";
+  const summary = league.ok
+    ? `teams=${league.teamCount} matches=${league.matchCount} rosterDiff=${league.rosterDiff}`
+    : league.error;
   return (
     <li className="rounded border border-neutral-200 p-3">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="font-medium">{result.slug}</span>
+        <span className="font-medium">{league.slug}</span>
         <span className={`text-xs uppercase tracking-wide ${statusClass}`}>{statusLabel}</span>
       </div>
       <p className="mt-1 text-xs text-neutral-600">{summary}</p>
@@ -233,7 +222,7 @@ function IngestResultRow({ result }: { result: IngestLeagueResult }) {
             <li key={idx}>{note}</li>
           ))}
         </ul>
-      ) : result.ok ? (
+      ) : league.ok ? (
         <p className="mt-2 text-xs text-neutral-500">No anomalies.</p>
       ) : null}
     </li>

@@ -1,8 +1,6 @@
-import { LEAGUE_SOURCES } from "@/backend/logic/core/league-sources";
-import { handleCronIngest } from "@/backend/logic/services/cron-ingest";
-import { createSnapshotStore } from "@/backend/logic/services/snapshot-store";
-import { createSheetsFetcher } from "@/backend/runtime/adapters/integrations/google-sheets";
-import { resolveObjectStore } from "@/backend/runtime/adapters/object-store";
+import { runIngestion } from "@/backend/logic/services/ingestion";
+import { authorizeCronRequest, toCronIngestResponse } from "@/backend/logic/services/ingestion-http";
+import { createIngestionDeps } from "@/backend/runtime/bootstrap/ingestion";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -10,12 +8,14 @@ export const dynamic = "force-dynamic";
 export const maxDuration = 60;
 
 export async function GET(req: Request): Promise<NextResponse> {
-  const result = await handleCronIngest({
-    authorization: req.headers.get("authorization"),
-    cronSecret: process.env.CRON_SECRET,
-    sources: LEAGUE_SOURCES,
-    fetcher: createSheetsFetcher(),
-    store: createSnapshotStore(resolveObjectStore()),
-  });
-  return NextResponse.json(result.body, { status: result.status });
+  const auth = authorizeCronRequest(req.headers.get("authorization"), process.env.CRON_SECRET);
+  if (!auth.ok) return NextResponse.json({ error: auth.error }, { status: auth.status });
+
+  try {
+    const response = toCronIngestResponse(await runIngestion({ trigger: "cron", ...createIngestionDeps() }));
+    return NextResponse.json(response.body, { status: response.status });
+  } catch (err) {
+    console.error("Cron ingest route failed", err);
+    return NextResponse.json({ error: err instanceof Error ? err.message : "Unknown ingest failure" }, { status: 500 });
+  }
 }

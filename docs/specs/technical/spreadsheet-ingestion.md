@@ -10,7 +10,7 @@ description: CLI-driven ingestion of thescoregr.com Google Sheets into per-leagu
 - ID: T0001
 - Type: Technical
 - Status: active
-- Version: v9
+- Version: v10
 - Last Updated: 2026-09-22
 
 ## Summary
@@ -66,8 +66,8 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 
 ### Must:
 
-- Ingestion is invokable in three ways that share a single orchestration service (`runIngestion` in
-  `src/backend/logic/services/run-ingestion.ts`):
+- Ingestion is invokable in three ways that share one Ingestion module (`runIngestion` in
+  `src/backend/logic/services/ingestion.ts`), each naming itself by trigger (`cli`, `admin`, `cron`):
   - CLI: `mise run ingest`, used for local development and as a disaster-recovery fallback.
   - HTTP (operator): `POST /api/admin/ingest`, used by the operator-facing admin tool in production.
   - HTTP (scheduled): `GET /api/cron/ingest`, invoked daily by Vercel Cron with a `Bearer ${CRON_SECRET}` header. See
@@ -79,13 +79,14 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
 - For each in-scope league, the command fetches the sheet via the public XLSX export endpoint
   `https://docs.google.com/spreadsheets/d/<sheet_id>/export?format=xlsx` (no OAuth, public-link access). The XLSX export
   is the authoritative source because it preserves cell background colors; CSV is not used because it strips colors.
-- The fetch/parse/write core is shared between the CLI and the route handler via `runIngestion`. The core must not
-  depend on CLI-only APIs (process args, stdout formatting, file paths relative to `process.cwd()` for anything other
-  than the snapshots root).
+- The fetch/parse/write core is shared between the CLI and the route handlers via `runIngestion`, which returns a domain
+  outcome (per-league team and match counts, roster diff, anomalies, or a one-line error) with no storage keys in it.
+  The core must not depend on CLI-only APIs (process args, stdout formatting, file paths relative to `process.cwd()` for
+  anything other than the snapshots root).
 - The runtime-ingestion route handler honors the same per-league failure semantics as the CLI: a single league failing
   does not abort the run; the response reports which leagues succeeded and which failed.
-- The runtime-ingestion route handler is rate-limited via the Snapshot store's `getLastIngestedAt` / `setLastIngestedAt`
-  pair. The CLI is not rate-limited because it runs in a trusted developer context.
+- The Ingestion module rate-limits the `admin` and `cron` triggers via the Snapshot store's `getLastIngestedAt` /
+  `setLastIngestedAt` pair. The `cli` trigger is not rate-limited because it runs in a trusted developer context.
 - A single parser is used for all in-scope leagues. It auto-detects the standings block, the schedule's `Match Time:`
   header row, the date-column mapping, and the time-plus-court rows. When multiple `Match Time:` headers appear in a
   sheet, only the first block is treated as authoritative and schedule-row scanning halts when a subsequent header is
@@ -132,9 +133,9 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   written. The most recent snapshot at the active path is always the one the app serves.
 - Per-league parse failure does not abort the command. The CLI continues to the next league and exits non-zero only if
   at least one league failed.
-- The CLI emits a human-readable summary at the end: per league, either `ok` with snapshot path and team count, or
-  `failed` with a one-line reason. Anomaly log entries (duplicate team numbers, missing division labels, unparseable
-  date headers, etc.) are printed beneath each league's line.
+- The CLI emits a human-readable summary at the end: per league, either `ok` with team and match counts and the roster
+  diff, or `failed` with a one-line reason. Anomaly log entries (duplicate team numbers, missing division labels,
+  unparseable date headers, etc.) are printed beneath each league's line.
 - After parsing, the ingestion pipeline runs a set of observational invariants over the parsed teams and matches and
   appends any violations to the same per-league anomaly stream. Invariants are non-fatal — they surface as warnings,
   they do not cause the league to be reported as `failed`. The current invariant set covers:
