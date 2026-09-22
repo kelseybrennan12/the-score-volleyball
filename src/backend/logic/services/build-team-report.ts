@@ -1,6 +1,6 @@
-import { compareMatches } from "@/shared/domain/next-match";
-import type { Match, Snapshot, Team } from "@/shared/domain/snapshot";
-import { computeStandings, type StandingsRow } from "@/shared/domain/standings";
+import type { Snapshot, Team } from "@/shared/domain/snapshot";
+import { buildTeamDetail, type TeamDetail, type TeamMatch } from "@/shared/domain/team-detail";
+import { formatTime } from "@/shared/format";
 
 export type ReportFormat = "text" | "md";
 
@@ -9,10 +9,12 @@ export interface BuildReportInput {
   leagueSlug?: string;
   teamNumber?: number;
   format?: ReportFormat;
+  now?: Date;
 }
 
 export function buildReport(input: BuildReportInput): string {
   const format = input.format ?? "text";
+  const now = input.now ?? new Date();
   const filteredSnapshots = input.leagueSlug
     ? input.snapshots.filter((s) => s.league.slug === input.leagueSlug)
     : input.snapshots;
@@ -21,12 +23,11 @@ export function buildReport(input: BuildReportInput): string {
   }
   const blocks: string[] = [];
   for (const snapshot of filteredSnapshots) {
-    const { byTeam } = computeStandings(snapshot);
     const teams =
       input.teamNumber != null ? snapshot.teams.filter((t) => t.number === input.teamNumber) : snapshot.teams;
     const ordered = [...teams].sort((a, b) => a.number - b.number);
     for (const team of ordered) {
-      blocks.push(renderTeamBlock(snapshot, team, byTeam.get(team.number), format));
+      blocks.push(renderTeamBlock(snapshot, team, buildTeamDetail(snapshot, team, now), format));
     }
   }
   if (blocks.length === 0) {
@@ -36,21 +37,16 @@ export function buildReport(input: BuildReportInput): string {
   return blocks.join(separator) + "\n";
 }
 
-function renderTeamBlock(
-  snapshot: Snapshot,
-  team: Team,
-  teamRow: StandingsRow | undefined,
-  format: ReportFormat,
-): string {
-  const teamMatches = snapshot.matches.filter((m) => m.teamNumbers.includes(team.number)).sort(compareMatches);
+function renderTeamBlock(snapshot: Snapshot, team: Team, detail: TeamDetail, format: ReportFormat): string {
   const leagueLabel = `${snapshot.league.displayName} ${snapshot.league.year}`;
-  const statsLine = teamRow
-    ? `Record: ${teamRow.setsWon}–${teamRow.setsLost} (sets) · ${
-        teamRow.rank != null ? `Rank ${teamRow.rankLabel} of ${teamRow.divisionSize}` : "Unranked"
-      } in ${teamRow.division}`
+  const { standingsRow } = detail;
+  const statsLine = standingsRow
+    ? `Record: ${standingsRow.setsWon}–${standingsRow.setsLost} (sets) · ${
+        standingsRow.rank != null ? `Rank ${standingsRow.rankLabel} of ${standingsRow.divisionSize}` : "Unranked"
+      } in ${standingsRow.division}`
     : "Record: unavailable";
   if (format === "md") {
-    const rows = teamMatches.map((m) => renderMarkdownRow(snapshot, team, m));
+    const rows = detail.matches.map(renderMarkdownRow);
     const header = "| Date | Time | Court | Opponent | Outcome |\n| --- | --- | --- | --- | --- |";
     return [
       `## ${leagueLabel} — ${team.division} Division — #${team.number} ${team.captain}`,
@@ -60,7 +56,7 @@ function renderTeamBlock(
       ...(rows.length > 0 ? rows : ["| _no scheduled matches_ |  |  |  |  |"]),
     ].join("\n");
   }
-  const rows = teamMatches.map((m) => `  ${renderTextRow(snapshot, team, m)}`);
+  const rows = detail.matches.map((entry) => `  ${renderTextRow(entry)}`);
   return [
     `${leagueLabel} — ${team.division} Division — #${team.number} ${team.captain}`,
     statsLine,
@@ -68,48 +64,17 @@ function renderTeamBlock(
   ].join("\n");
 }
 
-function renderTextRow(snapshot: Snapshot, team: Team, match: Match): string {
-  const opponent = findOpponent(snapshot, team, match);
-  const outcome = renderOutcome(team, match);
-  const outcomeTag = outcome ? ` [${outcome}]` : "";
-  const opponentDivision = opponent ? ` (${opponent.division})` : "";
-  const opponentLabel = opponent
-    ? `#${opponent.number} ${opponent.captain}${opponentDivision}`
-    : `#${opponentNumberOf(team, match)} (unknown)`;
-  return `${match.date} ${formatTime(match.time)} ${match.court.padEnd(10, " ")} vs ${opponentLabel}${outcomeTag}`;
+function renderTextRow(entry: TeamMatch): string {
+  const { match, outcome } = entry;
+  const outcomeTag = outcome ? ` [${outcome.label}]` : "";
+  return `${match.date} ${formatTime(match.time)} ${match.court.padEnd(10, " ")} vs ${opponentLabel(entry)}${outcomeTag}`;
 }
 
-function renderMarkdownRow(snapshot: Snapshot, team: Team, match: Match): string {
-  const opponent = findOpponent(snapshot, team, match);
-  const outcome = renderOutcome(team, match) ?? "";
-  const opponentLabel = opponent
-    ? `#${opponent.number} ${opponent.captain} (${opponent.division})`
-    : `#${opponentNumberOf(team, match)} (unknown)`;
-  return `| ${match.date} | ${formatTime(match.time)} | ${match.court} | ${opponentLabel} | ${outcome} |`;
+function renderMarkdownRow(entry: TeamMatch): string {
+  const { match, outcome } = entry;
+  return `| ${match.date} | ${formatTime(match.time)} | ${match.court} | ${opponentLabel(entry)} | ${outcome?.label ?? ""} |`;
 }
 
-function findOpponent(snapshot: Snapshot, team: Team, match: Match): Team | undefined {
-  const number = opponentNumberOf(team, match);
-  return snapshot.teams.find((t) => t.number === number);
-}
-
-function opponentNumberOf(team: Team, match: Match): number {
-  return match.teamNumbers[0] === team.number ? match.teamNumbers[1] : match.teamNumbers[0];
-}
-
-function renderOutcome(team: Team, match: Match): string | null {
-  if (match.outcome.status !== "played") return null;
-  const { winnerTeamNumber, setsWinner, setsLoser } = match.outcome;
-  const didWin = winnerTeamNumber === team.number;
-  const score = didWin ? `${setsWinner}-${setsLoser}` : `${setsLoser}-${setsWinner}`;
-  return `${didWin ? "W" : "L"} ${score}`;
-}
-
-function formatTime(time: string): string {
-  const [hStr, mStr] = time.split(":");
-  const h = Number.parseInt(hStr, 10);
-  const m = Number.parseInt(mStr, 10);
-  const suffix = h >= 12 ? "pm" : "am";
-  const hour12 = ((h + 11) % 12) + 1;
-  return `${hour12}:${String(m).padStart(2, "0")}${suffix}`;
+function opponentLabel({ opponent, opponentNumber }: TeamMatch): string {
+  return opponent ? `#${opponent.number} ${opponent.captain} (${opponent.division})` : `#${opponentNumber} (unknown)`;
 }

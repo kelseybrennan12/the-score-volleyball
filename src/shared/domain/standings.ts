@@ -1,3 +1,4 @@
+import { formatDay } from "../format";
 import type { Match, Snapshot, Team } from "./snapshot";
 
 /** One team's Record and Rank within its division. */
@@ -40,16 +41,6 @@ export interface StandingsOption {
   label: string;
 }
 
-const DAY_LABEL: Record<string, string> = {
-  sunday: "Sunday",
-  monday: "Monday",
-  tuesday: "Tuesday",
-  wednesday: "Wednesday",
-  thursday: "Thursday",
-  friday: "Friday",
-  saturday: "Saturday",
-};
-
 const DAY_ORDER: Record<string, number> = {
   sunday: 0,
   monday: 1,
@@ -89,9 +80,12 @@ export function listStandingsOptions(snapshots: Snapshot[]): StandingsOption[] {
   });
   const options: StandingsOption[] = [];
   for (const snapshot of sortedSnapshots) {
-    const dayLabel = DAY_LABEL[snapshot.league.day] ?? snapshot.league.day;
     for (const division of groupByDivision(snapshot.teams).keys()) {
-      options.push({ leagueSlug: snapshot.league.slug, division, label: `${dayLabel} ${division}` });
+      options.push({
+        leagueSlug: snapshot.league.slug,
+        division,
+        label: `${formatDay(snapshot.league.day)} ${division}`,
+      });
     }
   }
   return options;

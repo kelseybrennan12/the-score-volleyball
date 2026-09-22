@@ -1,6 +1,7 @@
 "use client";
 
 import { ANNOUNCEMENT_MAX_LENGTH, type Announcement } from "@/shared/domain/announcement";
+import { formatTimestamp } from "@/shared/format";
 import { useCallback, useEffect, useState } from "react";
 
 interface SaveErrorBody {
@@ -15,13 +16,6 @@ async function parseJson<T>(response: Response): Promise<T> {
     const snippet = text.slice(0, 200).trim();
     throw new Error(`Server returned HTTP ${response.status} with non-JSON response${snippet ? `: ${snippet}` : ""}.`);
   }
-}
-
-function formatTimestamp(iso: string | null): string {
-  if (!iso) return "never";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString();
 }
 
 // The read view when nothing is stored yet: off, blank, version 0.

@@ -3,8 +3,9 @@
 import { findTeamCandidates } from "@/shared/domain/lookup";
 import { todayIsoInLeagueTimezone } from "@/shared/domain/next-match";
 import type { SeasonArchive } from "@/shared/domain/seasons";
-import type { LeagueDay, Snapshot, Team } from "@/shared/domain/snapshot";
+import type { Snapshot, Team } from "@/shared/domain/snapshot";
 import { DAYS, VIEW_MODES, type ViewMode } from "@/shared/domain/viewer-selection";
+import { formatDay } from "@/shared/format";
 import { useMemo, useState } from "react";
 import { DevTimePanel } from "./dev-time-panel";
 import { NowView } from "./now-view";
@@ -12,10 +13,6 @@ import { StandingsView } from "./standings-view";
 import { TeamDetail } from "./team-detail";
 import { DivisionPill } from "./theme-tokens";
 import { useViewerSelection } from "./use-viewer-selection";
-
-function formatDay(day: LeagueDay): string {
-  return day.charAt(0).toUpperCase() + day.slice(1);
-}
 
 export function ViewerApp({
   snapshots,

@@ -2,18 +2,9 @@
 
 import { selectNowMatches, type NowMatch } from "@/shared/domain/now-view";
 import type { Snapshot } from "@/shared/domain/snapshot";
+import { formatDay, formatTime } from "@/shared/format";
 import { useMemo } from "react";
 import { CourtLabel, DivisionPill } from "./theme-tokens";
-
-const WEEKDAY_LABEL: Record<string, string> = {
-  sunday: "Sunday",
-  monday: "Monday",
-  tuesday: "Tuesday",
-  wednesday: "Wednesday",
-  thursday: "Thursday",
-  friday: "Friday",
-  saturday: "Saturday",
-};
 
 export function NowView({
   snapshots,
@@ -30,7 +21,7 @@ export function NowView({
   const upcomingCourts = [...selection.upcomingByCourt.entries()].sort(([a], [b]) => a.localeCompare(b));
   const showLeagueLabels =
     new Set([...courts, ...upcomingCourts].flatMap(([, list]) => list.map((m) => m.snapshot.league.slug))).size > 1;
-  const weekdayLabel = selection.todayWeekday ? WEEKDAY_LABEL[selection.todayWeekday] : null;
+  const weekdayLabel = selection.todayWeekday ? formatDay(selection.todayWeekday) : null;
 
   return (
     <div className="space-y-4">
@@ -168,12 +159,4 @@ function allUnique<T extends string | undefined | null>(values: T[]): NonNullabl
   if (filtered.length === 0) return null;
   const first = filtered[0]!;
   return filtered.every((v) => v === first) ? first : null;
-}
-
-function formatTime(hhmm: string): string {
-  const [h, m] = hhmm.split(":").map(Number);
-  if (!Number.isFinite(h) || !Number.isFinite(m)) return hhmm;
-  const period = h >= 12 ? "PM" : "AM";
-  const displayHour = h === 0 ? 12 : h > 12 ? h - 12 : h;
-  return `${displayHour}:${String(m).padStart(2, "0")} ${period}`;
 }

@@ -10,7 +10,7 @@ description: Single-page UX for a player to find their team's schedule, next gam
 - ID: P0001
 - Type: Product
 - Status: active
-- Version: v9
+- Version: v10
 - Last Updated: 2026-09-22
 
 ## Summary
@@ -91,7 +91,10 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
   - The team's schedule: every scheduled match, grouped by date in chronological order. Each date is rendered as its own
     card with the matches for that day listed inside.
   - For each match: opponent's number, captain name, division, opponent's record (scoped to the opponent's division),
-    time, and court.
+    time, and court. Match times are rendered as `h:mmam|pm` (e.g. `6:00pm`) everywhere the app shows a time.
+- Team detail — the record and rank line, the next-match highlight, and each match's opponent, opponent record, and
+  outcome from the team's own side — comes from one Team detail computation shared by the viewer, the Calendar export,
+  and the per-team report, so the three never disagree about a team's schedule.
 - When a league has a single division, the division label is still shown but ranking text may omit the label.
 - Teams are never ranked or compared across divisions. Teams only ever play within their division (a combined label such
   as BB/BBB is one division with no distinction inside it), so a team's record counts every played match and its rank is
@@ -103,7 +106,8 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
   "Next Match(es)" card that lists those matches with their times and courts.
 - If every scheduled match is strictly before today, no match-day highlight is rendered.
 - The page shows the league name, session label, and the timestamp of the data snapshot currently in use so users can
-  tell how fresh the data is.
+  tell how fresh the data is. Timestamps are rendered as `Apr 19, 2026, 2:05 PM` in the visitor's local timezone (per
+  [/docs/specs/product/data-freshness.md](/docs/specs/product/data-freshness.md)), the same format the Admin page uses.
 - The page reads exclusively from the on-disk cached snapshots described in
   [/docs/specs/technical/data-snapshots.md](/docs/specs/technical/data-snapshots.md). It does not fetch from Google
   Sheets at request time.
@@ -160,8 +164,8 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
     than `NOW_WINDOW_MINUTES` (a single tunable constant, default `50` — the slot length between consecutive league
     matches). Future-dated matches are never included; the moment the next slot begins, the previous slot's matches drop
     out and the new slot's matches appear. Widening or narrowing the window must remain a one-line change.
-  - For each included match shows: court, time, division pill, and both team numbers (`#A vs #B`). Captain names and
-    opponent records are not shown in this compact view.
+  - For each included match shows: court, time (in the same `6:00pm` format as Team detail), division pill, and both
+    team numbers (`#A vs #B`). Captain names and opponent records are not shown in this compact view.
   - Groups matches by court for at-a-glance scanning. Within a court, matches are ordered by start time.
   - When no matches are currently playing under the configured window, displays an empty-state message naming the next
     upcoming start time today (if any) so the spectator knows when to check back. If no league plays today at all,
@@ -198,10 +202,10 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
 - When a single team is identified, the team detail view renders an "Add to calendar (.ics)" control that downloads a
   single iCalendar (RFC 5545) file containing one event per scheduled match for that team. The file is generated
   client-side from the already-loaded snapshot — no additional server route or Sheets fetch — and reflects the snapshot
-  in use at click time. The control is disabled when the team has no scheduled matches. This is a one-time download, not
-  a live-updating subscription feed; re-clicking regenerates the file from the current snapshot. Events carry
-  `TZID=America/Detroit` with an embedded `VTIMEZONE` component so imports work across Google Calendar, Apple Calendar,
-  and Outlook.
+  and the same "now" the page is rendered against at click time. The control is disabled when the team has no scheduled
+  matches. This is a one-time download, not a live-updating subscription feed; re-clicking regenerates the file from the
+  current snapshot. Events carry `TZID=America/Detroit` with an embedded `VTIMEZONE` component so imports work across
+  Google Calendar, Apple Calendar, and Outlook.
 
 ### Should:
 
@@ -233,5 +237,8 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
     (Viewer selection as one deep module).
   - [/docs/efforts/2026-09-22-13-09-record-and-rank-module.md](/docs/efforts/2026-09-22-13-09-record-and-rank-module.md)
     (one Record-and-Rank module; Team detail adopts the T-N tie label).
+  - [/docs/efforts/2026-09-22-14-26-team-detail-module.md](/docs/efforts/2026-09-22-14-26-team-detail-module.md) (one
+    Team detail module behind the viewer, the Calendar export, and the per-team report; shared time and timestamp
+    formats).
   - [/docs/efforts/2026-09-21-18-10-standings-selection-parameters.md](/docs/efforts/2026-09-21-18-10-standings-selection-parameters.md)
     (Standings selection's own `standings`/`division` parameters, independent of Team search).
