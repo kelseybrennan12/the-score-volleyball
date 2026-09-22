@@ -1,10 +1,7 @@
-import { LEAGUE_SOURCES } from "@/backend/logic/core/league-sources";
 import { requireAdminRequest } from "@/backend/logic/services/admin-session";
-import { runIngestion } from "@/backend/logic/services/run-ingestion";
-import { INGEST_COOLDOWN_MS } from "@/backend/logic/services/runtime-ingestion-config";
-import { createSnapshotStore } from "@/backend/logic/services/snapshot-store";
-import { createSheetsFetcher } from "@/backend/runtime/adapters/integrations/google-sheets";
-import { resolveObjectStore } from "@/backend/runtime/adapters/object-store";
+import { runIngestion } from "@/backend/logic/services/ingestion";
+import { toAdminIngestResponse } from "@/backend/logic/services/ingestion-http";
+import { createIngestionDeps } from "@/backend/runtime/bootstrap/ingestion";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -16,38 +13,10 @@ export async function POST(): Promise<NextResponse> {
   if (!guard.ok) return NextResponse.json({ error: guard.reason }, { status: guard.status });
 
   try {
-    const store = createSnapshotStore(resolveObjectStore());
-    const last = await store.getLastIngestedAt();
-    if (last) {
-      const elapsed = Date.now() - new Date(last).getTime();
-      if (elapsed < INGEST_COOLDOWN_MS) {
-        const retryAfterSeconds = Math.ceil((INGEST_COOLDOWN_MS - elapsed) / 1000);
-        return NextResponse.json(
-          {
-            error: "Ingest is rate-limited. Try again in a few minutes.",
-            retryAfterSeconds,
-            lastIngestedAt: last,
-          },
-          { status: 429, headers: { "Retry-After": String(retryAfterSeconds) } },
-        );
-      }
-    }
-
-    const fetcher = createSheetsFetcher();
-    const { results, ranAt } = await runIngestion({ sources: LEAGUE_SOURCES, fetcher, store });
-    const anyFailed = results.some((r) => !r.ok);
-    return NextResponse.json({
-      ok: !anyFailed,
-      lastIngestedAt: ranAt,
-      results: results.map((r) => ({
-        slug: r.slug,
-        ok: r.ok,
-        teamCount: r.teamCount,
-        matchCount: r.matchCount,
-        rosterDiff: r.rosterDiff,
-        anomalies: r.anomalies,
-        error: r.error,
-      })),
+    const response = toAdminIngestResponse(await runIngestion({ trigger: "admin", ...createIngestionDeps() }));
+    return NextResponse.json(response.body, {
+      status: response.status,
+      headers: response.status === 429 ? response.headers : undefined,
     });
   } catch (err) {
     console.error("Ingest route failed", err);

@@ -1,6 +1,5 @@
+import type { RosterDiff } from "@/shared/domain/ingestion";
 import type { Team } from "@/shared/domain/snapshot";
-
-export type RosterDiff = "same" | "changed";
 
 export function diffRoster(prev: Team[] | null, next: Team[]): RosterDiff {
   if (!prev) return "same";

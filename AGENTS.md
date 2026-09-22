@@ -37,7 +37,14 @@
     [`/src/backend/runtime/adapters/object-store/`](/src/backend/runtime/adapters/object-store/) (filesystem, Blob,
     memory). The Snapshot store that owns the layout and rollback/season operations is
     [`/src/backend/logic/services/snapshot-store.ts`](/src/backend/logic/services/snapshot-store.ts).
-  - CLI entrypoint: [`/src/backend/ingest.entry.ts`](/src/backend/ingest.entry.ts).
+  - The Ingestion module: [`/src/backend/logic/services/ingestion.ts`](/src/backend/logic/services/ingestion.ts)
+    (`runIngestion` by trigger: owns the cooldown, returns a `ran`/`skipped` outcome). Its contract (outcome types,
+    cooldown) is [`/src/shared/domain/ingestion.ts`](/src/shared/domain/ingestion.ts); the routes' pure HTTP helpers are
+    [`/src/backend/logic/services/ingestion-http.ts`](/src/backend/logic/services/ingestion-http.ts); the environment
+    wiring is [`/src/backend/runtime/bootstrap/ingestion.ts`](/src/backend/runtime/bootstrap/ingestion.ts).
+  - Entrypoints: CLI [`/src/backend/ingest.entry.ts`](/src/backend/ingest.entry.ts), Admin
+    [`/src/app/api/admin/ingest/route.ts`](/src/app/api/admin/ingest/route.ts), cron
+    [`/src/app/api/cron/ingest/route.ts`](/src/app/api/cron/ingest/route.ts).
 - Data: [`/data/snapshots/active/`](/data/snapshots/active/) and [`/data/snapshots/archive/`](/data/snapshots/archive/),
   checked into the repo.
 - Tests: [`/src/tests/unit/`](/src/tests/unit/) (Vitest) with XLSX fixtures in
