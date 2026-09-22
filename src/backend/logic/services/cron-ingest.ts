@@ -1,8 +1,8 @@
 import type { LeagueSource } from "@/backend/logic/core/league-sources";
 import { runIngestion, type LeagueResult } from "@/backend/logic/services/run-ingestion";
 import { INGEST_COOLDOWN_MS } from "@/backend/logic/services/runtime-ingestion-config";
+import type { SnapshotStore } from "@/backend/logic/services/snapshot-store";
 import type { SheetsFetcher } from "@/backend/runtime/adapters/integrations/google-sheets";
-import type { SnapshotRepo } from "@/backend/runtime/adapters/snapshots/port";
 import { timingSafeEqual } from "node:crypto";
 
 export interface CronIngestInput {
@@ -10,7 +10,7 @@ export interface CronIngestInput {
   cronSecret: string | undefined;
   sources: LeagueSource[];
   fetcher: SheetsFetcher;
-  repo: SnapshotRepo;
+  store: SnapshotStore;
   now?: () => Date;
 }
 
@@ -40,7 +40,7 @@ export async function handleCronIngest(input: CronIngestInput): Promise<CronInge
   }
 
   try {
-    const last = await input.repo.getLastIngestedAt();
+    const last = await input.store.getLastIngestedAt();
     if (last) {
       const elapsed = (input.now?.().getTime() ?? Date.now()) - new Date(last).getTime();
       if (elapsed < INGEST_COOLDOWN_MS) {
@@ -54,7 +54,7 @@ export async function handleCronIngest(input: CronIngestInput): Promise<CronInge
     const { results, ranAt } = await runIngestion({
       sources: input.sources,
       fetcher: input.fetcher,
-      repo: input.repo,
+      store: input.store,
       now: input.now,
     });
     return {

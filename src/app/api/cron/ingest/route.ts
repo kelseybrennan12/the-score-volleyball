@@ -1,7 +1,8 @@
 import { LEAGUE_SOURCES } from "@/backend/logic/core/league-sources";
 import { handleCronIngest } from "@/backend/logic/services/cron-ingest";
+import { createSnapshotStore } from "@/backend/logic/services/snapshot-store";
 import { createSheetsFetcher } from "@/backend/runtime/adapters/integrations/google-sheets";
-import { resolveSnapshotRepo } from "@/backend/runtime/adapters/snapshots";
+import { resolveObjectStore } from "@/backend/runtime/adapters/object-store";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -14,7 +15,7 @@ export async function GET(req: Request): Promise<NextResponse> {
     cronSecret: process.env.CRON_SECRET,
     sources: LEAGUE_SOURCES,
     fetcher: createSheetsFetcher(),
-    repo: resolveSnapshotRepo(),
+    store: createSnapshotStore(resolveObjectStore()),
   });
   return NextResponse.json(result.body, { status: result.status });
 }

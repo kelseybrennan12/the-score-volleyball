@@ -1,11 +1,11 @@
 import type { LeagueSource } from "@/backend/logic/core/league-sources";
 import { runIngestion } from "@/backend/logic/services/run-ingestion";
+import { createSnapshotStore } from "@/backend/logic/services/snapshot-store";
 import type { SheetsFetcher } from "@/backend/runtime/adapters/integrations/google-sheets";
-import { createSnapshotRepo } from "@/backend/runtime/adapters/snapshots/fs";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { createMemoryObjectStore } from "@/backend/runtime/adapters/object-store/memory";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 const fixturesDir = path.join(process.cwd(), "src/tests/fixtures");
 
@@ -28,16 +28,10 @@ const failingSource: LeagueSource = {
 };
 
 describe("runIngestion", () => {
-  let root: string;
   let sundaysBuffer: Buffer;
 
   beforeEach(async () => {
-    root = await mkdtemp(path.join(tmpdir(), "ingest-"));
     sundaysBuffer = await readFile(path.join(fixturesDir, "spring-sundays-2026.xlsx"));
-  });
-
-  afterEach(async () => {
-    await rm(root, { recursive: true, force: true });
   });
 
   function makeFetcher(): SheetsFetcher {
@@ -50,42 +44,42 @@ describe("runIngestion", () => {
   }
 
   it("writes active + meta on successful ingest", async () => {
-    const repo = createSnapshotRepo(root);
+    const store = createSnapshotStore(createMemoryObjectStore());
     const { results, ranAt } = await runIngestion({
       sources: [sundaysSource],
       fetcher: makeFetcher(),
-      repo,
+      store,
     });
     expect(results).toHaveLength(1);
     expect(results[0].ok).toBe(true);
     expect(results[0].teamCount).toBeGreaterThan(0);
-    expect(await repo.getLastIngestedAt()).toBe(ranAt);
-    expect(await repo.readActive("spring-sundays")).not.toBeNull();
+    expect(await store.getLastIngestedAt()).toBe(ranAt);
+    expect(await store.readActive("spring-sundays")).not.toBeNull();
   });
 
   it("records per-league failures without aborting the run", async () => {
-    const repo = createSnapshotRepo(root);
+    const store = createSnapshotStore(createMemoryObjectStore());
     const { results } = await runIngestion({
       sources: [failingSource, sundaysSource],
       fetcher: makeFetcher(),
-      repo,
+      store,
     });
     expect(results).toHaveLength(2);
     expect(results[0].ok).toBe(false);
     expect(results[0].error).toContain("unreachable");
     expect(results[1].ok).toBe(true);
-    expect(await repo.getLastIngestedAt()).not.toBeNull();
+    expect(await store.getLastIngestedAt()).not.toBeNull();
   });
 
   it("dry-run skips writes and does not update meta", async () => {
-    const repo = createSnapshotRepo(root);
+    const store = createSnapshotStore(createMemoryObjectStore());
     await runIngestion({
       sources: [sundaysSource],
       fetcher: makeFetcher(),
-      repo,
+      store,
       dryRun: true,
     });
-    expect(await repo.readActive("spring-sundays")).toBeNull();
-    expect(await repo.getLastIngestedAt()).toBeNull();
+    expect(await store.readActive("spring-sundays")).toBeNull();
+    expect(await store.getLastIngestedAt()).toBeNull();
   });
 });

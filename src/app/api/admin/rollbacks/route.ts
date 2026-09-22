@@ -1,5 +1,6 @@
 import { requireAdminRequest } from "@/backend/logic/services/admin-session";
-import { resolveSnapshotRepo } from "@/backend/runtime/adapters/snapshots";
+import { createSnapshotStore } from "@/backend/logic/services/snapshot-store";
+import { resolveObjectStore } from "@/backend/runtime/adapters/object-store";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -10,7 +11,7 @@ export async function GET(): Promise<NextResponse> {
   if (!guard.ok) return NextResponse.json({ error: guard.reason }, { status: guard.status });
 
   try {
-    const repo = resolveSnapshotRepo();
+    const repo = createSnapshotStore(resolveObjectStore());
     const active = await repo.listActive();
     const lastIngestedAt = await repo.getLastIngestedAt();
     const leagues = await Promise.all(

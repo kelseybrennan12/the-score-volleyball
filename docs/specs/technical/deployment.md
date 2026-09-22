@@ -41,18 +41,18 @@ topology.
   ingestion core and writes updated snapshots to Blob. See
   [/docs/specs/technical/runtime-ingestion.md](/docs/specs/technical/runtime-ingestion.md) and
   [/docs/specs/product/admin-tool.md](/docs/specs/product/admin-tool.md).
-- **CLI fallback**: `mise run ingest` still works locally against the filesystem adapter for development and as a
-  disaster-recovery escape hatch.
+- **CLI fallback**: `mise run ingest` works locally against the filesystem store for development and as a
+  disaster-recovery escape hatch, and targets the production Blob store when run with `SNAPSHOT_STORAGE=blob`.
 
 ## Requirements
 
 ### Must:
 
 - The app is a Next.js project deployed on a Vercel Hobby account.
-- In production, snapshot reads and writes go through Vercel Blob (`@vercel/blob`) via the Blob adapter. The Vercel
+- In production, snapshot reads and writes go through Vercel Blob (`@vercel/blob`) via the Blob object store. The Vercel
   runtime filesystem remains read-only for the app; no snapshot file writes occur on the local function filesystem.
-- In local development and CI, snapshot reads and writes go through the filesystem adapter rooted at `data/snapshots/`.
-  The selection is environment-driven (see
+- In local development and CI, snapshot reads and writes go through the filesystem object store rooted at `data/`. The
+  selection is environment-driven (see
   [/docs/specs/technical/snapshot-storage.md](/docs/specs/technical/snapshot-storage.md)).
 - The deployment exposes a hidden admin tool (see
   [/docs/specs/product/admin-tool.md](/docs/specs/product/admin-tool.md)) as the primary refresh path in production. The
@@ -64,7 +64,7 @@ topology.
   `Authorization: Bearer ${CRON_SECRET}` to the outbound request; the route validates the bearer before running
   ingestion.
 - The ingestion CLI remains independent of Vercel. It runs anywhere the repo is checked out with the project's Node
-  toolchain and writes to the local filesystem, unaffected by the Blob adapter.
+  toolchain and writes to the local filesystem by default; it uses the same storage selection rule as the app.
 
 ### Should:
 

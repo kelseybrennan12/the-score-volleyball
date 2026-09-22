@@ -1,8 +1,8 @@
 import type { LeagueSource } from "@/backend/logic/core/league-sources";
 import { parseLeagueWorkbook } from "@/backend/logic/core/parse";
 import { diffRoster } from "@/backend/logic/core/roster-diff";
+import type { SnapshotStore } from "@/backend/logic/services/snapshot-store";
 import type { SheetsFetcher } from "@/backend/runtime/adapters/integrations/google-sheets";
-import type { SnapshotRepo } from "@/backend/runtime/adapters/snapshots/port";
 import type { Snapshot } from "@/shared/domain/snapshot";
 
 export interface LeagueResult {
@@ -20,7 +20,7 @@ export interface LeagueResult {
 export interface RunIngestionInput {
   sources: LeagueSource[];
   fetcher: SheetsFetcher;
-  repo: SnapshotRepo;
+  store: SnapshotStore;
   dryRun?: boolean;
   now?: () => Date;
 }
@@ -33,17 +33,17 @@ export interface RunIngestionResult {
 export async function runIngestion({
   sources,
   fetcher,
-  repo,
+  store,
   dryRun = false,
   now = () => new Date(),
 }: RunIngestionInput): Promise<RunIngestionResult> {
   const results: LeagueResult[] = [];
   for (const source of sources) {
-    results.push(await ingestOne(source, fetcher, repo, dryRun, now));
+    results.push(await ingestOne(source, fetcher, store, dryRun, now));
   }
   const ranAt = now().toISOString();
   if (!dryRun) {
-    await repo.setLastIngestedAt(ranAt);
+    await store.setLastIngestedAt(ranAt);
   }
   return { results, ranAt };
 }
@@ -51,7 +51,7 @@ export async function runIngestion({
 async function ingestOne(
   source: LeagueSource,
   fetcher: SheetsFetcher,
-  repo: SnapshotRepo,
+  store: SnapshotStore,
   dryRun: boolean,
   now: () => Date,
 ): Promise<LeagueResult> {
@@ -62,7 +62,7 @@ async function ingestOne(
       year: source.year,
       defaultDivision: source.defaultDivision,
     });
-    const prev = await repo.readActive(source.slug);
+    const prev = await store.readActive(source.slug);
     const rosterDiff = diffRoster(prev?.teams ?? null, parsed.teams);
     const snapshot: Snapshot = {
       schemaVersion: 1,
@@ -88,8 +88,8 @@ async function ingestOne(
         anomalies: parsed.anomalies,
       };
     }
-    const archivedPath = await repo.archiveExisting(source.slug);
-    const activePath = await repo.writeActive(snapshot);
+    const archivedPath = await store.archiveExisting(source.slug);
+    const activePath = await store.writeActive(snapshot);
     return {
       slug: source.slug,
       ok: true,

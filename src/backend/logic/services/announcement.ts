@@ -1,12 +1,28 @@
-import type { AnnouncementRepo } from "@/backend/runtime/adapters/announcements/port";
+import type { ObjectStore } from "@/backend/runtime/adapters/object-store/port";
 import { ANNOUNCEMENT_MAX_LENGTH, type Announcement } from "@/shared/domain/announcement";
+
+/** At most one Announcement exists at a time, so the store is just read/write of the single record. */
+export interface AnnouncementStore {
+  read(): Promise<Announcement | null>;
+  write(announcement: Announcement): Promise<void>;
+}
+
+const ANNOUNCEMENT_KEY = "announcement.json";
+
+/** The Announcement lives beside the snapshots in the same object store. */
+export function createAnnouncementStore(objects: ObjectStore): AnnouncementStore {
+  return {
+    read: () => objects.get<Announcement>(ANNOUNCEMENT_KEY),
+    write: (announcement) => objects.put(ANNOUNCEMENT_KEY, announcement),
+  };
+}
 
 /**
  * The read seam for the Viewer. Returns the current Announcement or nothing, and
  * swallows and logs read failures (missing store, corrupt file) so the page
  * always renders rather than erroring on a problem with the announcement.
  */
-export async function readAnnouncement(repo: AnnouncementRepo): Promise<Announcement | null> {
+export async function readAnnouncement(repo: AnnouncementStore): Promise<Announcement | null> {
   try {
     return await repo.read();
   } catch (err) {
@@ -19,7 +35,7 @@ export interface SaveAnnouncementInput {
   message: string;
   enabled: boolean;
   publishAsNew: boolean;
-  repo: AnnouncementRepo;
+  repo: AnnouncementStore;
   now?: () => Date;
 }
 

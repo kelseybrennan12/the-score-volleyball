@@ -1,6 +1,7 @@
-import { readAnnouncement } from "@/backend/logic/services/announcement";
-import { resolveAnnouncementRepo } from "@/backend/runtime/adapters/announcements";
-import { resolveSnapshotRepo } from "@/backend/runtime/adapters/snapshots";
+import { createAnnouncementStore, readAnnouncement } from "@/backend/logic/services/announcement";
+import { createSnapshotStore } from "@/backend/logic/services/snapshot-store";
+import type { ObjectStore } from "@/backend/runtime/adapters/object-store";
+import { resolveObjectStore } from "@/backend/runtime/adapters/object-store";
 import { AdminGate } from "@/components/admin-gate";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { ViewerApp } from "@/components/viewer-app";
@@ -11,8 +12,8 @@ import { cookies } from "next/headers";
 
 export const dynamic = "force-dynamic";
 
-async function loadData(): Promise<{ snapshots: Snapshot[]; seasons: SeasonArchive[] }> {
-  const repo = resolveSnapshotRepo();
+async function loadData(objects: ObjectStore): Promise<{ snapshots: Snapshot[]; seasons: SeasonArchive[] }> {
+  const repo = createSnapshotStore(objects);
   const snapshots = await repo.listActive();
   const seasonKeys = await repo.listSeasonKeys();
   const seasonGroups = await Promise.all(
@@ -25,8 +26,9 @@ async function loadData(): Promise<{ snapshots: Snapshot[]; seasons: SeasonArchi
 }
 
 export default async function HomePage() {
-  const { snapshots, seasons } = await loadData();
-  const announcement = await readAnnouncement(resolveAnnouncementRepo());
+  const objects = resolveObjectStore();
+  const { snapshots, seasons } = await loadData(objects);
+  const announcement = await readAnnouncement(createAnnouncementStore(objects));
   const mockNowIso = IS_DEV
     ? (parseMockNow((await cookies()).get(MOCK_NOW_COOKIE)?.value)?.toISOString() ?? null)
     : null;

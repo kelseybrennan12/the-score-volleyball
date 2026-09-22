@@ -1,5 +1,6 @@
-import { readAnnouncement, saveAnnouncement } from "@/backend/logic/services/announcement";
-import { createAnnouncementRepo } from "@/backend/runtime/adapters/announcements/fs";
+import { createAnnouncementStore, readAnnouncement, saveAnnouncement } from "@/backend/logic/services/announcement";
+import { createFsObjectStore } from "@/backend/runtime/adapters/object-store/fs";
+import { createMemoryObjectStore } from "@/backend/runtime/adapters/object-store/memory";
 import type { Announcement } from "@/shared/domain/announcement";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -18,12 +19,12 @@ describe("readAnnouncement", () => {
   });
 
   it("returns nothing when nothing is stored", async () => {
-    const repo = createAnnouncementRepo(root);
+    const repo = createAnnouncementStore(createMemoryObjectStore());
     expect(await readAnnouncement(repo)).toBeNull();
   });
 
   it("round-trips a stored announcement", async () => {
-    const repo = createAnnouncementRepo(root);
+    const repo = createAnnouncementStore(createMemoryObjectStore());
     const announcement: Announcement = {
       message: "Fall 2026 schedules are here!",
       enabled: true,
@@ -35,7 +36,7 @@ describe("readAnnouncement", () => {
   });
 
   it("returns nothing without throwing when the stored file is corrupt", async () => {
-    const repo = createAnnouncementRepo(root);
+    const repo = createAnnouncementStore(createFsObjectStore(root));
     await writeFile(path.join(root, "announcement.json"), "{ not valid json", "utf8");
     expect(await readAnnouncement(repo)).toBeNull();
   });
@@ -54,7 +55,7 @@ describe("saveAnnouncement", () => {
   });
 
   it("saves then reads back the stored announcement", async () => {
-    const repo = createAnnouncementRepo(root);
+    const repo = createAnnouncementStore(createMemoryObjectStore());
     const result = await saveAnnouncement({
       message: "Season starts Monday",
       enabled: true,
@@ -73,7 +74,7 @@ describe("saveAnnouncement", () => {
   });
 
   it("increments the version on publish-as-new but not on a plain save or an enabled-only flip", async () => {
-    const repo = createAnnouncementRepo(root);
+    const repo = createAnnouncementStore(createMemoryObjectStore());
 
     await saveAnnouncement({ message: "First", enabled: true, publishAsNew: false, repo, now: clock });
     let stored = await readAnnouncement(repo);
@@ -112,7 +113,7 @@ describe("saveAnnouncement", () => {
   });
 
   it("rejects an enabled announcement with a blank or whitespace-only message", async () => {
-    const repo = createAnnouncementRepo(root);
+    const repo = createAnnouncementStore(createMemoryObjectStore());
 
     const blank = await saveAnnouncement({ message: "", enabled: true, publishAsNew: false, repo, now: clock });
     expect(blank.status).toBe(400);
@@ -132,7 +133,7 @@ describe("saveAnnouncement", () => {
   });
 
   it("accepts a disabled announcement with a blank message", async () => {
-    const repo = createAnnouncementRepo(root);
+    const repo = createAnnouncementStore(createMemoryObjectStore());
     const result = await saveAnnouncement({ message: "  ", enabled: false, publishAsNew: false, repo, now: clock });
     expect(result.status).toBe(200);
     expect((result.body as Announcement).message).toBe("");
@@ -140,7 +141,7 @@ describe("saveAnnouncement", () => {
   });
 
   it("trims the message and rejects one over 200 characters after trimming", async () => {
-    const repo = createAnnouncementRepo(root);
+    const repo = createAnnouncementStore(createMemoryObjectStore());
 
     const trimmed = await saveAnnouncement({
       message: "  hello  ",
@@ -173,7 +174,7 @@ describe("saveAnnouncement", () => {
   });
 
   it("records the last-saved timestamp from the injected clock", async () => {
-    const repo = createAnnouncementRepo(root);
+    const repo = createAnnouncementStore(createMemoryObjectStore());
     const result = await saveAnnouncement({
       message: "Timestamped",
       enabled: true,

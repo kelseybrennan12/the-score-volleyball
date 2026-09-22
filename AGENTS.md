@@ -30,8 +30,10 @@
     [`/src/shared/domain/standings.ts`](/src/shared/domain/standings.ts).
   - Adapters:
     [`/src/backend/runtime/adapters/integrations/google-sheets.ts`](/src/backend/runtime/adapters/integrations/google-sheets.ts)
-    (XLSX fetch) and [`/src/backend/runtime/adapters/snapshots/fs.ts`](/src/backend/runtime/adapters/snapshots/fs.ts)
-    (snapshot filesystem repo).
+    (XLSX fetch) and the object store under
+    [`/src/backend/runtime/adapters/object-store/`](/src/backend/runtime/adapters/object-store/) (filesystem, Blob,
+    memory). The Snapshot store that owns the layout and rollback/season operations is
+    [`/src/backend/logic/services/snapshot-store.ts`](/src/backend/logic/services/snapshot-store.ts).
   - CLI entrypoint: [`/src/backend/ingest.entry.ts`](/src/backend/ingest.entry.ts).
 - Data: [`/data/snapshots/active/`](/data/snapshots/active/) and [`/data/snapshots/archive/`](/data/snapshots/archive/),
   checked into the repo.

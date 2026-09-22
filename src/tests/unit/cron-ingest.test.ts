@@ -1,12 +1,11 @@
 import type { LeagueSource } from "@/backend/logic/core/league-sources";
 import { handleCronIngest } from "@/backend/logic/services/cron-ingest";
+import { createSnapshotStore, type SnapshotStore } from "@/backend/logic/services/snapshot-store";
 import type { SheetsFetcher } from "@/backend/runtime/adapters/integrations/google-sheets";
-import { createSnapshotRepo } from "@/backend/runtime/adapters/snapshots/fs";
-import type { SnapshotRepo } from "@/backend/runtime/adapters/snapshots/port";
-import { mkdtemp, readFile, rm } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { createMemoryObjectStore } from "@/backend/runtime/adapters/object-store/memory";
+import { readFile } from "node:fs/promises";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
 const fixturesDir = path.join(process.cwd(), "src/tests/fixtures");
 const SECRET = "test-cron-secret";
@@ -30,18 +29,12 @@ const failingSource: LeagueSource = {
 };
 
 describe("handleCronIngest", () => {
-  let root: string;
   let sundaysBuffer: Buffer;
-  let repo: SnapshotRepo;
+  let store: SnapshotStore;
 
   beforeEach(async () => {
-    root = await mkdtemp(path.join(tmpdir(), "cron-ingest-"));
     sundaysBuffer = await readFile(path.join(fixturesDir, "spring-sundays-2026.xlsx"));
-    repo = createSnapshotRepo(root);
-  });
-
-  afterEach(async () => {
-    await rm(root, { recursive: true, force: true });
+    store = createSnapshotStore(createMemoryObjectStore());
   });
 
   function fetcherForSundays(): SheetsFetcher {
@@ -59,7 +52,7 @@ describe("handleCronIngest", () => {
       cronSecret: undefined,
       sources: [sundaysSource],
       fetcher: fetcherForSundays(),
-      repo,
+      store,
     });
     expect(result.status).toBe(503);
     expect(result.body).toEqual({ error: "CRON_SECRET not configured" });
@@ -71,7 +64,7 @@ describe("handleCronIngest", () => {
       cronSecret: SECRET,
       sources: [sundaysSource],
       fetcher: fetcherForSundays(),
-      repo,
+      store,
     });
     expect(noHeader.status).toBe(401);
 
@@ -80,7 +73,7 @@ describe("handleCronIngest", () => {
       cronSecret: SECRET,
       sources: [sundaysSource],
       fetcher: fetcherForSundays(),
-      repo,
+      store,
     });
     expect(wrongScheme.status).toBe(401);
 
@@ -89,19 +82,19 @@ describe("handleCronIngest", () => {
       cronSecret: SECRET,
       sources: [sundaysSource],
       fetcher: fetcherForSundays(),
-      repo,
+      store,
     });
     expect(wrongValue.status).toBe(401);
   });
 
   it("returns 200 with skipped=true when inside the cooldown window", async () => {
-    await repo.setLastIngestedAt(new Date().toISOString());
+    await store.setLastIngestedAt(new Date().toISOString());
     const result = await handleCronIngest({
       authorization: `Bearer ${SECRET}`,
       cronSecret: SECRET,
       sources: [sundaysSource],
       fetcher: fetcherForSundays(),
-      repo,
+      store,
     });
     expect(result.status).toBe(200);
     expect(result.body).toMatchObject({ ok: true, skipped: true, reason: "cooldown" });
@@ -113,7 +106,7 @@ describe("handleCronIngest", () => {
       cronSecret: SECRET,
       sources: [sundaysSource],
       fetcher: fetcherForSundays(),
-      repo,
+      store,
     });
     expect(result.status).toBe(200);
     if ("error" in result.body) throw new Error("expected success body");
@@ -121,7 +114,7 @@ describe("handleCronIngest", () => {
     expect(result.body.skipped).toBeUndefined();
     expect(result.body.results).toHaveLength(1);
     expect(result.body.results![0].ok).toBe(true);
-    expect(await repo.readActive("spring-sundays")).not.toBeNull();
+    expect(await store.readActive("spring-sundays")).not.toBeNull();
   });
 
   it("returns 200 with per-league failures rather than failing the cron", async () => {
@@ -130,7 +123,7 @@ describe("handleCronIngest", () => {
       cronSecret: SECRET,
       sources: [failingSource, sundaysSource],
       fetcher: fetcherForSundays(),
-      repo,
+      store,
     });
     expect(result.status).toBe(200);
     if ("error" in result.body) throw new Error("expected success body");
@@ -139,9 +132,9 @@ describe("handleCronIngest", () => {
     expect(result.body.results![1].ok).toBe(true);
   });
 
-  it("returns 500 when the pipeline throws (e.g. snapshot repo unavailable)", async () => {
-    const brokenRepo: SnapshotRepo = {
-      ...repo,
+  it("returns 500 when the pipeline throws (e.g. snapshot store unavailable)", async () => {
+    const brokenStore: SnapshotStore = {
+      ...store,
       async getLastIngestedAt() {
         throw new Error("blob outage");
       },
@@ -151,7 +144,7 @@ describe("handleCronIngest", () => {
       cronSecret: SECRET,
       sources: [sundaysSource],
       fetcher: fetcherForSundays(),
-      repo: brokenRepo,
+      store: brokenStore,
     });
     expect(result.status).toBe(500);
     expect(result.body).toEqual({ error: "blob outage" });

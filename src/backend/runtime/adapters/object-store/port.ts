@@ -1,0 +1,15 @@
+/**
+ * The storage seam under the snapshot and announcement stores: JSON objects addressed by key. Keys are `/`-separated
+ * and identical across backends (e.g. `snapshots/active/spring-sundays.json`); adapters own only how a key maps onto
+ * a filesystem, a Blob store, or memory.
+ */
+export interface ObjectStore {
+  /** The parsed JSON at `key`, or `null` when nothing is stored there. */
+  get<T>(key: string): Promise<T | null>;
+  /** Store `body` as JSON at `key`, overwriting anything already there. */
+  put(key: string, body: unknown): Promise<void>;
+  /** Remove the given keys; keys that do not exist are ignored. */
+  delete(keys: string[]): Promise<void>;
+  /** Every stored key that starts with `prefix`, sorted ascending. */
+  list(prefix: string): Promise<string[]>;
+}

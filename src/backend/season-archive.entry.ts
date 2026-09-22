@@ -1,7 +1,7 @@
 import { seasonKeyFor } from "@/shared/domain/seasons";
 import type { Snapshot } from "@/shared/domain/snapshot";
-import { resolveSnapshotRepo } from "./runtime/adapters/snapshots";
-import type { PromoteResult } from "./runtime/adapters/snapshots/port";
+import { createSnapshotStore, type PromoteResult, type SnapshotStore } from "./logic/services/snapshot-store";
+import { resolveObjectStore } from "./runtime/adapters/object-store";
 
 interface CliArgs {
   season: string | null;
@@ -24,7 +24,7 @@ async function main(): Promise<void> {
     process.exit(2);
   }
 
-  const repo = resolveSnapshotRepo();
+  const repo = createSnapshotStore(resolveObjectStore());
   const active = await repo.listActive();
   const matching = active.filter((s) => seasonKeyFor(s.league.session, s.league.year) === args.season);
 
@@ -42,11 +42,7 @@ async function main(): Promise<void> {
   process.exit(outcomes.some((o) => o.error) ? 1 : 0);
 }
 
-async function promoteOne(
-  snapshot: Snapshot,
-  args: CliArgs,
-  repo: ReturnType<typeof resolveSnapshotRepo>,
-): Promise<LeagueOutcome> {
+async function promoteOne(snapshot: Snapshot, args: CliArgs, repo: SnapshotStore): Promise<LeagueOutcome> {
   const slug = snapshot.league.slug;
   try {
     if (args.dryRun) {

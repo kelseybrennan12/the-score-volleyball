@@ -1,6 +1,6 @@
-import path from "node:path";
 import { buildReport, type ReportFormat } from "./logic/services/build-team-report";
-import { createSnapshotRepo } from "./runtime/adapters/snapshots/fs";
+import { createSnapshotStore } from "./logic/services/snapshot-store";
+import { resolveObjectStore } from "./runtime/adapters/object-store";
 
 interface CliArgs {
   league: string | null;
@@ -10,7 +10,7 @@ interface CliArgs {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-  const repo = createSnapshotRepo(path.resolve(process.cwd(), "data/snapshots"));
+  const repo = createSnapshotStore(resolveObjectStore());
   const snapshots = await repo.listActive();
   if (snapshots.length === 0) {
     console.log("No active snapshots found under data/snapshots/active.");

@@ -42,7 +42,7 @@ session that gates it, and the rate limit that protects it from abuse. Related s
 - **Admin session**: an HMAC-signed cookie (`admin_session`) of the form `<issuedAtMs>.<hex-hmac>`, signed with
   `ADMIN_COOKIE_SECRET`. See [/docs/specs/product/admin-tool.md](/docs/specs/product/admin-tool.md) for the UX-facing
   lifecycle.
-- **Rate limit stamp**: the snapshot repo's `getLastIngestedAt` / `setLastIngestedAt` pair, backed by a `meta.json`
+- **Rate limit stamp**: the Snapshot store's `getLastIngestedAt` / `setLastIngestedAt` pair, backed by a `meta.json`
   object in the active storage backend.
 
 ## Requirements

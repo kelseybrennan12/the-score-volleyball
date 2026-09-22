@@ -1,5 +1,6 @@
 import { requireAdminRequest } from "@/backend/logic/services/admin-session";
-import { resolveSnapshotRepo } from "@/backend/runtime/adapters/snapshots";
+import { createSnapshotStore } from "@/backend/logic/services/snapshot-store";
+import { resolveObjectStore } from "@/backend/runtime/adapters/object-store";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -24,7 +25,7 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid slug or archiveKey." }, { status: 400 });
   }
 
-  const repo = resolveSnapshotRepo();
+  const repo = createSnapshotStore(resolveObjectStore());
   try {
     const result = await repo.restoreArchive(slug, archiveKey);
     return NextResponse.json({ ok: true, activePath: result.activePath, archivedPath: result.archivedPath });
