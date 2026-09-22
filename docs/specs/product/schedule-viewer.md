@@ -10,8 +10,8 @@ description: Single-page UX for a player to find their team's schedule, next gam
 - ID: P0001
 - Type: Product
 - Status: active
-- Version: v8
-- Last Updated: 2026-09-21
+- Version: v9
+- Last Updated: 2026-09-22
 
 ## Summary
 
@@ -85,16 +85,19 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
   down as the user types by team number or captain name.
 - When a single team is identified, the page shows:
   - The team's number and captain name.
-  - The team's division label, record (sets won / sets lost within its division), and current rank within its division
-    (e.g. "3rd of 14 in BB").
+  - The team's division label, record (sets won / sets lost), and current rank within its division, using the same rank
+    label as the Standings table so a tie reads the same in both places (e.g. "Rank 3 of 14 in BB", "Rank T-2 of 14 in
+    BB", or "Unranked in BB" for a team that has not played a set).
   - The team's schedule: every scheduled match, grouped by date in chronological order. Each date is rendered as its own
     card with the matches for that day listed inside.
   - For each match: opponent's number, captain name, division, opponent's record (scoped to the opponent's division),
     time, and court.
 - When a league has a single division, the division label is still shown but ranking text may omit the label.
-- Teams are never ranked or compared across divisions. A BB team's record and rank are computed from BB teams only, even
-  if they are scheduled to play a BBB team inter-division (the match still appears on the schedule; the opponent's
-  displayed record is scoped to the opponent's own division).
+- Teams are never ranked or compared across divisions. Teams only ever play within their division (a combined tier such
+  as BB/BBB is one division with no distinction inside it), so a team's record counts every played match and its rank is
+  computed against its division only. Record and rank for every team come from one Standings computation shared by Team
+  detail, the Standings table, and the per-team report; ingestion records an anomaly if a schedule ever pairs teams from
+  different divisions.
 - When at least one scheduled match falls on a date today or later (in the league's local timezone), every match on the
   earliest such date is visually highlighted more prominently than the rest of the schedule, and the page surfaces a
   "Next Match(es)" card that lists those matches with their times and courts.
@@ -228,5 +231,7 @@ The active view mode is persisted in the URL as `?view=team|now|standings`. Abse
     (Previous Seasons section).
   - [/docs/efforts/2026-09-21-17-55-viewer-selection-module.md](/docs/efforts/2026-09-21-17-55-viewer-selection-module.md)
     (Viewer selection as one deep module).
+  - [/docs/efforts/2026-09-22-13-09-record-and-rank-module.md](/docs/efforts/2026-09-22-13-09-record-and-rank-module.md)
+    (one Record-and-Rank module; Team detail adopts the T-N tie label).
   - [/docs/efforts/2026-09-21-18-10-standings-selection-parameters.md](/docs/efforts/2026-09-21-18-10-standings-selection-parameters.md)
     (Standings selection's own `standings`/`division` parameters, independent of Team search).

@@ -1,5 +1,5 @@
 import type { Match, Snapshot, Team } from "@/shared/domain/snapshot";
-import { buildStandings, listStandingsOptions } from "@/shared/domain/standings";
+import { computeStandings, listStandingsOptions, type StandingsRow } from "@/shared/domain/standings";
 import { describe, expect, it } from "vitest";
 
 function makeSnapshot(overrides: Partial<Snapshot> = {}): Snapshot {
@@ -41,7 +41,12 @@ function played(
   };
 }
 
-describe("buildStandings", () => {
+/** Rows of one division's table, or `[]` when the snapshot has no such division. */
+function divisionRows(snap: Snapshot, division: string): StandingsRow[] {
+  return computeStandings(snap).divisions.find((g) => g.division === division)?.rows ?? [];
+}
+
+describe("computeStandings: per-division tables", () => {
   it("ranks teams by sets won desc, sets lost asc, with skip-rank ties labeled T-N", () => {
     const snap = makeSnapshot({
       teams: [team(1, "Alice"), team(2, "Bob"), team(3, "Cara"), team(4, "Dan")],
@@ -56,8 +61,8 @@ describe("buildStandings", () => {
         // Team 4: 0-3 + 1-2 => 1-5
       ],
     });
-    const result = buildStandings(snap, "B");
-    expect(result.rows.map((r) => [r.teamNumber, r.setsWon, r.setsLost, r.rankLabel])).toEqual([
+    const rows = divisionRows(snap, "B");
+    expect(rows.map((r) => [r.teamNumber, r.setsWon, r.setsLost, r.rankLabel])).toEqual([
       [1, 6, 0, "1"],
       [2, 3, 3, "2"],
       [3, 2, 4, "3"],
@@ -78,8 +83,8 @@ describe("buildStandings", () => {
         // After: team 2 = 3-3 (3-0 from above + loss 0-3 to team 1), team 3 = 3-3, team 4 = 0-9
       ],
     });
-    const result = buildStandings(snap, "B");
-    expect(result.rows.map((r) => [r.teamNumber, r.rankLabel, r.isTied])).toEqual([
+    const rows = divisionRows(snap, "B");
+    expect(rows.map((r) => [r.teamNumber, r.rankLabel, r.isTied])).toEqual([
       [1, "1", false],
       [2, "T-2", true],
       [3, "T-2", true],
@@ -92,13 +97,13 @@ describe("buildStandings", () => {
       teams: [team(7, "G"), team(2, "B"), team(5, "E")],
       matches: [played(2, 5, 2, 3, 0)],
     });
-    const result = buildStandings(snap, "B");
-    expect(result.rows.map((r) => [r.teamNumber, r.rankLabel])).toEqual([
+    const rows = divisionRows(snap, "B");
+    expect(rows.map((r) => [r.teamNumber, r.rankLabel])).toEqual([
       [2, "1"],
       [5, "2"],
       [7, "—"],
     ]);
-    expect(result.rows[2].rank).toBeNull();
+    expect(rows[2].rank).toBeNull();
   });
 
   it("only includes teams in the requested division", () => {
@@ -106,15 +111,15 @@ describe("buildStandings", () => {
       teams: [team(1, "A", "B"), team(2, "B", "BB"), team(3, "C", "B")],
       matches: [played(1, 3, 1, 3, 0)],
     });
-    const b = buildStandings(snap, "B");
-    expect(b.rows.map((r) => r.teamNumber)).toEqual([1, 3]);
-    const bb = buildStandings(snap, "BB");
-    expect(bb.rows.map((r) => r.teamNumber)).toEqual([2]);
+    const b = divisionRows(snap, "B");
+    expect(b.map((r) => r.teamNumber)).toEqual([1, 3]);
+    const bb = divisionRows(snap, "BB");
+    expect(bb.map((r) => r.teamNumber)).toEqual([2]);
   });
 
   it("returns no rows when the division has no teams", () => {
     const snap = makeSnapshot({ teams: [team(1, "A", "B")] });
-    expect(buildStandings(snap, "BB").rows).toEqual([]);
+    expect(divisionRows(snap, "BB")).toEqual([]);
   });
 });
 
@@ -160,5 +165,48 @@ describe("listStandingsOptions", () => {
     );
     const labels = listStandingsOptions(snapshots).map((o) => o.label);
     expect(labels).toEqual(["Sunday B", "Monday B", "Tuesday B", "Wednesday B", "Thursday B", "Friday B"]);
+  });
+});
+
+describe("computeStandings: per-team lookup", () => {
+  it("looks up any team's row by number, with division size counting unranked teams", () => {
+    const snap = makeSnapshot({
+      teams: [team(1, "A"), team(2, "B"), team(3, "C"), team(4, "D"), team(5, "E", "BB")],
+      matches: [played(1, 2, 1, 3, 0), played(3, 4, 3, 3, 0)],
+    });
+    const { byTeam } = computeStandings(snap);
+    expect(byTeam.get(1)).toMatchObject({ division: "B", setsWon: 3, setsLost: 0, rankLabel: "T-1", divisionSize: 4 });
+    expect(byTeam.get(3)).toMatchObject({ rankLabel: "T-1", divisionSize: 4 });
+    expect(byTeam.get(2)).toMatchObject({ setsWon: 0, setsLost: 3, rankLabel: "T-3", divisionSize: 4 });
+    expect(byTeam.get(5)).toMatchObject({ division: "BB", rank: null, rankLabel: "—", divisionSize: 1 });
+    expect(byTeam.get(99)).toBeUndefined();
+  });
+
+  it("counts every played match toward both teams' records and ignores unplayed ones", () => {
+    const snap = makeSnapshot({
+      teams: [team(1, "A"), team(2, "B"), team(3, "C")],
+      matches: [
+        played(1, 2, 1, 3, 0),
+        played(2, 1, 2, 2, 1),
+        played(1, 3, 3, 2, 1),
+        { date: "2026-05-03", time: "18:00", court: "Blue Ct", teamNumbers: [2, 3], outcome: { status: "unplayed" } },
+      ],
+    });
+    const { byTeam } = computeStandings(snap);
+    expect(byTeam.get(1)).toMatchObject({ setsWon: 3 + 1 + 1, setsLost: 0 + 2 + 2 });
+    expect(byTeam.get(2)).toMatchObject({ setsWon: 0 + 2, setsLost: 3 + 1 });
+    expect(byTeam.get(3)).toMatchObject({ setsWon: 2, setsLost: 1 });
+  });
+
+  it("returns one group per division, alphabetically, each ranked independently", () => {
+    const snap = makeSnapshot({
+      teams: [team(1, "A", "BB"), team(2, "B", "BB"), team(3, "C", "B"), team(4, "D", "B")],
+      matches: [played(1, 2, 2, 3, 0), played(3, 4, 3, 2, 1)],
+    });
+    const { divisions } = computeStandings(snap);
+    expect(divisions.map((g) => [g.division, g.rows.map((r) => `${r.teamNumber}:${r.rankLabel}`)])).toEqual([
+      ["B", ["3:1", "4:2"]],
+      ["BB", ["2:1", "1:2"]],
+    ]);
   });
 });

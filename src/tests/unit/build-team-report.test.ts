@@ -117,4 +117,27 @@ describe("buildReport", () => {
     });
     expect(report).toContain("(no scheduled matches)");
   });
+
+  it("shows Record and Rank with the same tie label as the Standings table", () => {
+    const tiedMatches: Match[] = [
+      {
+        date: "2026-04-26",
+        time: "18:00",
+        court: "Blue Ct",
+        teamNumbers: [1, 2],
+        outcome: { status: "played", winnerTeamNumber: 1, setsWinner: 3, setsLoser: 0 },
+      },
+      {
+        date: "2026-05-03",
+        time: "18:00",
+        court: "Blue Ct",
+        teamNumbers: [3, 2],
+        outcome: { status: "played", winnerTeamNumber: 3, setsWinner: 3, setsLoser: 0 },
+      },
+    ];
+    const snapshots = [snapshot("spring-sundays", "Spring Sundays", tiedMatches)];
+    expect(buildReport({ snapshots, teamNumber: 1 })).toContain("Record: 3–0 (sets) · Rank T-1 of 3 in B");
+    expect(buildReport({ snapshots, teamNumber: 3 })).toContain("Record: 3–0 (sets) · Rank T-1 of 3 in B");
+    expect(buildReport({ snapshots, teamNumber: 2 })).toContain("Record: 0–6 (sets) · Rank 3 of 3 in B");
+  });
 });

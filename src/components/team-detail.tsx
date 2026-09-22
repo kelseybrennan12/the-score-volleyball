@@ -3,7 +3,7 @@
 import { buildTeamIcs, icsFilenameFor } from "@/shared/domain/calendar-export";
 import { compareMatches, findNextMatchDate } from "@/shared/domain/next-match";
 import type { Match, Snapshot, Team } from "@/shared/domain/snapshot";
-import { computeTeamStats } from "@/shared/domain/stats";
+import { computeStandings, type StandingsRow } from "@/shared/domain/standings";
 import { isFavoriteTeam, parseFavoriteTeams } from "@/shared/favorites";
 import { useCallback, useMemo } from "react";
 import { CourtLabel, DivisionPill } from "./theme-tokens";
@@ -17,8 +17,8 @@ interface Props {
 }
 
 export function TeamDetail({ snapshot, team, now }: Props) {
-  const stats = useMemo(() => computeTeamStats(snapshot), [snapshot]);
-  const teamStats = stats.get(team.number);
+  const standings = useMemo(() => computeStandings(snapshot), [snapshot]);
+  const standing = standings.byTeam.get(team.number);
   const teamMatches = useMemo(() => {
     return snapshot.matches.filter((m) => m.teamNumbers.includes(team.number)).sort(compareMatches);
   }, [snapshot, team.number]);
@@ -69,15 +69,15 @@ export function TeamDetail({ snapshot, team, now }: Props) {
               <DivisionPill division={team.division} />
             </p>
           </div>
-          {teamStats && (
+          {standing && (
             <div className="text-right text-sm">
               <div className="font-medium">
-                Record: {teamStats.setsWon}–{teamStats.setsLost} <span className="text-neutral-500">(sets)</span>
+                Record: {standing.setsWon}–{standing.setsLost} <span className="text-neutral-500">(sets)</span>
               </div>
               <div className="text-neutral-600">
-                {teamStats.rank != null
-                  ? `Rank ${teamStats.rank} of ${teamStats.divisionSize} in ${teamStats.division}`
-                  : `Unranked in ${teamStats.division}`}
+                {standing.rank != null
+                  ? `Rank ${standing.rankLabel} of ${standing.divisionSize} in ${standing.division}`
+                  : `Unranked in ${standing.division}`}
               </div>
             </div>
           )}
@@ -104,7 +104,7 @@ export function TeamDetail({ snapshot, team, now }: Props) {
           <ul className="mt-2 divide-y divide-rose-100">
             {upcomingMatches.map((match, idx) => (
               <li key={`${match.time}-${match.court}-${idx}`} className="py-2 first:pt-0 last:pb-0">
-                <MatchRow snapshot={snapshot} team={team} match={match} hideDate />
+                <MatchRow snapshot={snapshot} team={team} match={match} byTeam={standings.byTeam} hideDate />
               </li>
             ))}
           </ul>
@@ -127,7 +127,7 @@ export function TeamDetail({ snapshot, team, now }: Props) {
                 <ul className="divide-y divide-neutral-200">
                   {matches.map((match, idx) => (
                     <li key={`${match.date}-${match.time}-${match.court}-${idx}`} className="px-4 py-3">
-                      <MatchRow snapshot={snapshot} team={team} match={match} hideDate />
+                      <MatchRow snapshot={snapshot} team={team} match={match} byTeam={standings.byTeam} hideDate />
                     </li>
                   ))}
                 </ul>
@@ -144,18 +144,20 @@ function MatchRow({
   snapshot,
   team,
   match,
+  byTeam,
   featured = false,
   hideDate = false,
 }: {
   snapshot: Snapshot;
   team: Team;
   match: Match;
+  byTeam: Map<number, StandingsRow>;
   featured?: boolean;
   hideDate?: boolean;
 }) {
   const opponentNumber = match.teamNumbers[0] === team.number ? match.teamNumbers[1] : match.teamNumbers[0];
   const opponent = snapshot.teams.find((t) => t.number === opponentNumber);
-  const opponentStats = useOpponentStats(snapshot, opponentNumber);
+  const opponentStats = byTeam.get(opponentNumber);
   const outcomeText = match.outcome.status === "played" ? outcomeLabel(match, team.number) : null;
   return (
     <div className={`flex items-baseline justify-between gap-3 ${featured ? "pt-2" : ""}`}>
@@ -190,11 +192,6 @@ function MatchRow({
       )}
     </div>
   );
-}
-
-function useOpponentStats(snapshot: Snapshot, opponentNumber: number) {
-  const stats = useMemo(() => computeTeamStats(snapshot), [snapshot]);
-  return stats.get(opponentNumber);
 }
 
 function outcomeLabel(match: Match, teamNumber: number): string | null {

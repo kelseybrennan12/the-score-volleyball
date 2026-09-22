@@ -25,8 +25,9 @@
 - Domain types + shared helpers: [`/src/shared/domain/`](/src/shared/domain/). Used by both the UI and the ingestion
   pipeline.
 - Ingestion:
-  - Pure core: [`/src/backend/logic/core/`](/src/backend/logic/core/) (parsers, outcome mapping, record/rank,
-    roster-diff, league source list).
+  - Pure core: [`/src/backend/logic/core/`](/src/backend/logic/core/) (parsers, outcome mapping, snapshot validation,
+    roster-diff, league source list). Record and Rank live in
+    [`/src/shared/domain/standings.ts`](/src/shared/domain/standings.ts).
   - Adapters:
     [`/src/backend/runtime/adapters/integrations/google-sheets.ts`](/src/backend/runtime/adapters/integrations/google-sheets.ts)
     (XLSX fetch) and [`/src/backend/runtime/adapters/snapshots/fs.ts`](/src/backend/runtime/adapters/snapshots/fs.ts)

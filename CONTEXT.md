@@ -18,7 +18,8 @@ are frozen. _Avoid_: session, year
 **Team**: A numbered roster led by a captain. Identified within a league by its number and captain name. _Avoid_:
 roster, squad
 
-**Division**: A skill tier within a league, e.g. B, BB, BBB. Record and rank are scoped to the division. _Avoid_: level,
+**Division**: A skill tier within a league, e.g. B, BB, BBB. A combined tier such as BB/BBB is one division with no
+distinction inside it. Teams only ever play within their division, so record and rank are scoped to it. _Avoid_: level,
 tier, bracket
 
 **Match**: One meeting of two teams at a specific date, time, and court. _Avoid_: game, matchup
@@ -26,7 +27,7 @@ tier, bracket
 **Outcome**: Whether a match has been played and, if so, its set result for the first-listed team (3-0 or 2-1). _Avoid_:
 result, score
 
-**Record**: A team's sets won and sets lost across all of its played matches.
+**Record**: A team's sets won and sets lost across all of its played matches, all of which are within its division.
 
 **Rank**: A team's ordinal position within its division by record. Tied teams share a rank, shown as T-N. _Avoid_:
 standing, position

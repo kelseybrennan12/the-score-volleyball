@@ -1,6 +1,6 @@
 import { compareMatches } from "@/shared/domain/next-match";
 import type { Match, Snapshot, Team } from "@/shared/domain/snapshot";
-import { computeTeamStats, type TeamStats } from "@/shared/domain/stats";
+import { computeStandings, type StandingsRow } from "@/shared/domain/standings";
 
 export type ReportFormat = "text" | "md";
 
@@ -21,12 +21,12 @@ export function buildReport(input: BuildReportInput): string {
   }
   const blocks: string[] = [];
   for (const snapshot of filteredSnapshots) {
-    const stats = computeTeamStats(snapshot);
+    const { byTeam } = computeStandings(snapshot);
     const teams =
       input.teamNumber != null ? snapshot.teams.filter((t) => t.number === input.teamNumber) : snapshot.teams;
     const ordered = [...teams].sort((a, b) => a.number - b.number);
     for (const team of ordered) {
-      blocks.push(renderTeamBlock(snapshot, team, stats.get(team.number), format));
+      blocks.push(renderTeamBlock(snapshot, team, byTeam.get(team.number), format));
     }
   }
   if (blocks.length === 0) {
@@ -36,13 +36,18 @@ export function buildReport(input: BuildReportInput): string {
   return blocks.join(separator) + "\n";
 }
 
-function renderTeamBlock(snapshot: Snapshot, team: Team, stats: TeamStats | undefined, format: ReportFormat): string {
+function renderTeamBlock(
+  snapshot: Snapshot,
+  team: Team,
+  standing: StandingsRow | undefined,
+  format: ReportFormat,
+): string {
   const teamMatches = snapshot.matches.filter((m) => m.teamNumbers.includes(team.number)).sort(compareMatches);
   const leagueLabel = `${snapshot.league.displayName} ${snapshot.league.year}`;
-  const statsLine = stats
-    ? `Record: ${stats.setsWon}–${stats.setsLost} (sets) · ${
-        stats.rank != null ? `Rank ${stats.rank} of ${stats.divisionSize}` : "Unranked"
-      } in ${stats.division}`
+  const statsLine = standing
+    ? `Record: ${standing.setsWon}–${standing.setsLost} (sets) · ${
+        standing.rank != null ? `Rank ${standing.rankLabel} of ${standing.divisionSize}` : "Unranked"
+      } in ${standing.division}`
     : "Record: unavailable";
   if (format === "md") {
     const rows = teamMatches.map((m) => renderMarkdownRow(snapshot, team, m));

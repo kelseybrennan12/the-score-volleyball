@@ -2,7 +2,7 @@
 
 import type { SeasonArchive } from "@/shared/domain/seasons";
 import type { Snapshot } from "@/shared/domain/snapshot";
-import { buildStandings, listStandingsOptions, type StandingsOption } from "@/shared/domain/standings";
+import { computeStandings, listStandingsOptions, type StandingsOption } from "@/shared/domain/standings";
 import { useMemo, useState } from "react";
 import { DivisionPill } from "./theme-tokens";
 
@@ -148,7 +148,11 @@ function PreviousSeasons({ seasons }: { seasons: SeasonArchive[] }) {
 
 function StandingsTable({ snapshots, option }: { snapshots: Snapshot[]; option: StandingsOption }) {
   const snapshot = snapshots.find((s) => s.league.slug === option.leagueSlug);
-  const standings = useMemo(() => (snapshot ? buildStandings(snapshot, option.division) : null), [snapshot, option]);
+  const standings = useMemo(
+    () =>
+      snapshot ? (computeStandings(snapshot).divisions.find((g) => g.division === option.division) ?? null) : null,
+    [snapshot, option],
+  );
   if (!snapshot || !standings) return null;
 
   const anyTies = standings.rows.some((r) => r.isTied);

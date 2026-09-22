@@ -10,8 +10,8 @@ description: CLI-driven ingestion of thescoregr.com Google Sheets into per-leagu
 - ID: T0001
 - Type: Technical
 - Status: active
-- Version: v8
-- Last Updated: 2026-09-15
+- Version: v9
+- Last Updated: 2026-09-22
 
 ## Summary
 
@@ -143,6 +143,9 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   - Played matches obey the winner-first convention (`outcome.winnerTeamNumber === teamNumbers[0]`) and carry a coherent
     set score (`setsWinner ∈ {2, 3}`, `setsLoser < setsWinner`).
   - Each team's total match count is within ±1 of the modal count for its division (tolerates a single bye week).
+  - Matchups only pair teams from the same division. Teams never play across divisions (a combined tier such as `BB/BBB`
+    is one division), so a cross-division pairing indicates a mislabeled team or a misread schedule cell and would skew
+    both teams' records.
   - Every date advertised in the schedule header row whose body carries at least one matchup-shaped cell (`\d+ v \d+`)
     produces at least one parsed match. Columns whose bodies are entirely placeholder text (e.g.
     `"Memorial Day Holiday"`, `"Playoffs Schedule TBD"`) are intentionally reserved by the league admins and are

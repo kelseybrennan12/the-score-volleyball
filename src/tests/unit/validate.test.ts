@@ -125,4 +125,14 @@ describe("validateSnapshot", () => {
     const anomalies = validateSnapshot({ teams, matches: [...base, ...outlierExtras] });
     expect(anomalies.some((a) => a.includes("Team 1 has"))).toBe(true);
   });
+
+  it("flags a match that pairs teams from different divisions, since teams only play within their division", () => {
+    const teams = [team(1, "B"), team(2, "B"), team(3, "BB"), team(4, "BB")];
+    const matches = uniformSeason(teams);
+    matches[0] = unplayed("2026-04-26", "18:00", "Ct 0", 1, 3);
+    matches[1] = unplayed("2026-04-26", "18:00", "Ct 2", 2, 4);
+    const anomalies = validateSnapshot({ teams, matches });
+    expect(anomalies).toContain("Match 2026-04-26 18:00 Ct 0 pairs teams from different divisions (1 in B, 3 in BB)");
+    expect(anomalies).toContain("Match 2026-04-26 18:00 Ct 2 pairs teams from different divisions (2 in B, 4 in BB)");
+  });
 });

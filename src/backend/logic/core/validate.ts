@@ -9,6 +9,7 @@ export interface ValidateInput {
 export function validateSnapshot(input: ValidateInput): string[] {
   const anomalies: string[] = [];
   anomalies.push(...checkMatchIntegrity(input.matches, new Set(input.teams.map((t) => t.number))));
+  anomalies.push(...checkWithinDivision(input.teams, input.matches));
   anomalies.push(...checkSlotUniqueness(input.matches));
   anomalies.push(...checkPerTeamSlotUniqueness(input.matches));
   anomalies.push(...checkWinnerFirst(input.matches));
@@ -47,6 +48,21 @@ function checkMatchIntegrity(matches: Match[], knownNumbers: Set<number>): strin
         out.push(`Match ${describeSlot(m)} has nonsense set score (winner=${setsWinner}, loser=${setsLoser})`);
       }
     }
+  }
+  return out;
+}
+
+// Teams only ever play within their division (a combined tier such as BB/BBB is one division), so a cross-division
+// pairing means a mislabeled team or a misread schedule cell, and would silently skew both teams' records.
+function checkWithinDivision(teams: Team[], matches: Match[]): string[] {
+  const divisionOf = new Map(teams.map((t) => [t.number, t.division]));
+  const out: string[] = [];
+  for (const m of matches) {
+    const [a, b] = m.teamNumbers;
+    const divA = divisionOf.get(a);
+    const divB = divisionOf.get(b);
+    if (divA == null || divB == null || divA === divB) continue;
+    out.push(`Match ${describeSlot(m)} pairs teams from different divisions (${a} in ${divA}, ${b} in ${divB})`);
   }
   return out;
 }
