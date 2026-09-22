@@ -1,6 +1,6 @@
 import { requireAdminRequest } from "@/backend/logic/services/admin-session";
-import { readAnnouncement, saveAnnouncement } from "@/backend/logic/services/announcement";
-import { resolveAnnouncementRepo } from "@/backend/runtime/adapters/announcements";
+import { createAnnouncementStore, readAnnouncement, saveAnnouncement } from "@/backend/logic/services/announcement";
+import { resolveObjectStore } from "@/backend/runtime/adapters/object-store";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -11,7 +11,7 @@ export async function GET(): Promise<NextResponse> {
   if (!guard.ok) return NextResponse.json({ error: guard.reason }, { status: guard.status });
 
   try {
-    const announcement = await readAnnouncement(resolveAnnouncementRepo());
+    const announcement = await readAnnouncement(createAnnouncementStore(resolveObjectStore()));
     return NextResponse.json({ announcement });
   } catch (err) {
     console.error("Announcement read route failed", err);
@@ -44,7 +44,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
       message: body.message,
       enabled: body.enabled,
       publishAsNew: body.publishAsNew,
-      repo: resolveAnnouncementRepo(),
+      store: createAnnouncementStore(resolveObjectStore()),
     });
     return NextResponse.json(result.body, { status: result.status });
   } catch (err) {

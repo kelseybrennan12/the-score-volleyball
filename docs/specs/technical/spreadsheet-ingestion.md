@@ -84,7 +84,7 @@ schedule, and outcomes, detects season rollovers, and writes per-league snapshot
   than the snapshots root).
 - The runtime-ingestion route handler honors the same per-league failure semantics as the CLI: a single league failing
   does not abort the run; the response reports which leagues succeeded and which failed.
-- The runtime-ingestion route handler is rate-limited via the snapshot repo's `getLastIngestedAt` / `setLastIngestedAt`
+- The runtime-ingestion route handler is rate-limited via the Snapshot store's `getLastIngestedAt` / `setLastIngestedAt`
   pair. The CLI is not rate-limited because it runs in a trusted developer context.
 - A single parser is used for all in-scope leagues. It auto-detects the standings block, the schedule's `Match Time:`
   header row, the date-column mapping, and the time-plus-court rows. When multiple `Match Time:` headers appear in a

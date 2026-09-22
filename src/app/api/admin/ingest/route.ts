@@ -2,8 +2,9 @@ import { LEAGUE_SOURCES } from "@/backend/logic/core/league-sources";
 import { requireAdminRequest } from "@/backend/logic/services/admin-session";
 import { runIngestion } from "@/backend/logic/services/run-ingestion";
 import { INGEST_COOLDOWN_MS } from "@/backend/logic/services/runtime-ingestion-config";
+import { createSnapshotStore } from "@/backend/logic/services/snapshot-store";
 import { createSheetsFetcher } from "@/backend/runtime/adapters/integrations/google-sheets";
-import { resolveSnapshotRepo } from "@/backend/runtime/adapters/snapshots";
+import { resolveObjectStore } from "@/backend/runtime/adapters/object-store";
 import { NextResponse } from "next/server";
 
 export const runtime = "nodejs";
@@ -15,8 +16,8 @@ export async function POST(): Promise<NextResponse> {
   if (!guard.ok) return NextResponse.json({ error: guard.reason }, { status: guard.status });
 
   try {
-    const repo = resolveSnapshotRepo();
-    const last = await repo.getLastIngestedAt();
+    const store = createSnapshotStore(resolveObjectStore());
+    const last = await store.getLastIngestedAt();
     if (last) {
       const elapsed = Date.now() - new Date(last).getTime();
       if (elapsed < INGEST_COOLDOWN_MS) {
@@ -33,7 +34,7 @@ export async function POST(): Promise<NextResponse> {
     }
 
     const fetcher = createSheetsFetcher();
-    const { results, ranAt } = await runIngestion({ sources: LEAGUE_SOURCES, fetcher, repo });
+    const { results, ranAt } = await runIngestion({ sources: LEAGUE_SOURCES, fetcher, store });
     const anyFailed = results.some((r) => !r.ok);
     return NextResponse.json({
       ok: !anyFailed,

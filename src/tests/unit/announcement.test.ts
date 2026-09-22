@@ -1,5 +1,6 @@
-import { readAnnouncement, saveAnnouncement } from "@/backend/logic/services/announcement";
-import { createAnnouncementRepo } from "@/backend/runtime/adapters/announcements/fs";
+import { createAnnouncementStore, readAnnouncement, saveAnnouncement } from "@/backend/logic/services/announcement";
+import { createFsObjectStore } from "@/backend/runtime/adapters/object-store/fs";
+import { createMemoryObjectStore } from "@/backend/runtime/adapters/object-store/memory";
 import type { Announcement } from "@/shared/domain/announcement";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -18,26 +19,26 @@ describe("readAnnouncement", () => {
   });
 
   it("returns nothing when nothing is stored", async () => {
-    const repo = createAnnouncementRepo(root);
-    expect(await readAnnouncement(repo)).toBeNull();
+    const store = createAnnouncementStore(createMemoryObjectStore());
+    expect(await readAnnouncement(store)).toBeNull();
   });
 
   it("round-trips a stored announcement", async () => {
-    const repo = createAnnouncementRepo(root);
+    const store = createAnnouncementStore(createMemoryObjectStore());
     const announcement: Announcement = {
       message: "Fall 2026 schedules are here!",
       enabled: true,
       version: 3,
       updatedAt: "2026-09-21T12:00:00.000Z",
     };
-    await repo.write(announcement);
-    expect(await readAnnouncement(repo)).toEqual(announcement);
+    await store.write(announcement);
+    expect(await readAnnouncement(store)).toEqual(announcement);
   });
 
   it("returns nothing without throwing when the stored file is corrupt", async () => {
-    const repo = createAnnouncementRepo(root);
+    const store = createAnnouncementStore(createFsObjectStore(root));
     await writeFile(path.join(root, "announcement.json"), "{ not valid json", "utf8");
-    expect(await readAnnouncement(repo)).toBeNull();
+    expect(await readAnnouncement(store)).toBeNull();
   });
 });
 
@@ -54,12 +55,12 @@ describe("saveAnnouncement", () => {
   });
 
   it("saves then reads back the stored announcement", async () => {
-    const repo = createAnnouncementRepo(root);
+    const store = createAnnouncementStore(createMemoryObjectStore());
     const result = await saveAnnouncement({
       message: "Season starts Monday",
       enabled: true,
       publishAsNew: false,
-      repo,
+      store,
       now: clock,
     });
     expect(result.status).toBe(200);
@@ -69,21 +70,21 @@ describe("saveAnnouncement", () => {
       version: 0,
       updatedAt: "2026-09-21T15:30:00.000Z",
     });
-    expect(await readAnnouncement(repo)).toEqual(result.body);
+    expect(await readAnnouncement(store)).toEqual(result.body);
   });
 
   it("increments the version on publish-as-new but not on a plain save or an enabled-only flip", async () => {
-    const repo = createAnnouncementRepo(root);
+    const store = createAnnouncementStore(createMemoryObjectStore());
 
-    await saveAnnouncement({ message: "First", enabled: true, publishAsNew: false, repo, now: clock });
-    let stored = await readAnnouncement(repo);
+    await saveAnnouncement({ message: "First", enabled: true, publishAsNew: false, store, now: clock });
+    let stored = await readAnnouncement(store);
     expect(stored?.version).toBe(0);
 
     const republished = await saveAnnouncement({
       message: "Second",
       enabled: true,
       publishAsNew: true,
-      repo,
+      store,
       now: clock,
     });
     expect((republished.body as Announcement).version).toBe(1);
@@ -93,7 +94,7 @@ describe("saveAnnouncement", () => {
       message: "Second (typo fix)",
       enabled: true,
       publishAsNew: false,
-      repo,
+      store,
       now: clock,
     });
     expect((edited.body as Announcement).version).toBe(1);
@@ -103,18 +104,18 @@ describe("saveAnnouncement", () => {
       message: "Second (typo fix)",
       enabled: false,
       publishAsNew: false,
-      repo,
+      store,
       now: clock,
     });
     expect((flipped.body as Announcement).version).toBe(1);
-    stored = await readAnnouncement(repo);
+    stored = await readAnnouncement(store);
     expect(stored?.version).toBe(1);
   });
 
   it("rejects an enabled announcement with a blank or whitespace-only message", async () => {
-    const repo = createAnnouncementRepo(root);
+    const store = createAnnouncementStore(createMemoryObjectStore());
 
-    const blank = await saveAnnouncement({ message: "", enabled: true, publishAsNew: false, repo, now: clock });
+    const blank = await saveAnnouncement({ message: "", enabled: true, publishAsNew: false, store, now: clock });
     expect(blank.status).toBe(400);
     expect(blank.body).toHaveProperty("error");
 
@@ -122,31 +123,31 @@ describe("saveAnnouncement", () => {
       message: "   \n\t ",
       enabled: true,
       publishAsNew: false,
-      repo,
+      store,
       now: clock,
     });
     expect(whitespace.status).toBe(400);
 
     // Nothing was written.
-    expect(await readAnnouncement(repo)).toBeNull();
+    expect(await readAnnouncement(store)).toBeNull();
   });
 
   it("accepts a disabled announcement with a blank message", async () => {
-    const repo = createAnnouncementRepo(root);
-    const result = await saveAnnouncement({ message: "  ", enabled: false, publishAsNew: false, repo, now: clock });
+    const store = createAnnouncementStore(createMemoryObjectStore());
+    const result = await saveAnnouncement({ message: "  ", enabled: false, publishAsNew: false, store, now: clock });
     expect(result.status).toBe(200);
     expect((result.body as Announcement).message).toBe("");
     expect((result.body as Announcement).enabled).toBe(false);
   });
 
   it("trims the message and rejects one over 200 characters after trimming", async () => {
-    const repo = createAnnouncementRepo(root);
+    const store = createAnnouncementStore(createMemoryObjectStore());
 
     const trimmed = await saveAnnouncement({
       message: "  hello  ",
       enabled: true,
       publishAsNew: false,
-      repo,
+      store,
       now: clock,
     });
     expect((trimmed.body as Announcement).message).toBe("hello");
@@ -156,7 +157,7 @@ describe("saveAnnouncement", () => {
       message: `  ${exactly200}  `,
       enabled: true,
       publishAsNew: false,
-      repo,
+      store,
       now: clock,
     });
     expect(ok.status).toBe(200);
@@ -166,19 +167,19 @@ describe("saveAnnouncement", () => {
       message: "x".repeat(201),
       enabled: true,
       publishAsNew: false,
-      repo,
+      store,
       now: clock,
     });
     expect(tooLong.status).toBe(400);
   });
 
   it("records the last-saved timestamp from the injected clock", async () => {
-    const repo = createAnnouncementRepo(root);
+    const store = createAnnouncementStore(createMemoryObjectStore());
     const result = await saveAnnouncement({
       message: "Timestamped",
       enabled: true,
       publishAsNew: false,
-      repo,
+      store,
       now: () => new Date("2027-01-02T03:04:05.000Z"),
     });
     expect((result.body as Announcement).updatedAt).toBe("2027-01-02T03:04:05.000Z");

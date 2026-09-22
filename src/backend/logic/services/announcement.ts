@@ -1,14 +1,30 @@
-import type { AnnouncementRepo } from "@/backend/runtime/adapters/announcements/port";
+import type { ObjectStore } from "@/backend/runtime/adapters/object-store/port";
 import { ANNOUNCEMENT_MAX_LENGTH, type Announcement } from "@/shared/domain/announcement";
+
+/** At most one Announcement exists at a time, so the store is just read/write of the single record. */
+export interface AnnouncementStore {
+  read(): Promise<Announcement | null>;
+  write(announcement: Announcement): Promise<void>;
+}
+
+const ANNOUNCEMENT_KEY = "announcement.json";
+
+/** The Announcement lives beside the snapshots in the same object store. */
+export function createAnnouncementStore(objects: ObjectStore): AnnouncementStore {
+  return {
+    read: () => objects.get<Announcement>(ANNOUNCEMENT_KEY),
+    write: (announcement) => objects.put(ANNOUNCEMENT_KEY, announcement),
+  };
+}
 
 /**
  * The read seam for the Viewer. Returns the current Announcement or nothing, and
  * swallows and logs read failures (missing store, corrupt file) so the page
  * always renders rather than erroring on a problem with the announcement.
  */
-export async function readAnnouncement(repo: AnnouncementRepo): Promise<Announcement | null> {
+export async function readAnnouncement(store: AnnouncementStore): Promise<Announcement | null> {
   try {
-    return await repo.read();
+    return await store.read();
   } catch (err) {
     console.error("Failed to read announcement", err);
     return null;
@@ -19,7 +35,7 @@ export interface SaveAnnouncementInput {
   message: string;
   enabled: boolean;
   publishAsNew: boolean;
-  repo: AnnouncementRepo;
+  store: AnnouncementStore;
   now?: () => Date;
 }
 
@@ -40,7 +56,7 @@ export async function saveAnnouncement({
   message,
   enabled,
   publishAsNew,
-  repo,
+  store,
   now = () => new Date(),
 }: SaveAnnouncementInput): Promise<SaveAnnouncementResult> {
   const trimmed = message.trim();
@@ -58,7 +74,7 @@ export async function saveAnnouncement({
     };
   }
 
-  const current = await readAnnouncement(repo);
+  const current = await readAnnouncement(store);
   const baseVersion = current?.version ?? 0;
   const stored: Announcement = {
     message: trimmed,
@@ -66,6 +82,6 @@ export async function saveAnnouncement({
     version: publishAsNew ? baseVersion + 1 : baseVersion,
     updatedAt: now().toISOString(),
   };
-  await repo.write(stored);
+  await store.write(stored);
   return { status: 200, body: stored };
 }

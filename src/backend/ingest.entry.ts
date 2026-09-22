@@ -1,8 +1,8 @@
-import path from "node:path";
 import { LEAGUE_SOURCES } from "./logic/core/league-sources";
 import { runIngestion, type LeagueResult } from "./logic/services/run-ingestion";
+import { createSnapshotStore } from "./logic/services/snapshot-store";
 import { createSheetsFetcher } from "./runtime/adapters/integrations/google-sheets";
-import { createSnapshotRepo } from "./runtime/adapters/snapshots/fs";
+import { resolveObjectStore } from "./runtime/adapters/object-store";
 
 interface CliArgs {
   league: string | null;
@@ -17,9 +17,9 @@ async function main(): Promise<void> {
     process.exit(2);
   }
   const fetcher = createSheetsFetcher();
-  const repo = createSnapshotRepo(path.resolve(process.cwd(), "data/snapshots"));
+  const store = createSnapshotStore(resolveObjectStore());
 
-  const { results } = await runIngestion({ sources, fetcher, repo, dryRun: args.dryRun });
+  const { results } = await runIngestion({ sources, fetcher, store, dryRun: args.dryRun });
   printSummary(results, args.dryRun);
   const anyFailed = results.some((r) => !r.ok);
   process.exit(anyFailed ? 1 : 0);
