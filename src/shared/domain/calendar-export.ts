@@ -1,5 +1,6 @@
-import { compareMatches, LEAGUE_TIMEZONE } from "./next-match";
+import { LEAGUE_TIMEZONE } from "./next-match";
 import type { Match, Snapshot, Team } from "./snapshot";
+import { buildTeamDetail, type TeamMatch } from "./team-detail";
 
 // League games run 50 minutes; the snapshot schema does not carry a per-match
 // duration.
@@ -13,7 +14,7 @@ export function icsFilenameFor(snapshot: Snapshot, team: Team): string {
 }
 
 export function buildTeamIcs(snapshot: Snapshot, team: Team, now: Date = new Date()): string {
-  const teamMatches = snapshot.matches.filter((m) => m.teamNumbers.includes(team.number)).sort(compareMatches);
+  const detail = buildTeamDetail(snapshot, team, now);
   // DTSTAMP and SEQUENCE both derive from the moment of generation so re-downloads
   // carry a newer revision marker. Without this, Google Calendar / Outlook see
   // an unchanged file and skip the update, leaving stale events in place.
@@ -27,16 +28,15 @@ export function buildTeamIcs(snapshot: Snapshot, team: Team, now: Date = new Dat
     "METHOD:PUBLISH",
     ...detroitVtimezoneLines(),
   ];
-  for (const match of teamMatches) {
-    lines.push(...veventLines(snapshot, team, match, dtstamp, sequence));
+  for (const entry of detail.matches) {
+    lines.push(...veventLines(snapshot, team, entry, dtstamp, sequence));
   }
   lines.push("END:VCALENDAR");
   return lines.map(foldLine).join("\r\n") + "\r\n";
 }
 
-function veventLines(snapshot: Snapshot, team: Team, match: Match, dtstamp: string, sequence: number): string[] {
-  const opponentNumber = match.teamNumbers[0] === team.number ? match.teamNumbers[1] : match.teamNumbers[0];
-  const opponent = snapshot.teams.find((t) => t.number === opponentNumber);
+function veventLines(snapshot: Snapshot, team: Team, entry: TeamMatch, dtstamp: string, sequence: number): string[] {
+  const { match, opponent, opponentNumber, outcome } = entry;
   const dtstart = toIcsLocalStamp(match.date, match.time);
   const dtend = toIcsLocalStamp(match.date, addMinutes(match.time, EVENT_DURATION_MINUTES));
   const summary = opponent
@@ -47,13 +47,7 @@ function veventLines(snapshot: Snapshot, team: Team, match: Match, dtstamp: stri
     `Division: ${team.division}`,
     `Team: #${team.number} ${team.captain}`,
   ];
-  if (match.outcome.status === "played") {
-    const didWin = match.outcome.winnerTeamNumber === team.number;
-    const score = didWin
-      ? `${match.outcome.setsWinner}-${match.outcome.setsLoser}`
-      : `${match.outcome.setsLoser}-${match.outcome.setsWinner}`;
-    descriptionLines.push(`Result: ${didWin ? "W" : "L"} ${score}`);
-  }
+  if (outcome) descriptionLines.push(`Result: ${outcome.label}`);
   return [
     "BEGIN:VEVENT",
     `UID:${uidFor(snapshot, team, match)}`,

@@ -66,7 +66,8 @@ _Avoid_: app, site, dashboard
 
 **Team search**: Finding a team by its number or its captain's name.
 
-**Team detail**: A team's record, rank, next match, and full schedule.
+**Team detail**: A team's record, rank, next match, and full schedule, seen from the team's own side (opponent,
+opponent's record, win or loss). One computation, rendered by the viewer, the Calendar export, and the per-team report.
 
 **Now Playing**: The view of matches on court right now and up next on the selected day, grouped by court.
 

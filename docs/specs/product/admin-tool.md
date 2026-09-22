@@ -10,8 +10,8 @@ description: Hidden admin entry, passphrase gate, and operator-facing ingest + r
 - ID: P0003
 - Type: Product
 - Status: active
-- Version: v2
-- Last Updated: 2026-04-20
+- Version: v3
+- Last Updated: 2026-09-22
 
 ## Summary
 
@@ -53,9 +53,12 @@ snapshot from the deployed app, without a local checkout.
 - `/admin` is reachable only with a valid admin session cookie. Unauthorized access redirects to `/`.
 - `/admin` shows:
   - An "Ingest now" action that triggers a refresh of all cached leagues.
-  - The timestamp of the last successful ingest.
+  - The timestamp of the last successful ingest, or "never" when none has succeeded.
   - For each league with an active snapshot, a list of up to the 10 most recent archived snapshots, ordered
     newest-first, each showing the ingestion timestamp and a "Restore" action.
+- Timestamps on the admin page (last ingest, archived snapshots, announcement last-saved) use the viewer's shared
+  timestamp format: `Apr 19, 2026, 2:05 PM` in the operator's local timezone. A value that cannot be parsed is shown as
+  received.
 - Invoking "Ingest now" within 5 minutes of the last successful ingest is rejected with a user-visible message
   indicating the remaining wait time. The rate limit is enforced server-side.
 - After each ingest attempt, the admin page renders a per-league result block listing: league slug, ok/failed status,

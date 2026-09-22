@@ -1,5 +1,6 @@
 "use client";
 
+import { formatTimestamp } from "@/shared/format";
 import { useCallback, useEffect, useState } from "react";
 import { AnnouncementSection } from "./announcement-section";
 
@@ -35,13 +36,6 @@ interface IngestResponse {
   ok: boolean;
   lastIngestedAt: string;
   results: IngestLeagueResult[];
-}
-
-function formatTimestamp(iso: string | null): string {
-  if (!iso) return "never";
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleString();
 }
 
 async function parseJsonResponse<T>(response: Response): Promise<T> {

@@ -23,7 +23,10 @@
 - Frontend: Next.js App Router under [`/src/app/`](/src/app/) with UI components in
   [`/src/components/`](/src/components/).
 - Domain types + shared helpers: [`/src/shared/domain/`](/src/shared/domain/). Used by both the UI and the ingestion
-  pipeline.
+  pipeline. Team detail (a team's record, next match, and schedule from its own side) is
+  [`/src/shared/domain/team-detail.ts`](/src/shared/domain/team-detail.ts), rendered by the viewer, the calendar export,
+  and the per-team report; display formatting shared by the viewer, Admin, and the report is
+  [`/src/shared/format.ts`](/src/shared/format.ts).
 - Ingestion:
   - Pure core: [`/src/backend/logic/core/`](/src/backend/logic/core/) (parsers, outcome mapping, snapshot validation,
     roster-diff, league source list). Record and Rank live in
