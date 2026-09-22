@@ -1,5 +1,5 @@
 import { BlobNotFoundError, del, get, list, put } from "@vercel/blob";
-import type { ObjectStore } from "./port";
+import { serializeObject, type ObjectStore } from "./port";
 
 const ACCESS = "private" as const;
 
@@ -42,7 +42,7 @@ export function createBlobObjectStore({ token }: BlobObjectStoreOptions): Object
       return JSON.parse(await new Response(result.stream).text()) as T;
     },
     async put(key, body) {
-      await put(key, JSON.stringify(body, null, 2) + "\n", writeOpts);
+      await put(key, serializeObject(body), writeOpts);
     },
     async delete(keys) {
       if (keys.length > 0) await del(keys, { token });

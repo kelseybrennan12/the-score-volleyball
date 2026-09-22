@@ -73,7 +73,11 @@ Out of scope: the other review candidates.
 
 - Rollback-archive entries now report `ingestedAt` at second precision (parsed from the key) on the filesystem backend,
   where they previously carried the archived file's millisecond value. The admin page only displays that value.
-- The `RunIngestionInput` and `CronIngestInput` field is `store`, not `repo`, to match the `SnapshotStore` name.
+- The `RunIngestionInput`, `CronIngestInput`, and `SaveAnnouncementInput` field is `store`, not `repo`, to match the
+  `SnapshotStore` and `AnnouncementStore` names.
+- `RestoreResult.archivedPath` is `null` (was `""`) when nothing was live to archive, since every returned location is
+  now a key.
+- An existing local `data/announcement/announcement.json` is not migrated; delete the old directory by hand. Dev-only.
 
 ## Status
 

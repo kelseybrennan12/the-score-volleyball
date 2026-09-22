@@ -8,8 +8,10 @@ export interface ArchiveEntry {
 }
 
 export interface RestoreResult {
+  /** Key of the restored snapshot. */
   activePath: string;
-  archivedPath: string;
+  /** Key the previously-live snapshot was archived under, or null when there was none. */
+  archivedPath: string | null;
 }
 
 /**
@@ -22,7 +24,7 @@ export interface PromoteResult {
   deletedArchiveCount: number;
 }
 
-export const DEFAULT_ARCHIVE_LIMIT = 10;
+const DEFAULT_ARCHIVE_LIMIT = 10;
 
 /**
  * Every snapshot of every league: the live snapshot per league, its rollback archive, the frozen season archive, and
@@ -62,7 +64,7 @@ const archiveKeyFor = (slug: string, archiveKey: string) => `${archivePrefix(slu
 const seasonPrefix = (seasonKey: string) => `${SEASONS_PREFIX}${seasonKey}/`;
 const seasonKeyFor = (seasonKey: string, slug: string) => `${seasonPrefix(seasonKey)}${slug}.json`;
 
-export function toArchiveStamp(ingestedAt: string): string {
+function toArchiveStamp(ingestedAt: string): string {
   const date = new Date(ingestedAt);
   const pad = (n: number) => n.toString().padStart(2, "0");
   return (
@@ -71,7 +73,7 @@ export function toArchiveStamp(ingestedAt: string): string {
   );
 }
 
-export function archiveFileName(slug: string, ingestedAt: string): string {
+function archiveFileName(slug: string, ingestedAt: string): string {
   return `${slug}-${toArchiveStamp(ingestedAt)}.json`;
 }
 
@@ -137,7 +139,7 @@ export function createSnapshotStore(objects: ObjectStore): SnapshotStore {
 
   async function restoreArchive(slug: string, archiveKey: string): Promise<RestoreResult> {
     const archivedSnapshot = await readArchive(slug, archiveKey);
-    const archivedPath = (await archiveExisting(slug)) ?? "";
+    const archivedPath = await archiveExisting(slug);
     const activePath = await writeActive(archivedSnapshot);
     await objects.delete([archiveKeyFor(slug, archiveKey)]);
     return { activePath, archivedPath };
@@ -178,8 +180,13 @@ export function createSnapshotStore(objects: ObjectStore): SnapshotStore {
     readArchive,
     restoreArchive,
     async getLastIngestedAt() {
-      const meta = await objects.get<{ lastIngestedAt?: string }>(META_KEY);
-      return meta?.lastIngestedAt ?? null;
+      // A corrupt stamp reads as "never ingested" so the next successful run rewrites it, rather than blocking ingestion.
+      try {
+        const meta = await objects.get<{ lastIngestedAt?: string }>(META_KEY);
+        return meta?.lastIngestedAt ?? null;
+      } catch {
+        return null;
+      }
     },
     setLastIngestedAt: (iso) => objects.put(META_KEY, { lastIngestedAt: iso }),
     listSeasonKeys,

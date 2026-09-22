@@ -10,10 +10,10 @@ interface CliArgs {
 
 async function main(): Promise<void> {
   const args = parseArgs(process.argv.slice(2));
-  const repo = createSnapshotStore(resolveObjectStore());
-  const snapshots = await repo.listActive();
+  const store = createSnapshotStore(resolveObjectStore());
+  const snapshots = await store.listActive();
   if (snapshots.length === 0) {
-    console.log("No active snapshots found under data/snapshots/active.");
+    console.log("No active snapshots found.");
     process.exit(0);
   }
   const output = buildReport({

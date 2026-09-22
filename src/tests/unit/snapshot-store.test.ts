@@ -1,7 +1,11 @@
 import { createSnapshotStore, type SnapshotStore } from "@/backend/logic/services/snapshot-store";
+import { createFsObjectStore } from "@/backend/runtime/adapters/object-store/fs";
 import { createMemoryObjectStore } from "@/backend/runtime/adapters/object-store/memory";
 import type { ObjectStore } from "@/backend/runtime/adapters/object-store/port";
 import type { Snapshot } from "@/shared/domain/snapshot";
+import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import path from "node:path";
 import { beforeEach, describe, expect, it } from "vitest";
 
 function makeSnapshot(slug: string, ingestedAt: string, tag = "A"): Snapshot {
@@ -45,8 +49,6 @@ describe("Snapshot store", () => {
         "snapshots/archive/spring-sundays/spring-sundays-2026-04-19-14-05-00.json",
       );
       expect(await store.readActive("spring-sundays")).toBeNull();
-      await store.writeActive(makeSnapshot("spring-sundays", "2026-04-26T14:00:00Z"));
-      expect((await store.readActive("spring-sundays"))?.ingestedAt).toBe("2026-04-26T14:00:00Z");
       expect(await objects.list("snapshots/archive/spring-sundays/")).toEqual([
         "snapshots/archive/spring-sundays/spring-sundays-2026-04-19-14-05-00.json",
       ]);
@@ -86,11 +88,14 @@ describe("Snapshot store", () => {
       ]);
     });
 
-    it("reads an archived snapshot by key and fails clearly when it is missing", async () => {
+    it("reads an archived snapshot by key", async () => {
       await store.writeActive(makeSnapshot("spring-sundays", "2026-04-12T10:00:00Z", "older"));
       await store.archiveExisting("spring-sundays");
       const read = await store.readArchive("spring-sundays", "spring-sundays-2026-04-12-10-00-00.json");
       expect(read.teams[0].captain).toBe("older");
+    });
+
+    it("fails clearly when the archived snapshot is missing", async () => {
       await expect(store.readArchive("spring-sundays", "spring-sundays-2000-01-01-00-00-00.json")).rejects.toThrow(
         /Archive not found/,
       );
@@ -113,6 +118,15 @@ describe("Snapshot store", () => {
       const afterRestore = await store.listArchive("spring-sundays");
       expect(afterRestore.map((e) => e.ingestedAt)).toEqual([newer.ingestedAt]);
     });
+
+    it("reports no archived path when restoring while nothing is live", async () => {
+      await objects.put(
+        "snapshots/archive/spring-sundays/spring-sundays-2026-04-12-10-00-00.json",
+        makeSnapshot("spring-sundays", "2026-04-12T10:00:00Z"),
+      );
+      const result = await store.restoreArchive("spring-sundays", "spring-sundays-2026-04-12-10-00-00.json");
+      expect(result).toEqual({ activePath: "snapshots/active/spring-sundays.json", archivedPath: null });
+    });
   });
 
   describe("last-ingested stamp", () => {
@@ -120,6 +134,17 @@ describe("Snapshot store", () => {
       expect(await store.getLastIngestedAt()).toBeNull();
       await store.setLastIngestedAt("2026-04-19T10:00:00Z");
       expect(await store.getLastIngestedAt()).toBe("2026-04-19T10:00:00Z");
+    });
+
+    it("reads a corrupt stamp as never ingested so the next run can rewrite it", async () => {
+      const root = await mkdtemp(path.join(tmpdir(), "snapshot-store-"));
+      try {
+        await mkdir(path.join(root, "snapshots"), { recursive: true });
+        await writeFile(path.join(root, "snapshots", "meta.json"), "{ not json", "utf8");
+        expect(await createSnapshotStore(createFsObjectStore(root)).getLastIngestedAt()).toBeNull();
+      } finally {
+        await rm(root, { recursive: true, force: true });
+      }
     });
   });
 

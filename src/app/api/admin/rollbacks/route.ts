@@ -11,9 +11,9 @@ export async function GET(): Promise<NextResponse> {
   if (!guard.ok) return NextResponse.json({ error: guard.reason }, { status: guard.status });
 
   try {
-    const repo = createSnapshotStore(resolveObjectStore());
-    const active = await repo.listActive();
-    const lastIngestedAt = await repo.getLastIngestedAt();
+    const store = createSnapshotStore(resolveObjectStore());
+    const active = await store.listActive();
+    const lastIngestedAt = await store.getLastIngestedAt();
     const leagues = await Promise.all(
       active
         .sort((a, b) => a.league.displayName.localeCompare(b.league.displayName))
@@ -21,7 +21,7 @@ export async function GET(): Promise<NextResponse> {
           slug: snapshot.league.slug,
           displayName: snapshot.league.displayName,
           activeIngestedAt: snapshot.ingestedAt,
-          archive: await repo.listArchive(snapshot.league.slug),
+          archive: await store.listArchive(snapshot.league.slug),
         })),
     );
     return NextResponse.json({ lastIngestedAt, leagues });

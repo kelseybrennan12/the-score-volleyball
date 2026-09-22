@@ -44,7 +44,7 @@ export async function PUT(request: Request): Promise<NextResponse> {
       message: body.message,
       enabled: body.enabled,
       publishAsNew: body.publishAsNew,
-      repo: createAnnouncementStore(resolveObjectStore()),
+      store: createAnnouncementStore(resolveObjectStore()),
     });
     return NextResponse.json(result.body, { status: result.status });
   } catch (err) {

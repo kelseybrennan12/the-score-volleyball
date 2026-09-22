@@ -25,9 +25,9 @@ export async function POST(request: Request): Promise<NextResponse> {
     return NextResponse.json({ error: "Invalid slug or archiveKey." }, { status: 400 });
   }
 
-  const repo = createSnapshotStore(resolveObjectStore());
+  const store = createSnapshotStore(resolveObjectStore());
   try {
-    const result = await repo.restoreArchive(slug, archiveKey);
+    const result = await store.restoreArchive(slug, archiveKey);
     return NextResponse.json({ ok: true, activePath: result.activePath, archivedPath: result.archivedPath });
   } catch (err) {
     return NextResponse.json({ error: err instanceof Error ? err.message : "Rollback failed." }, { status: 500 });

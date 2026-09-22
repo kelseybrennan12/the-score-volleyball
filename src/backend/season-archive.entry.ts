@@ -24,8 +24,8 @@ async function main(): Promise<void> {
     process.exit(2);
   }
 
-  const repo = createSnapshotStore(resolveObjectStore());
-  const active = await repo.listActive();
+  const store = createSnapshotStore(resolveObjectStore());
+  const active = await store.listActive();
   const matching = active.filter((s) => seasonKeyFor(s.league.session, s.league.year) === args.season);
 
   if (matching.length === 0) {
@@ -35,22 +35,22 @@ async function main(): Promise<void> {
 
   const outcomes: LeagueOutcome[] = [];
   for (const snapshot of matching) {
-    outcomes.push(await promoteOne(snapshot, args, repo));
+    outcomes.push(await promoteOne(snapshot, args, store));
   }
 
   printSummary(args, outcomes);
   process.exit(outcomes.some((o) => o.error) ? 1 : 0);
 }
 
-async function promoteOne(snapshot: Snapshot, args: CliArgs, repo: SnapshotStore): Promise<LeagueOutcome> {
+async function promoteOne(snapshot: Snapshot, args: CliArgs, store: SnapshotStore): Promise<LeagueOutcome> {
   const slug = snapshot.league.slug;
   try {
     if (args.dryRun) {
       // Count every rollback archive entry that a real run would purge (bypass the default limit).
-      const entries = await repo.listArchive(slug, Number.MAX_SAFE_INTEGER);
+      const entries = await store.listArchive(slug, Number.MAX_SAFE_INTEGER);
       return { slug, promoted: false, wouldDeleteArchiveCount: entries.length };
     }
-    const result: PromoteResult = await repo.promoteActiveToSeason(args.season!, slug);
+    const result: PromoteResult = await store.promoteActiveToSeason(args.season!, slug);
     return {
       slug,
       promoted: result.deletedActive,

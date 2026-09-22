@@ -1,6 +1,6 @@
 import { mkdir, readdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
-import type { ObjectStore } from "./port";
+import { serializeObject, type ObjectStore } from "./port";
 
 /** Filesystem object store: each key is a file under `root`, so `snapshots/active/x.json` is `<root>/snapshots/active/x.json`. */
 export function createFsObjectStore(root: string): ObjectStore {
@@ -33,7 +33,7 @@ export function createFsObjectStore(root: string): ObjectStore {
     async put(key, body) {
       const target = filePath(key);
       await mkdir(path.dirname(target), { recursive: true });
-      await writeFile(target, JSON.stringify(body, null, 2) + "\n", "utf8");
+      await writeFile(target, serializeObject(body), "utf8");
     },
     async delete(keys) {
       for (const key of keys) await rm(filePath(key), { force: true });

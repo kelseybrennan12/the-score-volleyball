@@ -1,10 +1,11 @@
+import { resolveObjectStore } from "@/backend/runtime/adapters/object-store";
 import { createFsObjectStore } from "@/backend/runtime/adapters/object-store/fs";
 import { createMemoryObjectStore } from "@/backend/runtime/adapters/object-store/memory";
 import type { ObjectStore } from "@/backend/runtime/adapters/object-store/port";
 import { mkdtemp, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import path from "node:path";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 type Factory = () => Promise<{ store: ObjectStore; cleanup: () => Promise<void> }>;
 
@@ -75,4 +76,22 @@ describe.each(adapters)("object store contract: %s", (_name, make) => {
       await store.delete([]);
       expect(await store.list("snapshots/archive/x/")).toEqual([]);
     }));
+});
+
+describe("resolveObjectStore", () => {
+  afterEach(() => vi.unstubAllEnvs());
+
+  it("fails at construction when Blob is selected without a token", () => {
+    vi.stubEnv("SNAPSHOT_STORAGE", "blob");
+    vi.stubEnv("BLOB_READ_WRITE_TOKEN", "");
+    expect(() => resolveObjectStore()).toThrow(/BLOB_READ_WRITE_TOKEN/);
+  });
+
+  it("defaults to the filesystem store, which reads the checked-in snapshots under data/", async () => {
+    vi.stubEnv("SNAPSHOT_STORAGE", "");
+    vi.stubEnv("VERCEL", "");
+    const keys = await resolveObjectStore().list("snapshots/active/");
+    expect(keys.length).toBeGreaterThan(0);
+    expect(keys.every((k) => k.startsWith("snapshots/active/") && k.endsWith(".json"))).toBe(true);
+  });
 });
